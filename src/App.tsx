@@ -1,24 +1,32 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { useEffect, useRef, useState } from "react";
+import "./App.css";
+import RealmsSketch from "./sketch/realms-sketch";
+import "antd/dist/antd.css";
 
 function App() {
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const [realmsSketch, setRealmsSketch] = useState<RealmsSketch | null>(null);
+
+  useEffect(() => {
+    if (canvasRef.current) {
+      const canvas = canvasRef.current;
+      setRealmsSketch(new RealmsSketch(canvas));
+    }
+  }, [canvasRef.current]);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <div
+        ref={canvasRef}
+        style={{
+          width: "100vw",
+          height: "100vh",
+          position: "absolute",
+          top: 0,
+          left: 0,
+        }}
+        id="canvas"
+      />
     </div>
   );
 }

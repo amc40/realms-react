@@ -20,12 +20,15 @@ abstract class HexTile extends RegularHexagon {
     row: number,
     col: number,
     color: RGB,
-    nMovementPoints: number
+    nMovementPoints: number,
+    owner: Player | null = null,
+    text: string | null = null
   ) {
-    super(radius, color);
+    super(radius, color, owner?.getColor() ?? null, text);
     this.row = row;
     this.col = col;
     this.nMovementPoints = nMovementPoints;
+    this.owner = owner;
   }
 
   addNeighbour(neighbourHexTile: HexTile) {

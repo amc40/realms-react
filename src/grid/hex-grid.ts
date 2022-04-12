@@ -1,6 +1,7 @@
 import HexTile from "./hex-tile";
 import ShortestPath, { Node } from "../utils/shortest-path";
 import p5 from "p5";
+import drawArrow from "../assets/arrow";
 
 export class AxialCoordinate {
   public readonly q: number;
@@ -196,7 +197,7 @@ class HexagonalGrid {
   }
 
   private firstOffset(row: number) {
-    if (row % 2 == 0) return 0;
+    if (row % 2 === 0) return 0;
     return this.horizontalDist / 2;
   }
 
@@ -221,8 +222,8 @@ class HexagonalGrid {
   }
 
   private start: HexTile | null = null;
-  private prevEnd: HexTile | null = null;
   private prevPath: HexTile[] | null = null;
+  private prevEnd: HexTile | null = null;
 
   private distBetweenHexTileNodes(node1: Node<HexTile>, node2: Node<HexTile>) {
     const hexTile1 = node1.gamePoint;
@@ -250,12 +251,15 @@ class HexagonalGrid {
       if (offsetCoordinate.inBounds(this.nRows, this.nCols)) {
         const end =
           this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
-        if (end != this.prevEnd) {
+        if (end !== this.prevEnd) {
           const aStarResult = this.hexTileShortestPath.getShortestPath(
             this.start.getNode(),
             end.getNode()
           );
           console.log("shortest result", aStarResult);
+          if (aStarResult?.path != null && aStarResult.path.length > 0) {
+            this.prevPath = aStarResult.path;
+          }
         }
 
         this.prevEnd = end;
@@ -270,8 +274,18 @@ class HexagonalGrid {
       const offsetCoordinate = this.mouseXYToOffset(mouseX, mouseY);
       if (offsetCoordinate.inBounds(this.nRows, this.nCols)) {
         if (this.start == null) {
+          const selectedTile =
+            this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
+          selectedTile.onClick();
           this.start =
             this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
+          if (selectedTile.unit?.toggleSelected()) {
+            this.start = selectedTile;
+          } else {
+            this.start = null;
+            this.prevEnd = null;
+            this.prevPath = null;
+          }
         } else {
           this.start = null;
         }
@@ -303,6 +317,44 @@ class HexagonalGrid {
     this.yPan += y;
   }
 
+  private getHexCentreX(hexTile: HexTile) {
+    return (
+      this.horizontalDist / 2 +
+      this.firstOffset(hexTile.getRow()) +
+      hexTile.getCol() * this.horizontalDist
+    );
+  }
+
+  private getHexCentreY(hexTile: HexTile) {
+    return this.radius * (1 + hexTile.getRow() * 1.5);
+  }
+
+  private drawPath(p5: p5) {
+    if (this.prevPath != null) {
+      p5.strokeWeight(3);
+      let prevHex = this.prevPath[0];
+      let prevHexX = this.getHexCentreX(prevHex);
+      let prevHexY = this.getHexCentreY(prevHex);
+      for (let i = 1; i < this.prevPath.length - 1; i++) {
+        const currentHex = this.prevPath[i];
+        const currentHexX = this.getHexCentreX(currentHex);
+        const currentHexY = this.getHexCentreY(currentHex);
+        p5.line(prevHexX, prevHexY, currentHexX, currentHexY);
+        prevHex = currentHex;
+        prevHexX = currentHexX;
+        prevHexY = currentHexY;
+      }
+      const finalHex = this.prevPath[this.prevPath.length - 1];
+      drawArrow(
+        p5,
+        prevHexX,
+        prevHexY,
+        this.getHexCentreX(finalHex),
+        this.getHexCentreY(finalHex)
+      );
+    }
+  }
+
   draw(p5: p5) {
     p5.push();
     p5.translate(this.xPan, this.yPan);
@@ -320,6 +372,7 @@ class HexagonalGrid {
       p5.translate(0, this.radius * 1.5);
     }
     p5.pop();
+    this.drawPath(p5);
     p5.pop();
   }
 }

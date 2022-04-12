@@ -1,5 +1,11 @@
+import p5 from "p5";
+import City from "../cities/city";
+import Empire from "../empires/empire";
+import Player from "../players/player";
+import Unit from "../units/unit";
 import HexagonalGrid, { CubeCoordinate, OffsetCoordinate } from "./hex-grid";
 import HexTile from "./hex-tile";
+import CityTile from "./tiles/city";
 import DesertTile from "./tiles/desert";
 import GrasslandTile from "./tiles/grassland";
 import HillTile from "./tiles/hills";
@@ -55,6 +61,12 @@ class MapGenerator {
       plains: 0.6,
     },
   };
+
+  private readonly openCityModal: (city: City) => void;
+
+  constructor(openCityModal: (city: City) => void) {
+    this.openCityModal = openCityModal;
+  }
 
   private static getPreviousGeneratedNeighbourOffsetCoords(
     row: number,
@@ -209,7 +221,8 @@ class MapGenerator {
     x: number,
     y: number,
     nRows: number,
-    nCols: number
+    nCols: number,
+    p5: p5
   ): HexagonalGrid {
     const radius = MapGenerator.getRadius(width, height, nRows, nCols);
     // random initial tile type
@@ -250,6 +263,30 @@ class MapGenerator {
         }
       }
     }
+
+    hexagonGrid[0][0].unit = new Unit(p5);
+
+    for (let cityN = 0; cityN < 3; cityN++) {
+      const randomRow = Math.floor(Math.random() * nRows);
+      const randomCol = Math.floor(Math.random() * nCols);
+      hexagonGrid[randomRow][randomCol] = new CityTile(
+        radius,
+        randomRow,
+        randomCol,
+        new City(
+          "City " + (cityN + 1),
+          new Player(
+            new Empire({
+              r: 255,
+              g: 0,
+              b: 0,
+            })
+          )
+        ),
+        this.openCityModal
+      );
+    }
+
     return new HexagonalGrid(
       width,
       height,

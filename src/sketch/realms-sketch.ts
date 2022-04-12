@@ -1,25 +1,33 @@
 import p5 from "p5";
+import NextTurn from "../assets/next-turn";
+import City from "../cities/city";
 import HexagonalGrid from "../grid/hex-grid";
 import MapGenerator from "../grid/map-generation";
+import Unit from "../units/unit";
 import { MouseButton } from "../utils/mouse-events";
 
 class RealmsSketch extends p5 {
   private hexagonalGrid: HexagonalGrid | null = null;
+  private nextTurnIndicator = new NextTurn();
+  private openCityModal: (city: City) => void;
+  selectedUnit: Unit | null = null;
 
-  constructor(canvasElement: HTMLElement) {
+  constructor(canvasElement: HTMLElement, openCityModal: (city: City) => void) {
     super(() => {}, canvasElement);
+    this.openCityModal = openCityModal;
   }
 
   setup(): void {
     this.createCanvas(this.windowWidth, this.windowHeight);
-    const mapGenerator = new MapGenerator();
+    const mapGenerator = new MapGenerator(this.openCityModal);
     this.hexagonalGrid = mapGenerator.generateMap(
       this.width,
       this.height,
       0,
       0,
       20,
-      20
+      20,
+      this
     );
   }
 
@@ -28,12 +36,12 @@ class RealmsSketch extends p5 {
   }
 
   mouseMoved(event?: MouseEvent): void {
-    this.hexagonalGrid!.handleMouseMove(this.mouseX, this.mouseY);
+    this.hexagonalGrid?.handleMouseMove(this.mouseX, this.mouseY);
   }
 
   mouseClicked(event: MouseEvent): void {
     if (event.button === MouseButton.LEFT) {
-      this.hexagonalGrid!.handleClick(this.mouseX, this.mouseY);
+      this.hexagonalGrid?.handleClick(this.mouseX, this.mouseY);
     }
   }
 
@@ -56,6 +64,7 @@ class RealmsSketch extends p5 {
     }
     this.background(0);
     this.hexagonalGrid!.draw(this);
+    this.nextTurnIndicator.draw(this);
   }
 }
 

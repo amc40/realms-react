@@ -1,7 +1,7 @@
 import Empire from "../empires/empire";
 import RGB from "../utils/RGB";
 
-abstract class Player {
+class Player {
   private readonly empire: Empire;
 
   constructor(empire: Empire) {

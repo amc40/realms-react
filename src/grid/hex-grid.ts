@@ -2,6 +2,7 @@ import HexTile from "./hex-tile";
 import ShortestPath, { Node } from "../utils/shortest-path";
 import p5 from "p5";
 import drawArrow from "../assets/arrow";
+import Unit from "../units/unit";
 
 export class AxialCoordinate {
   public readonly q: number;
@@ -128,6 +129,9 @@ class HexagonalGrid {
   private yPan = 0;
   private scale = 1;
 
+  private currentSelectedTile: HexTile | null = null;
+  private units: Unit[] = [];
+
   private static getNeighbourOffsetCoords(
     row: number,
     col: number,
@@ -221,11 +225,7 @@ class HexagonalGrid {
     return cubeCoordinate.toOffsetCoordinate();
   }
 
-  private start: HexTile | null = null;
-  private prevPath: HexTile[] | null = null;
-  private prevEnd: HexTile | null = null;
-
-  private distBetweenHexTileNodes(node1: Node<HexTile>, node2: Node<HexTile>) {
+  static distBetweenHexTileNodes(node1: Node<HexTile>, node2: Node<HexTile>) {
     const hexTile1 = node1.gamePoint;
     const hexTile2 = node2.gamePoint;
     const hexTile1CubeCoord = new OffsetCoordinate(
@@ -239,58 +239,87 @@ class HexagonalGrid {
     return hexTile1CubeCoord.diff(hexTile2CubeCoord).totalCoordMag();
   }
 
-  private readonly hexTileShortestPath = new ShortestPath<HexTile>(
-    this.distBetweenHexTileNodes
-  );
+  private getCurrentSelectedUnit(): Unit | null {
+    return this.currentSelectedTile?.getCurrentSelectedUnit() ?? null;
+  }
+
+  inBounds(row: number, col: number) {
+    return row >= 0 && row < this.nRows && col >= 0 && col < this.nCols;
+  }
+
+  addUnit(unit: Unit, row: number, col: number) {
+    if (!this.inBounds(row, col)) {
+      throw new Error("row and col must be in bounds");
+    }
+    this.addUnitToTile(unit, this.hexagonGrid[row][col]);
+  }
+
+  private addUnitToTile(unit: Unit, hexTile: HexTile) {
+    hexTile.addUnit(unit);
+    unit.currentTile = hexTile;
+    this.units.push(unit);
+  }
+
+  handleNextTurn() {
+    this.units.forEach((unit) => unit.handleNextTurn());
+  }
 
   public handleMouseMove(mouseScreenX: number, mouseScreenY: number) {
-    const mouseX = (mouseScreenX - this.xPan) / this.scale;
-    const mouseY = (mouseScreenY - this.yPan) / this.scale;
-    if (this.mouseXYInBounds(mouseX, mouseY) && this.start != null) {
-      const offsetCoordinate = this.mouseXYToOffset(mouseX, mouseY);
-      if (offsetCoordinate.inBounds(this.nRows, this.nCols)) {
-        const end =
-          this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
-        if (end !== this.prevEnd) {
-          const aStarResult = this.hexTileShortestPath.getShortestPath(
-            this.start.getNode(),
-            end.getNode()
-          );
-          console.log("shortest result", aStarResult);
-          if (aStarResult?.path != null && aStarResult.path.length > 0) {
-            this.prevPath = aStarResult.path;
-          }
+    const currentSelectedUnit = this.getCurrentSelectedUnit();
+    if (currentSelectedUnit != null) {
+      const mouseX = (mouseScreenX - this.xPan) / this.scale;
+      const mouseY = (mouseScreenY - this.yPan) / this.scale;
+      if (this.mouseXYInBounds(mouseX, mouseY)) {
+        const offsetCoordinate = this.mouseXYToOffset(mouseX, mouseY);
+        if (offsetCoordinate.inBounds(this.nRows, this.nCols)) {
+          const newMovementTarget =
+            this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
+          currentSelectedUnit.movementTarget = newMovementTarget;
         }
-
-        this.prevEnd = end;
       }
     }
   }
 
-  handleClick(mouseScreenX: number, mouseScreenY: number) {
+  public handleClick(mouseScreenX: number, mouseScreenY: number): boolean {
     const mouseX = (mouseScreenX - this.xPan) / this.scale;
     const mouseY = (mouseScreenY - this.yPan) / this.scale;
     if (this.mouseXYInBounds(mouseX, mouseY)) {
       const offsetCoordinate = this.mouseXYToOffset(mouseX, mouseY);
       if (offsetCoordinate.inBounds(this.nRows, this.nCols)) {
-        if (this.start == null) {
-          const selectedTile =
-            this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
-          selectedTile.onClick();
-          this.start =
-            this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
-          if (selectedTile.unit?.toggleSelected()) {
-            this.start = selectedTile;
-          } else {
-            this.start = null;
-            this.prevEnd = null;
-            this.prevPath = null;
-          }
+        const currentSelectedUnit = this.getCurrentSelectedUnit();
+        if (
+          currentSelectedUnit != null &&
+          currentSelectedUnit.havingMovementSelected()
+        ) {
+          // if selecting the movement then keep selection
+          currentSelectedUnit.selectCurrentMovementTarget();
         } else {
-          this.start = null;
+          const hexTile =
+            this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
+          // if selecting another tile then deselect the current one
+          // and select the one clicked
+          if (hexTile !== this.currentSelectedTile) {
+            if (this.currentSelectedTile != null) {
+              this.currentSelectedTile.handleDelelected();
+            }
+            this.currentSelectedTile = hexTile;
+            this.currentSelectedTile.onClick();
+            const currentSelectedUnit = this.getCurrentSelectedUnit();
+            if (currentSelectedUnit) {
+              currentSelectedUnit.selected = true;
+              currentSelectedUnit.startSelectingMovement();
+            }
+          } else {
+            // if selecting current tile then possibly cycle through units
+            this.currentSelectedTile.handleReselected();
+          }
         }
       }
+      // return true if processed click
+      return true;
     }
+    // return false if out of bounds so not processed
+    return false;
   }
 
   handleMouseWheel(e: WheelEvent, mouseX: number, mouseY: number): boolean {
@@ -329,14 +358,14 @@ class HexagonalGrid {
     return this.radius * (1 + hexTile.getRow() * 1.5);
   }
 
-  private drawPath(p5: p5) {
-    if (this.prevPath != null) {
+  drawPath(p5: p5, path: HexTile[]) {
+    if (path.length > 1) {
       p5.strokeWeight(3);
-      let prevHex = this.prevPath[0];
+      let prevHex = path[0];
       let prevHexX = this.getHexCentreX(prevHex);
       let prevHexY = this.getHexCentreY(prevHex);
-      for (let i = 1; i < this.prevPath.length - 1; i++) {
-        const currentHex = this.prevPath[i];
+      for (let i = 1; i < path.length - 1; i++) {
+        const currentHex = path[i];
         const currentHexX = this.getHexCentreX(currentHex);
         const currentHexY = this.getHexCentreY(currentHex);
         p5.line(prevHexX, prevHexY, currentHexX, currentHexY);
@@ -344,7 +373,7 @@ class HexagonalGrid {
         prevHexX = currentHexX;
         prevHexY = currentHexY;
       }
-      const finalHex = this.prevPath[this.prevPath.length - 1];
+      const finalHex = path[path.length - 1];
       drawArrow(
         p5,
         prevHexX,
@@ -372,7 +401,14 @@ class HexagonalGrid {
       p5.translate(0, this.radius * 1.5);
     }
     p5.pop();
-    this.drawPath(p5);
+    const currentSelectedUnit = this.getCurrentSelectedUnit();
+    if (
+      currentSelectedUnit != null &&
+      currentSelectedUnit.shortestPathToTarget != null
+    ) {
+      this.drawPath(p5, currentSelectedUnit.shortestPathToTarget);
+      console.log("drawing path");
+    }
     p5.pop();
   }
 }

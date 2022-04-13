@@ -264,7 +264,7 @@ class MapGenerator {
       }
     }
 
-    hexagonGrid[0][0].unit = new Unit(p5);
+    const unit = new Unit(p5, 2);
 
     for (let cityN = 0; cityN < 3; cityN++) {
       const randomRow = Math.floor(Math.random() * nRows);
@@ -286,8 +286,7 @@ class MapGenerator {
         this.openCityModal
       );
     }
-
-    return new HexagonalGrid(
+    const hexGrid = new HexagonalGrid(
       width,
       height,
       x,
@@ -297,6 +296,8 @@ class MapGenerator {
       radius,
       hexagonGrid
     );
+    hexGrid.addUnit(unit, 0, 0);
+    return hexGrid;
   }
 }
 

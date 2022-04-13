@@ -55,7 +55,7 @@ export class ShortestPath<T> {
       const currentResult = openQueue.dequeue() as AStarInterimResult<T>;
       const currentNode = currentResult.node;
       closedSet.add(currentNode);
-      if (currentNode == goalNode) {
+      if (currentNode === goalNode) {
         // clearing the interim results ensures they aren't reused on the next calculation
         this.clearInterimResults(closedSet);
         return this.getResult(currentResult);
@@ -95,7 +95,6 @@ export class ShortestPath<T> {
           }
         }
       });
-      openQueue.printPQueue();
     }
     // no path found
     this.clearInterimResults(closedSet);

@@ -1,6 +1,7 @@
 import p5 from "p5";
 import RegularHexagon from "../assets/regular-hexagon";
 import Player from "../players/player";
+import Unit from "../units/unit";
 import RGB from "../utils/RGB";
 import ShortestPath, {
   Node,
@@ -36,9 +37,14 @@ abstract class HexTile extends RegularHexagon {
       new WeightedDirectedEdge<HexTile>(
         this.node,
         neighbourHexTile.node,
-        this.nMovementPoints
+        neighbourHexTile.nMovementPoints
       )
     );
+  }
+
+  movementCostTo(otherHexTile: HexTile) {
+    return this.node.outEdges.find((edge) => edge.to === otherHexTile.node)
+      ?.weight;
   }
 
   getRow() {
@@ -51,6 +57,36 @@ abstract class HexTile extends RegularHexagon {
 
   getNode() {
     return this.node;
+  }
+
+  getCurrentSelectedUnit() {
+    // TODO: iterate through units using next and deselect
+    return this.unit;
+  }
+
+  handleDelelected() {
+    // TODO: deselect unit
+    if (this.unit) {
+      this.unit.toggleSelected();
+      this.unit = null;
+    }
+  }
+
+  handleReselected() {
+    // TODO: cycle through units
+  }
+
+  removeUnit(unit: Unit) {
+    if (this.unit === unit) {
+      this.unit = null;
+    }
+  }
+
+  addUnit(unit: Unit) {
+    if (this.unit != null) {
+      console.warn("possibly lossy remove of unit when adding another");
+    }
+    this.unit = unit;
   }
 }
 

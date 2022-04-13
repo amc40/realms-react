@@ -8,7 +8,7 @@ import { MouseButton } from "../utils/mouse-events";
 
 class RealmsSketch extends p5 {
   private hexagonalGrid: HexagonalGrid | null = null;
-  private nextTurnIndicator = new NextTurn();
+  private nextTurnIndicator = new NextTurn(() => this.handleNextTurn());
   private openCityModal: (city: City) => void;
   selectedUnit: Unit | null = null;
 
@@ -31,6 +31,10 @@ class RealmsSketch extends p5 {
     );
   }
 
+  handleNextTurn() {
+    this.hexagonalGrid?.handleNextTurn();
+  }
+
   windowResized(event?: object): void {
     this.resizeCanvas(this.windowWidth, this.windowHeight);
   }
@@ -41,7 +45,8 @@ class RealmsSketch extends p5 {
 
   mouseClicked(event: MouseEvent): void {
     if (event.button === MouseButton.LEFT) {
-      this.hexagonalGrid?.handleClick(this.mouseX, this.mouseY);
+      this.nextTurnIndicator.handleClick(this, this.mouseX, this.mouseY) ||
+        this.hexagonalGrid?.handleClick(this.mouseX, this.mouseY);
     }
   }
 

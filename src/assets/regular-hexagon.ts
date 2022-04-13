@@ -8,7 +8,7 @@ class RegularHexagon {
   private static readonly BORDER_WIDTH = 3;
   private readonly radius: number;
   private readonly color: RGB;
-  private borderColor: RGB | null = null;
+  protected borderColor: RGB | null = null;
   private readonly random: number = Math.random();
   private _unit: Unit | null = null;
   private text: string | null;

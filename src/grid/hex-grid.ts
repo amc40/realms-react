@@ -3,6 +3,7 @@ import ShortestPath, { Node } from "../utils/shortest-path";
 import p5 from "p5";
 import drawArrow from "../assets/arrow";
 import Unit from "../units/unit";
+import CityTile from "./tiles/city";
 
 export class AxialCoordinate {
   public readonly q: number;
@@ -283,43 +284,42 @@ class HexagonalGrid {
   public handleClick(mouseScreenX: number, mouseScreenY: number): boolean {
     const mouseX = (mouseScreenX - this.xPan) / this.scale;
     const mouseY = (mouseScreenY - this.yPan) / this.scale;
-    if (this.mouseXYInBounds(mouseX, mouseY)) {
-      const offsetCoordinate = this.mouseXYToOffset(mouseX, mouseY);
-      if (offsetCoordinate.inBounds(this.nRows, this.nCols)) {
-        const currentSelectedUnit = this.getCurrentSelectedUnit();
-        if (
-          currentSelectedUnit != null &&
-          currentSelectedUnit.havingMovementSelected()
-        ) {
-          // if selecting the movement then keep selection
-          currentSelectedUnit.selectCurrentMovementTarget();
-        } else {
-          const hexTile =
-            this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
-          // if selecting another tile then deselect the current one
-          // and select the one clicked
-          if (hexTile !== this.currentSelectedTile) {
-            if (this.currentSelectedTile != null) {
-              this.currentSelectedTile.handleDelelected();
-            }
-            this.currentSelectedTile = hexTile;
-            this.currentSelectedTile.onClick();
-            const currentSelectedUnit = this.getCurrentSelectedUnit();
-            if (currentSelectedUnit) {
-              currentSelectedUnit.selected = true;
-              currentSelectedUnit.startSelectingMovement();
-            }
-          } else {
-            // if selecting current tile then possibly cycle through units
-            this.currentSelectedTile.handleReselected();
+    const offsetCoordinate = this.mouseXYToOffset(mouseX, mouseY);
+    if (offsetCoordinate.inBounds(this.nRows, this.nCols)) {
+      const currentSelectedUnit = this.getCurrentSelectedUnit();
+      if (
+        currentSelectedUnit != null &&
+        currentSelectedUnit.havingMovementSelected()
+      ) {
+        // if selecting the movement then keep selection
+        currentSelectedUnit.selectCurrentMovementTarget();
+      } else {
+        const hexTile =
+          this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
+        // if selecting another tile then deselect the current one
+        // and select the one clicked
+        if (hexTile !== this.currentSelectedTile) {
+          if (this.currentSelectedTile != null) {
+            this.currentSelectedTile.handleDelelected();
           }
+          this.currentSelectedTile = hexTile;
+          this.currentSelectedTile.onClick();
+          const currentSelectedUnit = this.getCurrentSelectedUnit();
+          if (currentSelectedUnit) {
+            currentSelectedUnit.selected = true;
+            currentSelectedUnit.startSelectingMovement();
+          }
+        } else {
+          // if selecting current tile then possibly cycle through units
+          this.currentSelectedTile.handleReselected();
         }
       }
       // return true if processed click
       return true;
+    } else {
+      // return false if out of bounds so not processed
+      return false;
     }
-    // return false if out of bounds so not processed
-    return false;
   }
 
   handleMouseWheel(e: WheelEvent, mouseX: number, mouseY: number): boolean {
@@ -356,6 +356,24 @@ class HexagonalGrid {
 
   private getHexCentreY(hexTile: HexTile) {
     return this.radius * (1 + hexTile.getRow() * 1.5);
+  }
+
+  addCityTile(cityTile: CityTile) {
+    const row = cityTile.getRow();
+    const col = cityTile.getCol();
+    this.hexagonGrid[row][col] = cityTile;
+    for (let neighbourCoords of HexagonalGrid.getNeighbourOffsetCoords(
+      row,
+      col,
+      this.nRows,
+      this.nCols
+    )) {
+      const neighbourTile =
+        this.hexagonGrid[neighbourCoords.row][neighbourCoords.col];
+      if (!neighbourTile.hasOwner()) {
+        neighbourTile.setOwner(cityTile.getOwner());
+      }
+    }
   }
 
   drawPath(p5: p5, path: HexTile[]) {

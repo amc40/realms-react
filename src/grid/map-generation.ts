@@ -193,7 +193,7 @@ class MapGenerator {
     nRows: number,
     nCols: number
   ): number {
-    const widthDiv = (width / (2 * nCols + 1)) * Math.sqrt(3);
+    const widthDiv = width / ((2 * nCols + 1) * Math.sqrt(2 / 3));
     const heightDiv = height / ((nRows - 1) * 1.5 + 2);
     return Math.min(widthDiv, heightDiv);
   }
@@ -266,26 +266,6 @@ class MapGenerator {
 
     const unit = new Unit(p5, 2);
 
-    for (let cityN = 0; cityN < 3; cityN++) {
-      const randomRow = Math.floor(Math.random() * nRows);
-      const randomCol = Math.floor(Math.random() * nCols);
-      hexagonGrid[randomRow][randomCol] = new CityTile(
-        radius,
-        randomRow,
-        randomCol,
-        new City(
-          "City " + (cityN + 1),
-          new Player(
-            new Empire({
-              r: 255,
-              g: 0,
-              b: 0,
-            })
-          )
-        ),
-        this.openCityModal
-      );
-    }
     const hexGrid = new HexagonalGrid(
       width,
       height,
@@ -297,6 +277,28 @@ class MapGenerator {
       hexagonGrid
     );
     hexGrid.addUnit(unit, 0, 0);
+    for (let cityN = 0; cityN < 3; cityN++) {
+      const randomRow = Math.floor(Math.random() * nRows);
+      const randomCol = Math.floor(Math.random() * nCols);
+      hexGrid.addCityTile(
+        new CityTile(
+          radius,
+          randomRow,
+          randomCol,
+          new City(
+            "City " + (cityN + 1),
+            new Player(
+              new Empire({
+                r: 255,
+                g: 0,
+                b: 0,
+              })
+            )
+          ),
+          this.openCityModal
+        )
+      );
+    }
     return hexGrid;
   }
 }

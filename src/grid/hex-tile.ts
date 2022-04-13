@@ -88,6 +88,21 @@ abstract class HexTile extends RegularHexagon {
     }
     this.unit = unit;
   }
+
+  hasOwner() {
+    return this.owner != null;
+  }
+
+  getOwner() {
+    return this.owner;
+  }
+
+  setOwner(owner: Player | null) {
+    this.owner = owner;
+    if (owner != null) {
+      this.borderColor = owner.getColor();
+    }
+  }
 }
 
 export default HexTile;

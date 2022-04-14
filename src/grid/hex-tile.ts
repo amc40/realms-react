@@ -1,12 +1,19 @@
 import p5 from "p5";
 import RegularHexagon from "../assets/regular-hexagon";
 import Player from "../players/player";
+import { ResourceQuantity } from "../resources";
 import Unit from "../units/unit";
 import RGB from "../utils/RGB";
 import ShortestPath, {
   Node,
   WeightedDirectedEdge,
 } from "../utils/shortest-path";
+import {
+  getTileImprovementInstance,
+  TileImprovementType,
+} from "./tile-improvements";
+import TileImprovement from "./tile-improvements/tile-improvement";
+import TileImprovementIcon from "./tile-improvements/tile-improvement-icon";
 
 abstract class HexTile extends RegularHexagon {
   private readonly node = new Node<HexTile>(this);
@@ -15,6 +22,10 @@ abstract class HexTile extends RegularHexagon {
   // number of movement points required to move onto the tile
   private readonly nMovementPoints: number;
   private owner: Player | null = null;
+  private _unit: Unit | null = null;
+  private text: string | null;
+  private tileImprovement: TileImprovement | null = null;
+  private readonly baseResources: ResourceQuantity;
 
   constructor(
     radius: number,
@@ -22,14 +33,25 @@ abstract class HexTile extends RegularHexagon {
     col: number,
     color: RGB,
     nMovementPoints: number,
+    baseResources: ResourceQuantity,
     owner: Player | null = null,
     text: string | null = null
   ) {
-    super(radius, color, owner?.getColor() ?? null, text);
+    super(radius, color, owner?.getColor() ?? null, 3);
     this.row = row;
     this.col = col;
     this.nMovementPoints = nMovementPoints;
     this.owner = owner;
+    this.text = text;
+    this.baseResources = baseResources;
+  }
+
+  get unit() {
+    return this._unit;
+  }
+
+  set unit(unit: Unit | null) {
+    this._unit = unit;
   }
 
   addNeighbour(neighbourHexTile: HexTile) {
@@ -102,6 +124,34 @@ abstract class HexTile extends RegularHexagon {
     if (owner != null) {
       this.borderColor = owner.getColor();
     }
+  }
+
+  addTileImprovement(p5: p5, tileImprovementType: TileImprovementType) {
+    this.tileImprovement = getTileImprovementInstance(tileImprovementType, p5);
+  }
+
+  getResources(): ResourceQuantity {
+    // TODO: add tile improvement resources
+    return this.baseResources;
+  }
+
+  public draw(p5: p5): void {
+    super.draw(p5);
+    if (this.text) {
+      p5.rectMode(p5.CENTER);
+      p5.fill(255);
+      p5.stroke(0);
+      p5.strokeWeight(1.5);
+      p5.rect(0, 0, this.radius * 2 - 30, 30);
+      p5.push();
+      p5.strokeWeight(1);
+      p5.fill(0);
+      p5.textAlign(p5.CENTER, p5.CENTER);
+      p5.text(this.text, 0, 0);
+      p5.pop();
+    }
+    this.tileImprovement?.icon.draw(p5);
+    this._unit?.draw(p5);
   }
 }
 

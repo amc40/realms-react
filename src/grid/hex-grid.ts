@@ -2,7 +2,7 @@ import HexTile from "./hex-tile";
 import ShortestPath, { Node } from "../utils/shortest-path";
 import p5 from "p5";
 import drawArrow from "../assets/arrow";
-import Unit from "../units/unit";
+import Unit, { AugmentedTile as MoveAugmentedTile } from "../units/unit";
 import CityTile from "./tiles/city";
 
 export class AxialCoordinate {
@@ -402,6 +402,51 @@ class HexagonalGrid {
     }
   }
 
+  private drawEllipseWithText(x: number, y: number, text: string, p5: p5) {
+    p5.ellipseMode(p5.CENTER);
+    p5.ellipse(x, y, 20, 20);
+    p5.textAlign(p5.CENTER, p5.CENTER);
+    p5.text(text, x, y);
+  }
+
+  drawAugmentedPath(p5: p5, path: MoveAugmentedTile[]) {
+    if (path.length > 1) {
+      p5.strokeWeight(3);
+      let prevHex = path[0].tile;
+      let prevHexX = this.getHexCentreX(prevHex);
+      let prevHexY = this.getHexCentreY(prevHex);
+      for (let i = 1; i < path.length - 1; i++) {
+        const currentHex = path[i].tile;
+        const currentHexX = this.getHexCentreX(currentHex);
+        const currentHexY = this.getHexCentreY(currentHex);
+        p5.line(prevHexX, prevHexY, currentHexX, currentHexY);
+        prevHex = currentHex;
+        prevHexX = currentHexX;
+        prevHexY = currentHexY;
+      }
+
+      const finalHex = path[path.length - 1];
+      drawArrow(
+        p5,
+        prevHexX,
+        prevHexY,
+        this.getHexCentreX(finalHex.tile),
+        this.getHexCentreY(finalHex.tile)
+      );
+      for (let i = 1; i < path.length - 1; i++) {
+        const { nMoves, tile } = path[i];
+        if (nMoves != null) {
+          this.drawEllipseWithText(
+            this.getHexCentreX(tile),
+            this.getHexCentreY(tile),
+            nMoves.toString(),
+            p5
+          );
+        }
+      }
+    }
+  }
+
   draw(p5: p5) {
     p5.push();
     p5.translate(this.xPan, this.yPan);
@@ -412,7 +457,7 @@ class HexagonalGrid {
       p5.push();
       p5.translate(this.firstOffset(row), 0);
       for (let col = 0; col < this.nCols; col++) {
-        this.hexagonGrid[row][col].draw(p5, this.scale);
+        this.hexagonGrid[row][col].draw(p5);
         p5.translate(this.horizontalDist, 0);
       }
       p5.pop();
@@ -420,11 +465,10 @@ class HexagonalGrid {
     }
     p5.pop();
     const currentSelectedUnit = this.getCurrentSelectedUnit();
-    if (
-      currentSelectedUnit != null &&
-      currentSelectedUnit.shortestPathToTarget != null
-    ) {
-      this.drawPath(p5, currentSelectedUnit.shortestPathToTarget);
+    const augmentedPath =
+      currentSelectedUnit?.getMoveAugmentedShortestPathToTarget();
+    if (augmentedPath != null) {
+      this.drawAugmentedPath(p5, augmentedPath);
       console.log("drawing path");
     }
     p5.pop();

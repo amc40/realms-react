@@ -299,6 +299,7 @@ class MapGenerator {
         )
       );
     }
+    hexagonGrid[1][1].addTileImprovement(p5, "mine");
     return hexGrid;
   }
 }

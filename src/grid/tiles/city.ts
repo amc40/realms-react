@@ -1,10 +1,12 @@
 import City from "../../cities/city";
 import Player from "../../players/player";
+import { getNoResources } from "../../resources";
 import HexTile from "../hex-tile";
 
 class CityTile extends HexTile {
-  private static readonly nMovementPoints = Infinity;
+  private static readonly nMovementPoints = 1;
   private readonly openCityModal: (city: City) => void;
+  private static readonly resources = getNoResources();
   private readonly city: City;
 
   constructor(
@@ -20,6 +22,7 @@ class CityTile extends HexTile {
       col,
       city.owner.getColor(),
       CityTile.nMovementPoints,
+      CityTile.resources,
       city.owner,
       city.name
     );

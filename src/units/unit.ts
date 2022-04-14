@@ -9,6 +9,11 @@ enum State {
   SELECTING_MOVEMENT,
 }
 
+export type AugmentedTile = {
+  tile: HexTile;
+  nMoves?: number;
+};
+
 class Unit {
   unselectedImage: p5.Image;
   selectedImage: p5.Image;
@@ -138,6 +143,42 @@ class Unit {
 
   get shortestPathToTarget() {
     return this._shortestPathToTarget;
+  }
+
+  getMoveAugmentedShortestPathToTarget() {
+    if (
+      this.shortestPathToTarget != null &&
+      this.shortestPathToTarget.length > 1
+    ) {
+      let nMoves = 0;
+      let prevTile = this.shortestPathToTarget[0];
+      console.log("initial tile", prevTile);
+      let simulatedRemainingMoves = this.remainingMovementPoints;
+      let moveAugmentedShortestPath: AugmentedTile[] = [];
+      moveAugmentedShortestPath.push({
+        tile: prevTile,
+      });
+      for (let i = 1; i < this.shortestPathToTarget.length; i++) {
+        const currentTile = this.shortestPathToTarget[i];
+        const cost = prevTile.movementCostTo(currentTile)!;
+        if (cost > simulatedRemainingMoves) {
+          nMoves++;
+          moveAugmentedShortestPath[
+            moveAugmentedShortestPath.length - 1
+          ].nMoves = nMoves;
+          simulatedRemainingMoves = this.movementPoints - cost;
+        } else {
+          simulatedRemainingMoves -= cost;
+        }
+        moveAugmentedShortestPath.push({
+          tile: currentTile,
+        });
+        prevTile = currentTile;
+      }
+      return moveAugmentedShortestPath;
+    } else {
+      return null;
+    }
   }
 
   draw(p5: p5) {

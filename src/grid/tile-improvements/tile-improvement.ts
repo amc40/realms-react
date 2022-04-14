@@ -1,11 +1,13 @@
-import p5 from "p5";
 import { ResourceQuantity } from "../../resources";
+import TileImprovementIcon from "./tile-improvement-icon";
 
 class TileImprovement {
   readonly resourceYield: ResourceQuantity;
-  readonly image: p5.Image;
-  constructor(resourceYield: ResourceQuantity, image: p5.Image) {
+  readonly icon: TileImprovementIcon;
+  constructor(resourceYield: ResourceQuantity, icon: TileImprovementIcon) {
     this.resourceYield = resourceYield;
-    this.image = image;
+    this.icon = icon;
   }
 }
+
+export default TileImprovement;

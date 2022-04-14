@@ -5,37 +5,31 @@ import RGB from "../utils/RGB";
 class RegularHexagon {
   private static readonly INIT_ANGLE = Math.PI / 6;
   private static readonly ROT_INCREMENT_ANGLE = Math.PI / 3;
-  private static readonly BORDER_WIDTH = 3;
-  private readonly radius: number;
+  protected readonly radius: number;
   private readonly color: RGB;
   protected borderColor: RGB | null = null;
-  private readonly random: number = Math.random();
-  private _unit: Unit | null = null;
-  private text: string | null;
+  private borderWidth: number;
 
   constructor(
     radius: number,
     color: RGB,
     borderColor: RGB | null = null,
-    text: string | null = null
+    borderWidth: number = 1
   ) {
     this.radius = radius;
     this.color = color;
     this.borderColor = borderColor;
-    this.text = text;
+    this.borderWidth = borderWidth;
   }
 
-  get unit() {
-    return this._unit;
-  }
-
-  set unit(unit: Unit | null) {
-    this._unit = unit;
+  getMinWidthHeight() {
+    // 2 * height of sides (2 * 1/2 sqrt(2/3))
+    return this.radius * Math.sqrt(2 / 3);
   }
 
   public onClick() {}
 
-  public draw(p5: p5, scale: number) {
+  public draw(p5: p5) {
     p5.push();
     const borderColor = this.borderColor;
     p5.noStroke();
@@ -52,8 +46,8 @@ class RegularHexagon {
     p5.fill(0, 0);
 
     if (borderColor) {
-      const borderRadius = this.radius - RegularHexagon.BORDER_WIDTH / 2;
-      p5.strokeWeight(RegularHexagon.BORDER_WIDTH);
+      const borderRadius = this.radius - this.borderWidth / 2;
+      p5.strokeWeight(this.borderWidth);
       p5.stroke(borderColor.r, borderColor.g, borderColor.b);
       p5.beginShape();
       for (
@@ -68,22 +62,6 @@ class RegularHexagon {
       }
       p5.endShape(p5.CLOSE);
     }
-
-    if (this.text) {
-      p5.rectMode(p5.CENTER);
-      p5.fill(255);
-      p5.stroke(0);
-      p5.strokeWeight(1.5);
-      p5.rect(0, 0, this.radius * 2 - 30, 30);
-      p5.push();
-      p5.strokeWeight(1);
-      p5.fill(0);
-      p5.textAlign(p5.CENTER, p5.CENTER);
-      p5.text(this.text, 0, 0);
-      p5.pop();
-    }
-
-    this._unit?.draw(p5);
     p5.pop();
   }
 }

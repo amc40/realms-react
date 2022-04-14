@@ -124,7 +124,11 @@ class Unit {
         this.moveAlongShortestPath();
       }
     }
-    this.remainingMovementPoints = this.movementPoints;
+    if (this.state === State.FOLLOWING_ORDERS) {
+      this.remainingMovementPoints += this.movementPoints;
+    } else {
+      this.remainingMovementPoints = this.movementPoints;
+    }
   }
 
   selectCurrentMovementTarget() {
@@ -166,7 +170,7 @@ class Unit {
           moveAugmentedShortestPath[
             moveAugmentedShortestPath.length - 1
           ].nMoves = nMoves;
-          simulatedRemainingMoves = this.movementPoints - cost;
+          simulatedRemainingMoves += this.movementPoints - cost;
         } else {
           simulatedRemainingMoves -= cost;
         }

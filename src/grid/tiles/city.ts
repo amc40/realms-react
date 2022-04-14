@@ -1,6 +1,10 @@
 import City from "../../cities/city";
 import Player from "../../players/player";
-import { getNoResources } from "../../resources";
+import {
+  AllResourceTypes,
+  getNoResources,
+  ResourceQuantity,
+} from "../../resources";
 import HexTile from "../hex-tile";
 
 class CityTile extends HexTile {
@@ -8,6 +12,7 @@ class CityTile extends HexTile {
   private readonly openCityModal: (city: City) => void;
   private static readonly resources = getNoResources();
   private readonly city: City;
+  private resources: ResourceQuantity = {};
 
   constructor(
     radius: number,
@@ -28,6 +33,17 @@ class CityTile extends HexTile {
     );
     this.city = city;
     this.openCityModal = openCityModal;
+  }
+
+  public addResources(resourceQuantity: ResourceQuantity) {
+    for (let resourceStr in Object.keys(resourceQuantity)) {
+      const resource = resourceStr as AllResourceTypes;
+      if (this.resources[resource] != null) {
+        this.resources[resource]! += resourceQuantity[resource]!;
+      } else {
+        this.resources[resource] = resourceQuantity[resource];
+      }
+    }
   }
 
   public onClick(): void {

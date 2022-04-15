@@ -93,6 +93,10 @@ class Unit {
     this.selectingMovement = !this.selectingMovement;
   }
 
+  stopSelectingMovement() {
+    this.selectingMovement = false;
+  }
+
   requiresOrders() {
     return this.state === State.WAITING_FOR_ORDERS && this.movementPoints > 0;
   }
@@ -132,15 +136,43 @@ class Unit {
    * Get the tiles which are reachable using this turn's remaining movement points
    */
   getReachableTiles() {
-    if (this.currentTile == null) {
+    const currentTile = this.currentTile;
+    if (currentTile == null) {
       return [];
     }
-    return this.getReachableTilesRecursive(
-      null,
-      this.currentTile,
-      0,
-      new Set<HexTile>()
-    );
+    let reachable: HexTile[] = [currentTile];
+    let toConsider: {
+      prevTile: HexTile;
+      tile: HexTile;
+      costSoFar: number;
+    }[] = currentTile.getNeighbours().map((tile) => ({
+      prevTile: currentTile,
+      tile,
+      costSoFar: 0,
+    }));
+    const visitedSet = new Set<HexTile>();
+    while (toConsider.length > 1) {
+      const { prevTile, tile, costSoFar } = toConsider.shift()!;
+      const additionalMovementCost = prevTile.movementCostTo(tile);
+      if (
+        visitedSet.has(tile) ||
+        additionalMovementCost == null ||
+        costSoFar + additionalMovementCost > this.remainingMovementPoints
+      ) {
+        continue;
+      }
+      visitedSet.add(tile);
+      reachable.push(tile);
+      const totalCost = costSoFar + additionalMovementCost;
+      for (let neighbour of tile.getNeighbours()) {
+        toConsider.push({
+          prevTile: tile,
+          tile: neighbour,
+          costSoFar: totalCost,
+        });
+      }
+    }
+    return reachable;
   }
 
   private moveAlongShortestPath() {

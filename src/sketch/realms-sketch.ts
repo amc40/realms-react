@@ -83,7 +83,17 @@ class RealmsSketch extends p5 {
   }
 
   handleUnitMove() {
-    this.hexagonalGrid!.getCurrentSelectedUnit()?.toggleSelectingMovement();
+    if (this.isUnitMoveSelected()) {
+      this.hexagonalGrid!.getCurrentSelectedUnit()!.stopSelectingMovement();
+    } else {
+      this.clearAllUnitActionSelections();
+      this.hexagonalGrid!.getCurrentSelectedUnit()!.toggleSelectingMovement();
+    }
+  }
+
+  clearAllUnitActionSelections() {
+    this.hexagonalGrid!.getCurrentSelectedUnit()?.stopSelectingMovement();
+    this.getCurrentSelectedMillitaryUnit()?.stopSelectingAttackTarget();
   }
 
   handleUnitSleep() {}
@@ -100,7 +110,12 @@ class RealmsSketch extends p5 {
   }
 
   handleUnitAttack() {
-    this.getCurrentSelectedMillitaryUnit()?.toggleSelectingAttackTarget();
+    if (this.isAttackSelected()) {
+      this.getCurrentSelectedMillitaryUnit()?.toggleSelectingAttackTarget();
+    } else {
+      this.clearAllUnitActionSelections();
+      this.getCurrentSelectedMillitaryUnit()?.toggleSelectingAttackTarget();
+    }
   }
 
   handleNextTurn() {

@@ -20,6 +20,9 @@ class MillitaryUnit extends Unit {
   public toggleSelectingAttackTarget() {
     this.selectingAttackTarget = !this.selectingAttackTarget;
   }
+  public stopSelectingAttackTarget() {
+    this.selectingAttackTarget = false;
+  }
 
   public draw(p5: p5) {
     super.draw(p5);

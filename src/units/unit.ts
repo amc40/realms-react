@@ -1,12 +1,11 @@
 import p5 from "p5";
-import HexagonalGrid from "../grid/hex-grid";
+import Map from "../grid/hex-grid";
 import HexTile from "../grid/hex-tile";
 import ShortestPath from "../utils/shortest-path";
 
 enum State {
   WAITING_FOR_ORDERS,
   FOLLOWING_ORDERS,
-  SELECTING_MOVEMENT,
 }
 
 export type AugmentedTile = {
@@ -22,12 +21,13 @@ class Unit {
   // TODO: maybe add a temp target so can cancel ordering movement
   private _movementTarget: HexTile | null = null;
   readonly hexTileShortestPath = new ShortestPath<HexTile>(
-    HexagonalGrid.distBetweenHexTileNodes
+    Map.distBetweenHexTileNodes
   );
   private _shortestPathToTarget: HexTile[] | null = null;
   private state: State = State.WAITING_FOR_ORDERS;
   readonly movementPoints;
   private remainingMovementPoints: number;
+  private selectingMovement = false;
 
   constructor(p5: p5, movementPoints: number) {
     this.unselectedImage = p5.loadImage(
@@ -43,6 +43,10 @@ class Unit {
   toggleSelected() {
     this.selected = !this.selected;
     return this.selected;
+  }
+
+  unselect() {
+    this.selected = false;
   }
 
   set movementTarget(movementTarget: HexTile | null) {
@@ -74,7 +78,7 @@ class Unit {
   }
 
   havingMovementSelected() {
-    return this.state === State.SELECTING_MOVEMENT;
+    return this.selectingMovement;
   }
 
   private checkIfReachedTarget() {
@@ -83,8 +87,8 @@ class Unit {
     }
   }
 
-  startSelectingMovement() {
-    this.state = State.SELECTING_MOVEMENT;
+  toggleSelectingMovement() {
+    this.selectingMovement = !this.selectingMovement;
   }
 
   requiresOrders() {
@@ -134,7 +138,7 @@ class Unit {
   selectCurrentMovementTarget() {
     // already have the current target set, just move along that path and set state to
     // FOLLOWING_ORDERS, or WAITING_FOR_ORDERS if reached target
-    if (this._shortestPathToTarget != null) {
+    if (this.shortestPathToTarget != null) {
       this.state = State.FOLLOWING_ORDERS;
       this.moveAlongShortestPath();
     } else if (this.remainingMovementPoints > 0) {
@@ -143,6 +147,7 @@ class Unit {
       // TODO: ensure that at the end of the turn we update the state to WAITING_FOR_ORDERS
       this.state = State.FOLLOWING_ORDERS;
     }
+    return this.currentTile;
   }
 
   get shortestPathToTarget() {

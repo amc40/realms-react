@@ -3,7 +3,7 @@ import City from "../cities/city";
 import Empire from "../empires/empire";
 import Player from "../players/player";
 import Unit from "../units/unit";
-import HexagonalGrid, { CubeCoordinate, OffsetCoordinate } from "./hex-grid";
+import Map, { CubeCoordinate, OffsetCoordinate } from "./hex-grid";
 import HexTile from "./hex-tile";
 import CityTile from "./tiles/city";
 import DesertTile from "./tiles/desert";
@@ -223,7 +223,7 @@ class MapGenerator {
     nRows: number,
     nCols: number,
     p5: p5
-  ): HexagonalGrid {
+  ): Map {
     const radius = MapGenerator.getRadius(width, height, nRows, nCols);
     // random initial tile type
     const initialTileType =
@@ -266,7 +266,7 @@ class MapGenerator {
 
     const unit = new Unit(p5, 2);
 
-    const hexGrid = new HexagonalGrid(
+    const hexGrid = new Map(
       width,
       height,
       x,

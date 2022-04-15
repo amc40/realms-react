@@ -1,20 +1,37 @@
 import p5 from "p5";
+import CircularButton from "../assets/circular-button";
 import NextTurn from "../assets/next-turn";
 import City from "../cities/city";
-import HexagonalGrid from "../grid/hex-grid";
+import Map from "../grid/hex-grid";
 import MapGenerator from "../grid/map-generation";
 import Unit from "../units/unit";
 import { MouseButton } from "../utils/mouse-events";
+import { getSpacing } from "../utils/spacing";
+
+type UnitActionButtons = {
+  attackButton: CircularButton;
+  moveButton: CircularButton;
+  sleepButton: CircularButton;
+};
 
 class RealmsSketch extends p5 {
-  private hexagonalGrid: HexagonalGrid | null = null;
+  private hexagonalGrid: Map | null = null;
   private nextTurnIndicator = new NextTurn(() => this.handleNextTurn());
   private openCityModal: (city: City) => void;
-  selectedUnit: Unit | null = null;
+  private unitActionButtions: UnitActionButtons | null = null;
+  private moveIcon: p5.Image | null = null;
+  private attackIcon: p5.Image | null = null;
+  private sleepIcon: p5.Image | null = null;
 
   constructor(canvasElement: HTMLElement, openCityModal: (city: City) => void) {
     super(() => {}, canvasElement);
     this.openCityModal = openCityModal;
+  }
+
+  preload(): void {
+    this.moveIcon = this.loadImage("/assets/button-icons/move.png");
+    this.attackIcon = this.loadImage("/assets/button-icons/battle.png");
+    this.sleepIcon = this.loadImage("/assets/button-icons/sleep.png");
   }
 
   setup(): void {
@@ -29,7 +46,48 @@ class RealmsSketch extends p5 {
       20,
       this
     );
+    const unitActionButtonX = getSpacing(this.width / 2, 100, 3);
+    const unitActionButtonRadius = 30;
+    const unitActionButtonY = this.height - unitActionButtonRadius - 50;
+
+    this.unitActionButtions = {
+      attackButton: new CircularButton(
+        () => this.handleUnitAttack(),
+        unitActionButtonX[0],
+        unitActionButtonY,
+        unitActionButtonRadius,
+        this,
+        this.attackIcon!
+      ),
+      moveButton: new CircularButton(
+        () => this.handleUnitMove(),
+        unitActionButtonX[1],
+        unitActionButtonY,
+        unitActionButtonRadius,
+        this,
+        this.moveIcon!
+      ),
+      sleepButton: new CircularButton(
+        () => this.handleUnitSleep(),
+        unitActionButtonX[2],
+        unitActionButtonY,
+        unitActionButtonRadius,
+        this,
+        this.sleepIcon!
+      ),
+    };
+    Object.values(this.unitActionButtions!).forEach((button) =>
+      button.setVisible()
+    );
   }
+
+  handleUnitMove() {
+    this.hexagonalGrid!.getCurrentSelectedUnit()?.toggleSelectingMovement();
+  }
+
+  handleUnitSleep() {}
+
+  handleUnitAttack() {}
 
   handleNextTurn() {
     this.hexagonalGrid?.handleNextTurn();
@@ -45,7 +103,10 @@ class RealmsSketch extends p5 {
 
   mouseClicked(event: MouseEvent): void {
     if (event.button === MouseButton.LEFT) {
-      this.nextTurnIndicator.handleClick(this, this.mouseX, this.mouseY) ||
+      Object.values(this.unitActionButtions!).some((button) =>
+        button.handleClick(this, this.mouseX, this.mouseY)
+      ) ||
+        this.nextTurnIndicator.handleClick(this, this.mouseX, this.mouseY) ||
         this.hexagonalGrid?.handleClick(this.mouseX, this.mouseY);
     }
   }
@@ -54,6 +115,10 @@ class RealmsSketch extends p5 {
 
   mouseWheel(e: WheelEvent): boolean {
     return this.hexagonalGrid!.handleMouseWheel(e, this.mouseX, this.mouseY);
+  }
+
+  isUnitMoveSelected() {
+    return this.hexagonalGrid!.getCurrentSelectedUnit()?.havingMovementSelected();
   }
 
   draw(): void {
@@ -69,6 +134,12 @@ class RealmsSketch extends p5 {
     }
     this.background(0);
     this.hexagonalGrid!.draw(this);
+    if (this.hexagonalGrid!.getCurrentSelectedUnit() != null) {
+      console.log(this.unitActionButtions);
+      this.unitActionButtions?.attackButton.draw(this);
+      this.unitActionButtions?.moveButton.draw(this, this.isUnitMoveSelected());
+      this.unitActionButtions?.sleepButton.draw(this);
+    }
     this.nextTurnIndicator.draw(this);
   }
 }

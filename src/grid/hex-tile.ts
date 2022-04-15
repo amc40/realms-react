@@ -89,8 +89,7 @@ abstract class HexTile extends RegularHexagon {
   handleDelelected() {
     // TODO: deselect unit
     if (this.unit) {
-      this.unit.toggleSelected();
-      this.unit = null;
+      this.unit.unselect();
     }
   }
 

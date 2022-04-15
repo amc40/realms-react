@@ -115,7 +115,7 @@ export class OffsetCoordinate {
   }
 }
 
-class HexagonalGrid {
+class Map {
   private readonly x: number;
   private readonly y: number;
   private readonly width: number;
@@ -161,7 +161,7 @@ class HexagonalGrid {
   addGridEdges() {
     for (let row = 0; row < this.nRows; row++) {
       for (let col = 0; col < this.nCols; col++) {
-        for (let neighbourOffsetCoord of HexagonalGrid.getNeighbourOffsetCoords(
+        for (let neighbourOffsetCoord of Map.getNeighbourOffsetCoords(
           row,
           col,
           this.nRows,
@@ -240,7 +240,7 @@ class HexagonalGrid {
     return hexTile1CubeCoord.diff(hexTile2CubeCoord).totalCoordMag();
   }
 
-  private getCurrentSelectedUnit(): Unit | null {
+  getCurrentSelectedUnit(): Unit | null {
     return this.currentSelectedTile?.getCurrentSelectedUnit() ?? null;
   }
 
@@ -263,11 +263,16 @@ class HexagonalGrid {
 
   handleNextTurn() {
     this.units.forEach((unit) => unit.handleNextTurn());
+    this.currentSelectedTile?.handleDelelected();
+    this.currentSelectedTile = null;
   }
 
   public handleMouseMove(mouseScreenX: number, mouseScreenY: number) {
     const currentSelectedUnit = this.getCurrentSelectedUnit();
-    if (currentSelectedUnit != null) {
+    if (
+      currentSelectedUnit != null &&
+      currentSelectedUnit.havingMovementSelected()
+    ) {
       const mouseX = (mouseScreenX - this.xPan) / this.scale;
       const mouseY = (mouseScreenY - this.yPan) / this.scale;
       if (this.mouseXYInBounds(mouseX, mouseY)) {
@@ -292,7 +297,9 @@ class HexagonalGrid {
         currentSelectedUnit.havingMovementSelected()
       ) {
         // if selecting the movement then keep selection
-        currentSelectedUnit.selectCurrentMovementTarget();
+        this.currentSelectedTile =
+          currentSelectedUnit.selectCurrentMovementTarget();
+        currentSelectedUnit.toggleSelectingMovement();
       } else {
         const hexTile =
           this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
@@ -307,7 +314,6 @@ class HexagonalGrid {
           const currentSelectedUnit = this.getCurrentSelectedUnit();
           if (currentSelectedUnit) {
             currentSelectedUnit.selected = true;
-            currentSelectedUnit.startSelectingMovement();
           }
         } else {
           // if selecting current tile then possibly cycle through units
@@ -362,7 +368,7 @@ class HexagonalGrid {
     const row = cityTile.getRow();
     const col = cityTile.getCol();
     this.hexagonGrid[row][col] = cityTile;
-    for (let neighbourCoords of HexagonalGrid.getNeighbourOffsetCoords(
+    for (let neighbourCoords of Map.getNeighbourOffsetCoords(
       row,
       col,
       this.nRows,
@@ -471,8 +477,9 @@ class HexagonalGrid {
       this.drawAugmentedPath(p5, augmentedPath);
       console.log("drawing path");
     }
+
     p5.pop();
   }
 }
 
-export default HexagonalGrid;
+export default Map;

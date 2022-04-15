@@ -118,6 +118,14 @@ export class Node<T> {
   public clearInterimResult() {
     this.bestResultSoFar = null;
   }
+
+  public removeEdgeTo(to: Node<T>) {
+    this.outEdges = this.outEdges.filter((edge) => edge.to !== to);
+  }
+
+  public getNeighbours(): Node<T>[] {
+    return this.outEdges.map((edge) => edge.to);
+  }
 }
 
 export class WeightedDirectedEdge<T> {

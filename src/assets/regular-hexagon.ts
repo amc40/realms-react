@@ -7,19 +7,24 @@ class RegularHexagon {
   private static readonly ROT_INCREMENT_ANGLE = Math.PI / 3;
   protected readonly radius: number;
   private readonly color: RGB;
-  protected borderColor: RGB | null = null;
   private borderWidth: number;
 
   constructor(
     radius: number,
     color: RGB,
-    borderColor: RGB | null = null,
-    borderWidth: number = 1
+    borderWidth: number = 1,
   ) {
     this.radius = radius;
     this.color = color;
-    this.borderColor = borderColor;
     this.borderWidth = borderWidth;
+  }
+
+  getBorderColor(): RGB | null {
+    return null;
+  }
+
+  getInnerBorderColor(): RGB | null {
+    return null;
   }
 
   getMinWidthHeight() {
@@ -27,38 +32,41 @@ class RegularHexagon {
     return this.radius * Math.sqrt(2 / 3);
   }
 
-  public draw(p5: p5) {
-    p5.push();
-    const borderColor = this.borderColor;
-    p5.noStroke();
-    p5.fill(this.color.r, this.color.g, this.color.b);
+  private static drawHexagon(p5: p5, radius: number) {
     p5.beginShape();
     for (
       let angle = RegularHexagon.INIT_ANGLE;
       angle < 2 * Math.PI;
       angle += RegularHexagon.ROT_INCREMENT_ANGLE
     ) {
-      p5.vertex(this.radius * Math.cos(angle), this.radius * Math.sin(angle));
+      p5.vertex(radius * Math.cos(angle), radius * Math.sin(angle));
     }
     p5.endShape(p5.CLOSE);
-    p5.fill(0, 0);
+  }
 
+  public draw(p5: p5) {
+    p5.push();
+    p5.noStroke();
+    p5.fill(this.color.r, this.color.g, this.color.b);
+    RegularHexagon.drawHexagon(p5, this.radius);
+    p5.fill(0, 0);
+    const borderColor = this.getBorderColor();
     if (borderColor) {
       const borderRadius = this.radius - this.borderWidth / 2;
       p5.strokeWeight(this.borderWidth);
       p5.stroke(borderColor.r, borderColor.g, borderColor.b);
-      p5.beginShape();
-      for (
-        let angle = RegularHexagon.INIT_ANGLE;
-        angle < 2 * Math.PI;
-        angle += RegularHexagon.ROT_INCREMENT_ANGLE
-      ) {
-        p5.vertex(
-          borderRadius * Math.cos(angle),
-          borderRadius * Math.sin(angle)
-        );
-      }
-      p5.endShape(p5.CLOSE);
+      RegularHexagon.drawHexagon(p5, borderRadius);
+    }
+    const innerBorderColor = this.getInnerBorderColor();
+    if (innerBorderColor) {
+      const innerBorderRadius = this.radius - (this.borderWidth * 3) / 2;
+      p5.strokeWeight(this.borderWidth);
+      p5.stroke(
+        innerBorderColor.r,
+        innerBorderColor.g,
+        innerBorderColor.b
+      );
+      RegularHexagon.drawHexagon(p5, innerBorderRadius);
     }
     p5.pop();
   }

@@ -4,6 +4,7 @@ import p5 from "p5";
 import drawArrow from "../assets/arrow";
 import Unit, { AugmentedTile as MoveAugmentedTile } from "../units/unit";
 import CityTile from "./tiles/city";
+import MillitaryUnit from "../units/millitary/millitary-unit";
 
 export class AxialCoordinate {
   public readonly q: number;
@@ -273,13 +274,11 @@ class Map {
     ) {
       const mouseX = (mouseScreenX - this.xPan) / this.scale;
       const mouseY = (mouseScreenY - this.yPan) / this.scale;
-      if (this.mouseXYInBounds(mouseX, mouseY)) {
-        const offsetCoordinate = this.mouseXYToOffset(mouseX, mouseY);
-        if (offsetCoordinate.inBounds(this.nRows, this.nCols)) {
-          const newMovementTarget =
-            this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
-          currentSelectedUnit.movementTarget = newMovementTarget;
-        }
+      const offsetCoordinate = this.mouseXYToOffset(mouseX, mouseY);
+      if (offsetCoordinate.inBounds(this.nRows, this.nCols)) {
+        const newMovementTarget =
+          this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
+        currentSelectedUnit.movementTarget = newMovementTarget;
       }
     }
   }
@@ -358,6 +357,10 @@ class Map {
   addCityTile(cityTile: CityTile) {
     const row = cityTile.getRow();
     const col = cityTile.getCol();
+    const originalTile = this.hexagonGrid[row][col];
+    for (let unit of originalTile.getUnits()) {
+      unit.currentTile = cityTile;
+    }
     this.hexagonGrid[row][col] = cityTile;
     for (let neighbourCoords of Map.getNeighbourOffsetCoords(
       row,
@@ -370,6 +373,10 @@ class Map {
       if (!neighbourTile.hasOwner()) {
         neighbourTile.setOwner(cityTile.getOwner());
       }
+      const neighbourTileNode = neighbourTile.getNode();
+      neighbourTileNode.removeEdgeTo(originalTile.getNode());
+      neighbourTile.addNeighbour(cityTile);
+      cityTile.addNeighbour(neighbourTile);
     }
   }
 
@@ -450,6 +457,17 @@ class Map {
     p5.scale(this.scale);
     p5.push();
     p5.translate(this.horizontalDist / 2, this.radius);
+    const currentSelectedUnit = this.getCurrentSelectedUnit();
+    let currentUnitReachableTiles: HexTile[] | null = null;
+    if (
+      currentSelectedUnit instanceof MillitaryUnit &&
+      currentSelectedUnit.isSelectingAttackTarget()
+    ) {
+      currentUnitReachableTiles = currentSelectedUnit.getReachableTiles();
+      currentUnitReachableTiles.forEach((reachableTile) =>
+        reachableTile.showAsValidTarget()
+      );
+    }
     for (let row = 0; row < this.nRows; row++) {
       p5.push();
       p5.translate(this.firstOffset(row), 0);
@@ -461,13 +479,17 @@ class Map {
       p5.translate(0, this.radius * 1.5);
     }
     p5.pop();
-    const currentSelectedUnit = this.getCurrentSelectedUnit();
+
     const augmentedPath =
       currentSelectedUnit?.getMoveAugmentedShortestPathToTarget();
     if (augmentedPath != null) {
       this.drawAugmentedPath(p5, augmentedPath);
     }
-
+    if (currentUnitReachableTiles != null) {
+      currentUnitReachableTiles.forEach((reachableTile) =>
+        reachableTile.stopShowAsValidTarget()
+      );
+    }
     p5.pop();
   }
 }

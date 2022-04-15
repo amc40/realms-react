@@ -4,6 +4,7 @@ import NextTurn from "../assets/next-turn";
 import City from "../cities/city";
 import Map from "../grid/hex-grid";
 import MapGenerator from "../grid/map-generation";
+import MillitaryUnit from "../units/millitary/millitary-unit";
 import Unit from "../units/unit";
 import { MouseButton } from "../utils/mouse-events";
 import { getSpacing } from "../utils/spacing";
@@ -87,7 +88,20 @@ class RealmsSketch extends p5 {
 
   handleUnitSleep() {}
 
-  handleUnitAttack() {}
+  getCurrentSelectedMillitaryUnit(): MillitaryUnit | null {
+    const currentSelectedUnit = this.hexagonalGrid!.getCurrentSelectedUnit();
+    if (
+      currentSelectedUnit != null &&
+      currentSelectedUnit instanceof MillitaryUnit
+    ) {
+      return currentSelectedUnit;
+    }
+    return null;
+  }
+
+  handleUnitAttack() {
+    this.getCurrentSelectedMillitaryUnit()?.toggleSelectingAttackTarget();
+  }
 
   handleNextTurn() {
     this.hexagonalGrid?.handleNextTurn();
@@ -121,6 +135,10 @@ class RealmsSketch extends p5 {
     return this.hexagonalGrid!.getCurrentSelectedUnit()?.havingMovementSelected();
   }
 
+  isAttackSelected() {
+    return this.getCurrentSelectedMillitaryUnit()?.isSelectingAttackTarget();
+  }
+
   draw(): void {
     if (this.keyIsDown("A".charCodeAt(0))) {
       this.hexagonalGrid!.panX(3);
@@ -135,7 +153,7 @@ class RealmsSketch extends p5 {
     this.background(0);
     this.hexagonalGrid!.draw(this);
     if (this.hexagonalGrid!.getCurrentSelectedUnit() != null) {
-      this.unitActionButtions?.attackButton.draw(this);
+      this.unitActionButtions?.attackButton.draw(this, this.isAttackSelected());
       this.unitActionButtions?.moveButton.draw(this, this.isUnitMoveSelected());
       this.unitActionButtions?.sleepButton.draw(this);
     }

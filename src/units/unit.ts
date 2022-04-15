@@ -14,9 +14,11 @@ export type AugmentedTile = {
 };
 
 class Unit {
-  unselectedImage: p5.Image;
-  selectedImage: p5.Image;
-  selected: boolean = false;
+  protected static WIDTH = 35;
+  protected static HEIGHT = Unit.WIDTH;
+  private unselectedImage: p5.Image;
+  private selectedImage: p5.Image;
+  private selected: boolean = false;
   private _currentTile: HexTile | null = null;
   // TODO: maybe add a temp target so can cancel ordering movement
   private _movementTarget: HexTile | null = null;
@@ -93,6 +95,52 @@ class Unit {
 
   requiresOrders() {
     return this.state === State.WAITING_FOR_ORDERS && this.movementPoints > 0;
+  }
+
+  private getReachableTilesRecursive(
+    prevTile: HexTile | null,
+    tileToConsider: HexTile,
+    movementCostSoFar: number,
+    visitedSet: Set<HexTile>
+  ): HexTile[] {
+    const additionalMovementCost =
+      prevTile != null ? prevTile.movementCostTo(tileToConsider) : 0;
+    if (
+      visitedSet.has(tileToConsider) ||
+      additionalMovementCost == null ||
+      additionalMovementCost + movementCostSoFar > this.remainingMovementPoints
+    ) {
+      return [];
+    }
+    const totalMovementCost = movementCostSoFar + additionalMovementCost;
+    let reachableFromHere: HexTile[] = [tileToConsider];
+    visitedSet.add(tileToConsider);
+    for (let neighbour of tileToConsider.getNeighbours()) {
+      reachableFromHere = reachableFromHere.concat(
+        this.getReachableTilesRecursive(
+          tileToConsider,
+          neighbour,
+          totalMovementCost,
+          visitedSet
+        )
+      );
+    }
+    return reachableFromHere;
+  }
+
+  /**
+   * Get the tiles which are reachable using this turn's remaining movement points
+   */
+  getReachableTiles() {
+    if (this.currentTile == null) {
+      return [];
+    }
+    return this.getReachableTilesRecursive(
+      null,
+      this.currentTile,
+      0,
+      new Set<HexTile>()
+    );
   }
 
   private moveAlongShortestPath() {
@@ -190,9 +238,9 @@ class Unit {
   draw(p5: p5) {
     p5.imageMode(p5.CENTER);
     if (this.selected) {
-      p5.image(this.selectedImage, 0, 0, 30, 30);
+      p5.image(this.selectedImage, 0, 0, Unit.WIDTH, Unit.HEIGHT);
     } else {
-      p5.image(this.unselectedImage, 0, 0, 30, 30);
+      p5.image(this.unselectedImage, 0, 0, Unit.WIDTH, Unit.HEIGHT);
     }
   }
 }

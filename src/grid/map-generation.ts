@@ -2,6 +2,7 @@ import p5 from "p5";
 import City from "../cities/city";
 import Empire from "../empires/empire";
 import Player from "../players/player";
+import MillitaryUnit from "../units/millitary/millitary-unit";
 import Unit from "../units/unit";
 import Map, { CubeCoordinate, OffsetCoordinate } from "./hex-grid";
 import HexTile from "./hex-tile";
@@ -264,7 +265,7 @@ class MapGenerator {
       }
     }
 
-    const unit = new Unit(p5, 2);
+    const unit = new MillitaryUnit(10, 2, p5);
 
     const hexGrid = new Map(
       width,

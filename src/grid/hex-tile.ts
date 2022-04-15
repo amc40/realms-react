@@ -29,6 +29,7 @@ abstract class HexTile extends RegularHexagon {
   private readonly baseResources: ResourceQuantity;
   private readonly textWidth = this.radius * 1.4;
   private readonly textHeight = 60;
+  private _showAsValidTarget = false;
 
   constructor(
     radius: number,
@@ -40,7 +41,7 @@ abstract class HexTile extends RegularHexagon {
     owner: Player | null = null,
     text: string | null = null
   ) {
-    super(radius, color, owner?.getColor() ?? null, 3);
+    super(radius, color, 3);
     this.row = row;
     this.col = col;
     this.nMovementPoints = nMovementPoints;
@@ -55,6 +56,33 @@ abstract class HexTile extends RegularHexagon {
     if (this.units.length === 1) {
       this.currentUnit = unit;
     }
+  }
+
+  getUnits() {
+    return [...this.units];
+  }
+
+  getBorderColor(): RGB | null {
+    return this.owner?.getColor() ?? null;
+  }
+
+  getInnerBorderColor(): RGB | null {
+    if (this._showAsValidTarget) {
+      return {
+        r: 255,
+        g: 0,
+        b: 0,
+      };
+    }
+    return null;
+  }
+
+  showAsValidTarget() {
+    this._showAsValidTarget = true;
+  }
+
+  stopShowAsValidTarget() {
+    this._showAsValidTarget = false;
   }
 
   removeUnit(unitToRemove: Unit) {
@@ -77,6 +105,10 @@ abstract class HexTile extends RegularHexagon {
         neighbourHexTile.nMovementPoints
       )
     );
+  }
+
+  getNeighbours(): HexTile[] {
+    return this.node.getNeighbours().map((neighbour) => neighbour.gamePoint);
   }
 
   movementCostTo(otherHexTile: HexTile) {
@@ -121,9 +153,6 @@ abstract class HexTile extends RegularHexagon {
 
   setOwner(owner: Player | null) {
     this.owner = owner;
-    if (owner != null) {
-      this.borderColor = owner.getColor();
-    }
   }
 
   addTileImprovement(p5: p5, tileImprovementType: TileImprovementType) {
@@ -180,7 +209,10 @@ abstract class HexTile extends RegularHexagon {
       p5.pop();
     }
     this.tileImprovement?.icon.draw(p5);
+    p5.push();
+    p5.translate(0, -this.radius / 1.6);
     this.currentUnit?.draw(p5);
+    p5.pop();
   }
 }
 

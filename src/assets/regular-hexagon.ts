@@ -27,8 +27,6 @@ class RegularHexagon {
     return this.radius * Math.sqrt(2 / 3);
   }
 
-  public onClick() {}
-
   public draw(p5: p5) {
     p5.push();
     const borderColor = this.borderColor;

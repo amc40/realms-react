@@ -46,8 +46,12 @@ class CityTile extends HexTile {
     }
   }
 
-  public onClick(): void {
-    this.openCityModal(this.city);
+  public onClick(mouseRelativeX: number, mouseRelativeY: number): void {
+    if (this.intersectsWithText(mouseRelativeX, mouseRelativeY)) {
+      this.openCityModal(this.city);
+    } else {
+      super.onClick(mouseRelativeX, mouseRelativeY);
+    }
   }
 }
 

@@ -22,10 +22,13 @@ abstract class HexTile extends RegularHexagon {
   // number of movement points required to move onto the tile
   private readonly nMovementPoints: number;
   private owner: Player | null = null;
-  private _unit: Unit | null = null;
+  private units: Unit[] = [];
+  private currentUnit: Unit | null = null;
   private text: string | null;
   private tileImprovement: TileImprovement | null = null;
   private readonly baseResources: ResourceQuantity;
+  private readonly textWidth = this.radius * 1.4;
+  private readonly textHeight = 60;
 
   constructor(
     radius: number,
@@ -46,12 +49,24 @@ abstract class HexTile extends RegularHexagon {
     this.baseResources = baseResources;
   }
 
-  get unit() {
-    return this._unit;
+  addUnit(unit: Unit) {
+    console.log("adding ", unit, "to", this);
+    this.units.push(unit);
+    if (this.units.length === 1) {
+      this.currentUnit = unit;
+    }
   }
 
-  set unit(unit: Unit | null) {
-    this._unit = unit;
+  removeUnit(unitToRemove: Unit) {
+    console.log("removing unit", unitToRemove, "from", this);
+    this.units = this.units.filter((unit) => unit !== unitToRemove);
+    if (this.currentUnit === unitToRemove) {
+      if (this.units.length > 0) {
+        this.currentUnit = this.units[0];
+      } else {
+        this.currentUnit = null;
+      }
+    }
   }
 
   addNeighbour(neighbourHexTile: HexTile) {
@@ -81,33 +96,19 @@ abstract class HexTile extends RegularHexagon {
     return this.node;
   }
 
+  public onClick(relativeMouseX: number, relativeMouseY: number): void {
+    // cycle through units by default
+    if (this.currentUnit === null) {
+      this.currentUnit = this.units[0];
+    } else {
+      const currentUnitIndex = this.units.indexOf(this.currentUnit);
+      this.currentUnit = this.units[(currentUnitIndex + 1) % this.units.length];
+    }
+  }
+
   getCurrentSelectedUnit() {
     // TODO: iterate through units using next and deselect
-    return this.unit;
-  }
-
-  handleDelelected() {
-    // TODO: deselect unit
-    if (this.unit) {
-      this.unit.unselect();
-    }
-  }
-
-  handleReselected() {
-    // TODO: cycle through units
-  }
-
-  removeUnit(unit: Unit) {
-    if (this.unit === unit) {
-      this.unit = null;
-    }
-  }
-
-  addUnit(unit: Unit) {
-    if (this.unit != null) {
-      console.warn("possibly lossy remove of unit when adding another");
-    }
-    this.unit = unit;
+    return this.currentUnit;
   }
 
   hasOwner() {
@@ -134,6 +135,34 @@ abstract class HexTile extends RegularHexagon {
     return this.baseResources;
   }
 
+  minTextX() {
+    return -this.textWidth / 2;
+  }
+
+  maxTextX() {
+    return this.textWidth / 2;
+  }
+
+  minTextY() {
+    return -this.textHeight / 2;
+  }
+
+  maxTextY() {
+    return this.textHeight / 2;
+  }
+
+  protected intersectsWithText(
+    xRelativeCentre: number,
+    yRelativeCentre: number
+  ): boolean {
+    return (
+      xRelativeCentre >= this.minTextX() &&
+      xRelativeCentre <= this.maxTextX() &&
+      yRelativeCentre >= this.minTextY() &&
+      yRelativeCentre <= this.maxTextY()
+    );
+  }
+
   public draw(p5: p5): void {
     super.draw(p5);
     if (this.text) {
@@ -141,16 +170,17 @@ abstract class HexTile extends RegularHexagon {
       p5.fill(255);
       p5.stroke(0);
       p5.strokeWeight(1.5);
-      p5.rect(0, 0, this.radius * 2 - 30, 30);
+      p5.rect(0, 0, this.textWidth, this.textHeight);
       p5.push();
       p5.strokeWeight(1);
       p5.fill(0);
       p5.textAlign(p5.CENTER, p5.CENTER);
+      p5.textSize(26);
       p5.text(this.text, 0, 0);
       p5.pop();
     }
     this.tileImprovement?.icon.draw(p5);
-    this._unit?.draw(p5);
+    this.currentUnit?.draw(p5);
   }
 }
 

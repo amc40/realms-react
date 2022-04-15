@@ -224,7 +224,7 @@ class MapGenerator {
     nCols: number,
     p5: p5
   ): Map {
-    const radius = MapGenerator.getRadius(width, height, nRows, nCols);
+    const radius = 100;
     // random initial tile type
     const initialTileType =
       tileTypes[Math.floor(Math.random() * tileTypes.length)];

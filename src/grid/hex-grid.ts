@@ -130,7 +130,7 @@ class Map {
   private yPan = 0;
   private scale = 1;
 
-  private currentSelectedTile: HexTile | null = null;
+  private currentSelectedUnit: Unit | null = null;
   private units: Unit[] = [];
 
   private static getNeighbourOffsetCoords(
@@ -241,7 +241,7 @@ class Map {
   }
 
   getCurrentSelectedUnit(): Unit | null {
-    return this.currentSelectedTile?.getCurrentSelectedUnit() ?? null;
+    return this.currentSelectedUnit;
   }
 
   inBounds(row: number, col: number) {
@@ -256,15 +256,13 @@ class Map {
   }
 
   private addUnitToTile(unit: Unit, hexTile: HexTile) {
-    hexTile.addUnit(unit);
     unit.currentTile = hexTile;
     this.units.push(unit);
   }
 
   handleNextTurn() {
     this.units.forEach((unit) => unit.handleNextTurn());
-    this.currentSelectedTile?.handleDelelected();
-    this.currentSelectedTile = null;
+    this.currentSelectedUnit = null;
   }
 
   public handleMouseMove(mouseScreenX: number, mouseScreenY: number) {
@@ -286,7 +284,11 @@ class Map {
     }
   }
 
-  public handleClick(mouseScreenX: number, mouseScreenY: number): boolean {
+  public handleClick(
+    p5: p5,
+    mouseScreenX: number,
+    mouseScreenY: number
+  ): boolean {
     const mouseX = (mouseScreenX - this.xPan) / this.scale;
     const mouseY = (mouseScreenY - this.yPan) / this.scale;
     const offsetCoordinate = this.mouseXYToOffset(mouseX, mouseY);
@@ -296,29 +298,18 @@ class Map {
         currentSelectedUnit != null &&
         currentSelectedUnit.havingMovementSelected()
       ) {
-        // if selecting the movement then keep selection
-        this.currentSelectedTile =
-          currentSelectedUnit.selectCurrentMovementTarget();
+        currentSelectedUnit.selectCurrentMovementTarget();
         currentSelectedUnit.toggleSelectingMovement();
       } else {
         const hexTile =
           this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
-        // if selecting another tile then deselect the current one
-        // and select the one clicked
-        if (hexTile !== this.currentSelectedTile) {
-          if (this.currentSelectedTile != null) {
-            this.currentSelectedTile.handleDelelected();
-          }
-          this.currentSelectedTile = hexTile;
-          this.currentSelectedTile.onClick();
-          const currentSelectedUnit = this.getCurrentSelectedUnit();
-          if (currentSelectedUnit) {
-            currentSelectedUnit.selected = true;
-          }
-        } else {
-          // if selecting current tile then possibly cycle through units
-          this.currentSelectedTile.handleReselected();
-        }
+        const hexCentreX = this.getHexCentreX(hexTile);
+        const hexCentreY = this.getHexCentreY(hexTile);
+        const mouseRelativeToCentre = p5
+          .createVector(mouseX, mouseY)
+          .sub(hexCentreX, hexCentreY);
+        hexTile.onClick(mouseRelativeToCentre.x, mouseRelativeToCentre.y);
+        this.currentSelectedUnit = hexTile.getCurrentSelectedUnit();
       }
       // return true if processed click
       return true;
@@ -475,7 +466,6 @@ class Map {
       currentSelectedUnit?.getMoveAugmentedShortestPathToTarget();
     if (augmentedPath != null) {
       this.drawAugmentedPath(p5, augmentedPath);
-      console.log("drawing path");
     }
 
     p5.pop();

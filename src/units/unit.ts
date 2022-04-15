@@ -96,7 +96,6 @@ class Unit {
   }
 
   private moveAlongShortestPath() {
-    console.log("moving along shortest path");
     if (
       this.currentTile != null &&
       this.shortestPathToTarget != null &&
@@ -112,7 +111,6 @@ class Unit {
           this.currentTile.movementCostTo(nextTile)!;
         this.currentTile = nextTile;
         this.shortestPathToTarget.shift();
-        console.log("moved to", this.currentTile);
         nextTile =
           this.shortestPathToTarget.length > 1
             ? this.shortestPathToTarget[1]
@@ -161,7 +159,6 @@ class Unit {
     ) {
       let nMoves = 0;
       let prevTile = this.shortestPathToTarget[0];
-      console.log("initial tile", prevTile);
       let simulatedRemainingMoves = this.remainingMovementPoints;
       let moveAugmentedShortestPath: AugmentedTile[] = [];
       moveAugmentedShortestPath.push({

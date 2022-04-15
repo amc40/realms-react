@@ -107,7 +107,7 @@ class RealmsSketch extends p5 {
         button.handleClick(this, this.mouseX, this.mouseY)
       ) ||
         this.nextTurnIndicator.handleClick(this, this.mouseX, this.mouseY) ||
-        this.hexagonalGrid?.handleClick(this.mouseX, this.mouseY);
+        this.hexagonalGrid?.handleClick(this, this.mouseX, this.mouseY);
     }
   }
 
@@ -135,7 +135,6 @@ class RealmsSketch extends p5 {
     this.background(0);
     this.hexagonalGrid!.draw(this);
     if (this.hexagonalGrid!.getCurrentSelectedUnit() != null) {
-      console.log(this.unitActionButtions);
       this.unitActionButtions?.attackButton.draw(this);
       this.unitActionButtions?.moveButton.draw(this, this.isUnitMoveSelected());
       this.unitActionButtions?.sleepButton.draw(this);

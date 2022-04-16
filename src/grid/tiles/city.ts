@@ -12,7 +12,6 @@ class CityTile extends HexTile {
   private readonly openCityModal: (city: City) => void;
   private static readonly resources = getNoResources();
   private readonly city: City;
-  private resources: ResourceQuantity = {};
 
   constructor(
     radius: number,
@@ -36,14 +35,7 @@ class CityTile extends HexTile {
   }
 
   public addResources(resourceQuantity: ResourceQuantity) {
-    for (let resourceStr in Object.keys(resourceQuantity)) {
-      const resource = resourceStr as AllResourceTypes;
-      if (this.resources[resource] != null) {
-        this.resources[resource]! += resourceQuantity[resource]!;
-      } else {
-        this.resources[resource] = resourceQuantity[resource];
-      }
-    }
+    this.city.addResources(resourceQuantity);
   }
 
   public onClick(mouseRelativeX: number, mouseRelativeY: number): void {

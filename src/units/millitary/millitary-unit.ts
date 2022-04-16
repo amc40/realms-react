@@ -1,15 +1,22 @@
 import p5 from "p5";
+import Player from "../../players/player";
 import Unit from "../unit";
 
 class MillitaryUnit extends Unit {
   private static readonly HEALTH_BAR_WIDTH = 30;
   private static readonly HEALTH_BAR_HEIGHT = 5;
   private readonly strength: number;
-  private readonly health = 50;
+  private health = 50;
   private selectingAttackTarget = false;
 
-  constructor(strength: number, movementPoints: number, p5: p5) {
-    super(p5, movementPoints);
+  constructor(
+    strength: number,
+    movementPoints: number,
+    p5: p5,
+    owner: Player,
+    onKilled: (unit: Unit) => void
+  ) {
+    super(p5, movementPoints, owner, onKilled);
     this.strength = strength;
   }
 
@@ -22,6 +29,105 @@ class MillitaryUnit extends Unit {
   }
   public stopSelectingAttackTarget() {
     this.selectingAttackTarget = false;
+  }
+
+  private static getDamage(
+    attackingUnit: MillitaryUnit,
+    defendingUnit: MillitaryUnit
+  ): number {
+    const strengthRatio = attackingUnit.strength / defendingUnit.strength;
+    // TODO: add randomness
+    // need 3x strength to have guaranteed kill
+    const damage = (strengthRatio / 3) * 100;
+    return damage;
+  }
+
+  /**
+   *
+   * @param attackingUnit the unit that is attacking
+   * @param defendingUnit the unit which is defending
+   * @returns true if the attack was successful, false otherwise.
+   */
+  private static simulateMeleeAttack(
+    attackingUnit: MillitaryUnit,
+    defendingUnit: Unit
+  ): boolean {
+    if (defendingUnit instanceof MillitaryUnit) {
+      const attackingDamage = MillitaryUnit.getDamage(
+        attackingUnit,
+        defendingUnit
+      );
+      let success = false;
+      const defendingDamage = MillitaryUnit.getDamage(
+        defendingUnit,
+        attackingUnit
+      );
+      defendingUnit.health -= attackingDamage;
+      if (defendingUnit.health <= 0) {
+        defendingUnit.onKilled();
+        success = true;
+      }
+      attackingUnit.health -= defendingDamage;
+      if (attackingUnit.health <= 0) {
+        attackingUnit.onKilled();
+        success = false;
+      }
+
+      return success;
+    } else {
+      // automatically convert undefended civilian units
+      return true;
+    }
+  }
+
+  /**
+   * Melee attack a given target unit.
+   * Note: the target unit should be within range with the current move's remaining movement points.
+   * @param unit the unit to attack.
+   */
+  meleeAttack(unit: Unit) {
+    const shortesPathToUnit = this.hexTileShortestPath.getShortestPath(
+      this.currentTile!.getNode(),
+      unit.currentTile!.getNode()
+    );
+    if (shortesPathToUnit == null) {
+      console.warn(
+        this,
+        "could not find path to",
+        unit,
+        "when trying to attack"
+      );
+      return;
+    }
+    const { minCost, path } = shortesPathToUnit;
+    if (minCost > this.remainingMovementPoints) {
+      console.warn(
+        this,
+        "could not find path below",
+        minCost,
+        "to",
+        unit,
+        "when trying to attack"
+      );
+      return;
+    }
+    if (path.length < 2) {
+      console.warn("path appears to show that", this, "is already on", unit);
+    }
+    // move to the tile adjacent to the target unit
+    this.movementTarget = path[path.length - 2];
+    this.moveAlongShortestPath();
+    if (MillitaryUnit.simulateMeleeAttack(this, unit)) {
+      // battle was a success -- advance to the target tile
+      const takenTile = unit.currentTile;
+      this.currentTile = takenTile;
+      // and capture any civilian units on it
+      takenTile?.getUnits().forEach((unit) => {
+        if (!(unit instanceof MillitaryUnit)) {
+          unit.owner = this.owner;
+        }
+      });
+    }
   }
 
   public draw(p5: p5) {

@@ -1,1 +1,1 @@
-export type BasicResourceTypes = "food" | "production" | "culture";
+export type BasicResourceTypes = "food" | "production" | "population";

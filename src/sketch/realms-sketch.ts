@@ -2,8 +2,11 @@ import p5 from "p5";
 import CircularButton from "../assets/circular-button";
 import NextTurn from "../assets/next-turn";
 import City from "../cities/city";
+import { Empires } from "../empires/empire";
 import Map from "../grid/hex-grid";
 import MapGenerator from "../grid/map-generation";
+import Player from "../players/player";
+import Resources from "../resources";
 import MillitaryUnit from "../units/millitary/millitary-unit";
 import Unit from "../units/unit";
 import { MouseButton } from "../utils/mouse-events";
@@ -23,6 +26,10 @@ class RealmsSketch extends p5 {
   private moveIcon: p5.Image | null = null;
   private attackIcon: p5.Image | null = null;
   private sleepIcon: p5.Image | null = null;
+  private empires: Empires | null = null;
+  private allPlayers: Player[] = [];
+  private humanPlayer: Player | null = null;
+  resources: Resources | null = null;
 
   constructor(canvasElement: HTMLElement, openCityModal: (city: City) => void) {
     super(() => {}, canvasElement);
@@ -33,10 +40,17 @@ class RealmsSketch extends p5 {
     this.moveIcon = this.loadImage("/assets/button-icons/move.png");
     this.attackIcon = this.loadImage("/assets/button-icons/battle.png");
     this.sleepIcon = this.loadImage("/assets/button-icons/sleep.png");
+    this.empires = new Empires(this);
+    this.resources = new Resources(this);
   }
 
   setup(): void {
     this.createCanvas(this.windowWidth, this.windowHeight);
+    // add players
+    this.allPlayers = this.empires!.empires.slice(0, 3).map(
+      (empire) => new Player(empire)
+    );
+    this.humanPlayer = this.allPlayers[0];
     const mapGenerator = new MapGenerator(this.openCityModal);
     this.hexagonalGrid = mapGenerator.generateMap(
       this.width,
@@ -45,6 +59,7 @@ class RealmsSketch extends p5 {
       0,
       20,
       20,
+      this.allPlayers,
       this
     );
     const unitActionButtonX = getSpacing(this.width / 2, 100, 3);

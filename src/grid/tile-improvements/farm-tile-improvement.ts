@@ -13,7 +13,7 @@ class FarmTileImprovementIcon extends TileImprovementIcon {
 
 class FarmTileImprovement extends TileImprovement {
   static readonly resourceYield: ResourceQuantity = {
-    culture: 1,
+    food: 2,
   };
 
   constructor(p5: p5) {

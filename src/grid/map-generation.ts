@@ -1,6 +1,5 @@
 import p5 from "p5";
 import City from "../cities/city";
-import Empire from "../empires/empire";
 import Player from "../players/player";
 import MillitaryUnit from "../units/millitary/millitary-unit";
 import Unit from "../units/unit";
@@ -216,6 +215,46 @@ class MapGenerator {
     throw new Error(`Invalid probability distribution: ${probabilities}`);
   }
 
+  private static getRandomRow(map: Map) {
+    return Math.floor(Math.random() * map.nRows);
+  }
+
+  private static getRandomCol(map: Map) {
+    return Math.floor(Math.random() * map.nCols);
+  }
+
+  private addPlayers(
+    map: Map,
+    players: Player[],
+    nCities: number,
+    tileRadius: number,
+    p5: p5
+  ) {
+    for (let player of players) {
+      const unit = new MillitaryUnit(10, 2, p5, player, (unit: Unit) =>
+        map.onUnitKilled(unit)
+      );
+      map.addUnit(
+        unit,
+        MapGenerator.getRandomRow(map),
+        MapGenerator.getRandomCol(map)
+      );
+      for (let cityN = 0; cityN < nCities; cityN++) {
+        const cityRow = MapGenerator.getRandomRow(map);
+        const cityCol = MapGenerator.getRandomCol(map);
+        map.addCityTile(
+          new CityTile(
+            tileRadius,
+            cityRow,
+            cityCol,
+            new City("City " + (cityN + 1), player),
+            this.openCityModal
+          )
+        );
+      }
+    }
+  }
+
   generateMap(
     width: number,
     height: number,
@@ -223,6 +262,7 @@ class MapGenerator {
     y: number,
     nRows: number,
     nCols: number,
+    players: Player[],
     p5: p5
   ): Map {
     const radius = 100;
@@ -264,9 +304,6 @@ class MapGenerator {
         }
       }
     }
-
-    const unit = new MillitaryUnit(10, 2, p5);
-
     const hexGrid = new Map(
       width,
       height,
@@ -277,29 +314,7 @@ class MapGenerator {
       radius,
       hexagonGrid
     );
-    hexGrid.addUnit(unit, 0, 0);
-    for (let cityN = 0; cityN < 3; cityN++) {
-      const randomRow = Math.floor(Math.random() * nRows);
-      const randomCol = Math.floor(Math.random() * nCols);
-      hexGrid.addCityTile(
-        new CityTile(
-          radius,
-          randomRow,
-          randomCol,
-          new City(
-            "City " + (cityN + 1),
-            new Player(
-              new Empire({
-                r: 255,
-                g: 0,
-                b: 0,
-              })
-            )
-          ),
-          this.openCityModal
-        )
-      );
-    }
+    this.addPlayers(hexGrid, players, 3, radius, p5);
     hexagonGrid[1][1].addTileImprovement(p5, "mine");
     return hexGrid;
   }

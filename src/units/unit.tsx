@@ -1,6 +1,8 @@
 import p5 from "p5";
+import { ProductionItem } from "../cities/production";
 import Map from "../grid/hex-grid";
 import HexTile from "../grid/hex-tile";
+import Player from "../players/player";
 import ShortestPath from "../utils/shortest-path";
 
 enum State {
@@ -28,18 +30,23 @@ class Unit {
   private _shortestPathToTarget: HexTile[] | null = null;
   private state: State = State.WAITING_FOR_ORDERS;
   readonly movementPoints;
-  private remainingMovementPoints: number;
+  protected remainingMovementPoints: number;
   private selectingMovement = false;
+  owner: Player;
+  readonly _onKilled: (unit: Unit) => void;
 
-  constructor(p5: p5, movementPoints: number) {
-    this.unselectedImage = p5.loadImage(
-      "assets/shields/shield-blue-unselected.png"
-    );
-    this.selectedImage = p5.loadImage(
-      "assets/shields/shield-blue-selected.png"
-    );
+  constructor(
+    p5: p5,
+    movementPoints: number,
+    owner: Player,
+    onKilled: (unit: Unit) => void
+  ) {
+    this.unselectedImage = owner.empire.shieldUnselectedIcon;
+    this.selectedImage = owner.empire.shieldSelectedIcon;
     this.movementPoints = movementPoints;
     this.remainingMovementPoints = movementPoints;
+    this.owner = owner;
+    this._onKilled = onKilled;
   }
 
   toggleSelected() {
@@ -47,8 +54,16 @@ class Unit {
     return this.selected;
   }
 
+  select() {
+    this.selected = true;
+  }
+
   unselect() {
     this.selected = false;
+  }
+
+  onKilled() {
+    this._onKilled(this);
   }
 
   set movementTarget(movementTarget: HexTile | null) {
@@ -101,37 +116,6 @@ class Unit {
     return this.state === State.WAITING_FOR_ORDERS && this.movementPoints > 0;
   }
 
-  private getReachableTilesRecursive(
-    prevTile: HexTile | null,
-    tileToConsider: HexTile,
-    movementCostSoFar: number,
-    visitedSet: Set<HexTile>
-  ): HexTile[] {
-    const additionalMovementCost =
-      prevTile != null ? prevTile.movementCostTo(tileToConsider) : 0;
-    if (
-      visitedSet.has(tileToConsider) ||
-      additionalMovementCost == null ||
-      additionalMovementCost + movementCostSoFar > this.remainingMovementPoints
-    ) {
-      return [];
-    }
-    const totalMovementCost = movementCostSoFar + additionalMovementCost;
-    let reachableFromHere: HexTile[] = [tileToConsider];
-    visitedSet.add(tileToConsider);
-    for (let neighbour of tileToConsider.getNeighbours()) {
-      reachableFromHere = reachableFromHere.concat(
-        this.getReachableTilesRecursive(
-          tileToConsider,
-          neighbour,
-          totalMovementCost,
-          visitedSet
-        )
-      );
-    }
-    return reachableFromHere;
-  }
-
   /**
    * Get the tiles which are reachable using this turn's remaining movement points
    */
@@ -175,7 +159,7 @@ class Unit {
     return reachable;
   }
 
-  private moveAlongShortestPath() {
+  protected moveAlongShortestPath() {
     if (
       this.currentTile != null &&
       this.shortestPathToTarget != null &&

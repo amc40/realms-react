@@ -1,1 +1,1 @@
-export type ExtraResourceTypes = "wheat" | "wood";
+export type ExtraResourceTypes = "iron" | "wood";

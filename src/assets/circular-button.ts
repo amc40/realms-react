@@ -10,9 +10,9 @@ class CircularButton {
   private icon: p5.Image;
   private visible: boolean;
   private static readonly selectedColor: RGB = {
-    r: 100,
-    g: 149,
-    b: 237,
+    r: 105,
+    g: 143,
+    b: 202,
   };
 
   constructor(

@@ -13,7 +13,7 @@ class MonumentTileImprovementIcon extends TileImprovementIcon {
 
 class MonumentTileImprovement extends TileImprovement {
   static readonly resourceYield: ResourceQuantity = {
-    culture: 1,
+    // culture: 1,
   };
 
   constructor(p5: p5) {

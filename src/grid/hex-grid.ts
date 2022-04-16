@@ -5,6 +5,7 @@ import drawArrow from "../assets/arrow";
 import Unit, { AugmentedTile as MoveAugmentedTile } from "../units/unit";
 import CityTile from "./tiles/city";
 import MillitaryUnit from "../units/millitary/millitary-unit";
+import Player from "../players/player";
 
 export class AxialCoordinate {
   public readonly q: number;
@@ -123,8 +124,8 @@ class Map {
   private readonly height: number;
   private readonly hexagonGrid: HexTile[][];
   private readonly radius: number;
-  private readonly nRows: number;
-  private readonly nCols: number;
+  readonly nRows: number;
+  readonly nCols: number;
   // horizontal distance between hexagon centres
   private readonly horizontalDist: number;
   private xPan = 0;
@@ -293,22 +294,41 @@ class Map {
     const offsetCoordinate = this.mouseXYToOffset(mouseX, mouseY);
     if (offsetCoordinate.inBounds(this.nRows, this.nCols)) {
       const currentSelectedUnit = this.getCurrentSelectedUnit();
+      const hexTile =
+        this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
       if (
         currentSelectedUnit != null &&
         currentSelectedUnit.havingMovementSelected()
       ) {
         currentSelectedUnit.selectCurrentMovementTarget();
         currentSelectedUnit.toggleSelectingMovement();
+      } else if (
+        currentSelectedUnit != null &&
+        currentSelectedUnit instanceof MillitaryUnit &&
+        currentSelectedUnit.isSelectingAttackTarget() &&
+        this.getAttackableTargets(currentSelectedUnit).includes(hexTile)
+      ) {
+        const enemyUnitsOnTile = hexTile.getUnits();
+        const millitaryEnemiesOnTile = enemyUnitsOnTile.filter(
+          (unit) => unit instanceof MillitaryUnit
+        );
+        const attackTarget =
+          millitaryEnemiesOnTile.length > 0
+            ? millitaryEnemiesOnTile[0]
+            : enemyUnitsOnTile[0];
+        currentSelectedUnit.meleeAttack(attackTarget);
       } else {
-        const hexTile =
-          this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
         const hexCentreX = this.getHexCentreX(hexTile);
         const hexCentreY = this.getHexCentreY(hexTile);
         const mouseRelativeToCentre = p5
           .createVector(mouseX, mouseY)
           .sub(hexCentreX, hexCentreY);
         hexTile.onClick(mouseRelativeToCentre.x, mouseRelativeToCentre.y);
+        if (this.currentSelectedUnit != null) {
+          this.currentSelectedUnit.unselect();
+        }
         this.currentSelectedUnit = hexTile.getCurrentSelectedUnit();
+        this.currentSelectedUnit?.select();
       }
       // return true if processed click
       return true;
@@ -451,6 +471,26 @@ class Map {
     }
   }
 
+  hasEnemyUnit(player: Player, hexTile: HexTile): boolean {
+    const selectedUnit = hexTile.getCurrentSelectedUnit();
+    return selectedUnit != null && selectedUnit.owner !== player;
+  }
+
+  getAttackableTargets(millaryUnit: MillitaryUnit) {
+    const currentUnitReachableTiles = millaryUnit.getReachableTiles();
+    const attackableTiles = currentUnitReachableTiles.filter(
+      (hexTile: HexTile) => this.hasEnemyUnit(millaryUnit.owner, hexTile)
+    );
+    return attackableTiles;
+  }
+
+  onUnitKilled(unit: Unit) {
+    unit.currentTile?.removeUnit(unit);
+    if (this.getCurrentSelectedUnit() === unit) {
+      this.currentSelectedUnit = null;
+    }
+  }
+
   draw(p5: p5) {
     p5.push();
     p5.translate(this.xPan, this.yPan);
@@ -458,14 +498,14 @@ class Map {
     p5.push();
     p5.translate(this.horizontalDist / 2, this.radius);
     const currentSelectedUnit = this.getCurrentSelectedUnit();
-    let currentUnitReachableTiles: HexTile[] | null = null;
+    let attackableTiles: HexTile[] | null = null;
     if (
       currentSelectedUnit instanceof MillitaryUnit &&
       currentSelectedUnit.isSelectingAttackTarget()
     ) {
-      currentUnitReachableTiles = currentSelectedUnit.getReachableTiles();
-      currentUnitReachableTiles.forEach((reachableTile) =>
-        reachableTile.showAsValidTarget()
+      attackableTiles = this.getAttackableTargets(currentSelectedUnit);
+      attackableTiles.forEach((attackableTile) =>
+        attackableTile.showAsValidTarget()
       );
     }
     for (let row = 0; row < this.nRows; row++) {
@@ -485,9 +525,9 @@ class Map {
     if (augmentedPath != null) {
       this.drawAugmentedPath(p5, augmentedPath);
     }
-    if (currentUnitReachableTiles != null) {
-      currentUnitReachableTiles.forEach((reachableTile) =>
-        reachableTile.stopShowAsValidTarget()
+    if (attackableTiles != null) {
+      attackableTiles.forEach((attackableTile) =>
+        attackableTile.stopShowAsValidTarget()
       );
     }
     p5.pop();

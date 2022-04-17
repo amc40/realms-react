@@ -1,7 +1,9 @@
 import p5 from "p5";
 import City from "../cities/city";
 import Player from "../players/player";
+import Units from "../units";
 import MillitaryUnit from "../units/millitary/millitary-unit";
+import Swordsman from "../units/millitary/swordsman";
 import Unit from "../units/unit";
 import Map, { CubeCoordinate, OffsetCoordinate } from "./hex-grid";
 import HexTile from "./hex-tile";
@@ -228,10 +230,10 @@ class MapGenerator {
     players: Player[],
     nCities: number,
     tileRadius: number,
-    p5: p5
+    units: Units
   ) {
     for (let player of players) {
-      const unit = new MillitaryUnit(10, 2, p5, player, (unit: Unit) =>
+      const unit = units.getSwordsman(player, (unit: Unit) =>
         map.onUnitKilled(unit)
       );
       map.addUnit(
@@ -263,6 +265,7 @@ class MapGenerator {
     nRows: number,
     nCols: number,
     players: Player[],
+    units: Units,
     p5: p5
   ): Map {
     const radius = 100;
@@ -314,7 +317,7 @@ class MapGenerator {
       radius,
       hexagonGrid
     );
-    this.addPlayers(hexGrid, players, 3, radius, p5);
+    this.addPlayers(hexGrid, players, 3, radius, units);
     hexagonGrid[1][1].addTileImprovement(p5, "mine");
     return hexGrid;
   }

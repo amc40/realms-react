@@ -2,7 +2,7 @@ import p5 from "p5";
 import Player from "../../players/player";
 import Unit from "../unit";
 
-class MillitaryUnit extends Unit {
+abstract class MillitaryUnit extends Unit {
   private static readonly HEALTH_BAR_WIDTH = 30;
   private static readonly HEALTH_BAR_HEIGHT = 5;
   private readonly strength: number;
@@ -14,9 +14,10 @@ class MillitaryUnit extends Unit {
     movementPoints: number,
     p5: p5,
     owner: Player,
-    onKilled: (unit: Unit) => void
+    onKilled: (unit: Unit) => void,
+    icon: p5.Image
   ) {
-    super(p5, movementPoints, owner, onKilled);
+    super(p5, movementPoints, owner, onKilled, icon);
     this.strength = strength;
   }
 

@@ -15,9 +15,9 @@ export type AugmentedTile = {
   nMoves?: number;
 };
 
-class Unit {
-  protected static WIDTH = 35;
-  protected static HEIGHT = Unit.WIDTH;
+abstract class Unit {
+  public static WIDTH = 35;
+  public static HEIGHT = Unit.WIDTH;
   private unselectedImage: p5.Image;
   private selectedImage: p5.Image;
   private selected: boolean = false;
@@ -34,12 +34,14 @@ class Unit {
   private selectingMovement = false;
   owner: Player;
   readonly _onKilled: (unit: Unit) => void;
+  private readonly icon: p5.Image;
 
   constructor(
     p5: p5,
     movementPoints: number,
     owner: Player,
-    onKilled: (unit: Unit) => void
+    onKilled: (unit: Unit) => void,
+    icon: p5.Image
   ) {
     this.unselectedImage = owner.empire.shieldUnselectedIcon;
     this.selectedImage = owner.empire.shieldSelectedIcon;
@@ -47,6 +49,7 @@ class Unit {
     this.remainingMovementPoints = movementPoints;
     this.owner = owner;
     this._onKilled = onKilled;
+    this.icon = icon;
   }
 
   toggleSelected() {
@@ -251,13 +254,16 @@ class Unit {
     }
   }
 
-  draw(p5: p5) {
+  abstract draw(p5: p5):void;
+  
+  {
     p5.imageMode(p5.CENTER);
     if (this.selected) {
       p5.image(this.selectedImage, 0, 0, Unit.WIDTH, Unit.HEIGHT);
     } else {
       p5.image(this.unselectedImage, 0, 0, Unit.WIDTH, Unit.HEIGHT);
     }
+    p5.image(this.icon, 0, 0, Unit.WIDTH * 0.6, Unit.HEIGHT * 0.6);
   }
 }
 

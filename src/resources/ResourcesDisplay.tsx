@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { Col, Container, Row } from "react-bootstrap";
 import Resources, { AllResourceTypes, ResourceQuantity } from ".";
+import ResourceQuantityDisplay from "./ResourceQuantityDisplay";
 
 interface Props {
   resourceQuantity: ResourceQuantity;
@@ -9,11 +10,10 @@ interface Props {
 
 type ResourcePairEntry = {
   resource: AllResourceTypes;
-  quantity: number;
   iconElem: JSX.Element;
 };
 
-const ResourceDisplay: React.FC<Props> = ({
+const ResourcesDisplay: React.FC<Props> = ({
   resourceQuantity,
   resources,
 }: Props) => {
@@ -25,30 +25,18 @@ const ResourceDisplay: React.FC<Props> = ({
     )[] = [];
     let idx = 0;
     for (const [resource, quantity] of Object.entries(resourceQuantity)) {
-      const icon = Resources.getIconUrl(resource as AllResourceTypes);
+      const iconUrl = Resources.getIconUrl(resource as AllResourceTypes);
       const iconElem = (
-        <span
-          style={{
-            border: "2px solid black",
-            borderRadius: "50%",
-            padding: 3,
-          }}
-        >
-          <img
-            src={icon}
-            alt={resource}
-            style={{
-              width: "1.5em",
-              height: "1.5em",
-            }}
-          />
-        </span>
+        <ResourceQuantityDisplay
+          resourceQuantity={quantity}
+          resourceIconSrc={iconUrl}
+          resourceName={resource}
+        />
       );
       if (idx % 3 === 0) {
         resourceQuantityPairs.push([
           {
             resource: resource as AllResourceTypes,
-            quantity,
             iconElem,
           },
         ]);
@@ -57,7 +45,6 @@ const ResourceDisplay: React.FC<Props> = ({
           resourceQuantityPairs[resourceQuantityPairs.length - 1];
         lastResourceQuantityPair.push({
           resource: resource as AllResourceTypes,
-          quantity,
           iconElem,
         });
       }
@@ -79,9 +66,6 @@ const ResourceDisplay: React.FC<Props> = ({
                   alignItems: "center",
                 }}
               >
-                <span style={{ marginRight: 10 }}>
-                  {resourceQuantityPairEntry.quantity}
-                </span>
                 {resourceQuantityPairEntry.iconElem}
               </div>
             </Col>
@@ -92,4 +76,4 @@ const ResourceDisplay: React.FC<Props> = ({
   );
 };
 
-export default ResourceDisplay;
+export default ResourcesDisplay;

@@ -1,6 +1,7 @@
 import p5 from "p5";
 import Player from "../players/player";
 import { AllResourceTypes, ResourceQuantity } from "../resources";
+import { ProductionItem } from "./production";
 
 class City {
   readonly name: string;
@@ -10,6 +11,7 @@ class City {
     food: 10,
     production: 10,
   };
+  private currentProduction: ProductionItem | null = null;
 
   constructor(name: string = "City", owner: Player) {
     this.name = name;

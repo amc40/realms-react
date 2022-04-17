@@ -4,7 +4,8 @@ import RealmsSketch from "./sketch/realms-sketch";
 import City from "./cities/city";
 import { Button, Modal } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
-import ResourceDisplay from "./resources/ResourceDisplay";
+import ResourcesDisplay from "./resources/ResourcesDisplay";
+import ProductionDisplay from "./cities/ProductionDisplay";
 
 function App() {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -56,9 +57,12 @@ function App() {
               <Modal.Title>{cityModalCity!.name}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-              <ResourceDisplay
+              <ResourcesDisplay
                 resources={realmsSketch!.resources!}
                 resourceQuantity={cityModalCity!.getResources()}
+              />
+              <ProductionDisplay
+                productionItems={realmsSketch!.productionItems!.getItems()}
               />
             </Modal.Body>
           </>

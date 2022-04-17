@@ -8,6 +8,9 @@ abstract class MillitaryUnit extends Unit {
   private readonly strength: number;
   private health = 50;
   private selectingAttackTarget = false;
+  private readonly icon: p5.Image;
+  private unselectedImage: p5.Image;
+  private selectedImage: p5.Image;
 
   constructor(
     strength: number,
@@ -17,8 +20,11 @@ abstract class MillitaryUnit extends Unit {
     onKilled: (unit: Unit) => void,
     icon: p5.Image
   ) {
-    super(p5, movementPoints, owner, onKilled, icon);
+    super(p5, movementPoints, owner, onKilled);
+    this.unselectedImage = owner.empire.shieldUnselectedIcon;
+    this.selectedImage = owner.empire.shieldSelectedIcon;
     this.strength = strength;
+    this.icon = icon;
   }
 
   public isSelectingAttackTarget() {
@@ -132,7 +138,13 @@ abstract class MillitaryUnit extends Unit {
   }
 
   public draw(p5: p5) {
-    super.draw(p5);
+    p5.imageMode(p5.CENTER);
+    if (this.selected) {
+      p5.image(this.selectedImage, 0, 0, Unit.WIDTH, Unit.HEIGHT);
+    } else {
+      p5.image(this.unselectedImage, 0, 0, Unit.WIDTH, Unit.HEIGHT);
+    }
+    p5.image(this.icon, 0, 0, Unit.WIDTH * 0.6, Unit.HEIGHT * 0.6);
     const offsetY = Unit.HEIGHT / 2 + 5 + MillitaryUnit.HEALTH_BAR_HEIGHT / 2;
     p5.rectMode(p5.CENTER);
     p5.noStroke();

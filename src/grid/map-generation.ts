@@ -236,11 +236,28 @@ class MapGenerator {
       const unit = units.getSwordsman(player, (unit: Unit) =>
         map.onUnitKilled(unit)
       );
+      const caravan = units.getCaravan(player, (unit: Unit) => {
+        map.onUnitKilled(unit);
+      });
+      const worker = units.getWorker(player, (unit: Unit) => {
+        map.onUnitKilled(unit);
+      });
       map.addUnit(
         unit,
         MapGenerator.getRandomRow(map),
         MapGenerator.getRandomCol(map)
       );
+      map.addUnit(
+        caravan,
+        MapGenerator.getRandomRow(map),
+        MapGenerator.getRandomCol(map)
+      );
+      map.addUnit(
+        worker,
+        MapGenerator.getRandomRow(map),
+        MapGenerator.getRandomCol(map)
+      );
+
       for (let cityN = 0; cityN < nCities; cityN++) {
         const cityRow = MapGenerator.getRandomRow(map);
         const cityCol = MapGenerator.getRandomCol(map);

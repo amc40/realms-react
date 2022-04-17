@@ -1,12 +1,18 @@
 import { Button, Col, Row } from "react-bootstrap";
 import ProductionQuantityDisplay from "../resources/ProductionQuanityDisplay";
+import TurnDisplay from "../resources/TurnDisplay";
 import { ProductionItem } from "./production";
 
 interface Props {
   productionItems: ProductionItem[];
+  productionPerTurn: number;
 }
 
-const ProductionDisplay: React.FC<Props> = ({ productionItems }) => {
+const ProductionDisplay: React.FC<Props> = ({
+  productionItems,
+  productionPerTurn,
+}) => {
+  console.log("production per turn", productionPerTurn);
   return (
     <>
       <h5>Production Items:</h5>
@@ -53,8 +59,11 @@ const ProductionDisplay: React.FC<Props> = ({ productionItems }) => {
                   float="right"
                   quantity={item.productionCost}
                 />
+                <TurnDisplay
+                  nTurns={Math.ceil(item.productionCost / productionPerTurn)}
+                />
               </div>
-            </Col>  
+            </Col>
           </Row>
         ))}
       </div>

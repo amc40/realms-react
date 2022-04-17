@@ -1,6 +1,12 @@
 import p5 from "p5";
+import HexTile from "../grid/hex-tile";
 import Player from "../players/player";
-import { AllResourceTypes, ResourceQuantity } from "../resources";
+import {
+  addAllResourceQuantities,
+  addResourceQuantities,
+  AllResourceTypes,
+  ResourceQuantity,
+} from "../resources";
 import { ProductionItem } from "./production";
 
 class City {
@@ -11,22 +17,40 @@ class City {
     food: 10,
     production: 10,
   };
+  private baseResourcesPerTurn: ResourceQuantity = {
+    food: 1,
+    production: 1,
+  };
   private currentProduction: ProductionItem | null = null;
+  private readonly tiles: HexTile[] = [];
 
   constructor(name: string = "City", owner: Player) {
     this.name = name;
     this.owner = owner;
   }
 
+  addTile(tile: HexTile) {
+    this.tiles.push(tile);
+  }
+
+  removeTile(tile: HexTile) {
+    this.tiles.splice(this.tiles.indexOf(tile), 1);
+  }
+
+  getCurrentResourcesPerTurn() {
+    const tileResources = this.tiles.map((tile) => tile.getResources());
+    return addAllResourceQuantities([
+      this.baseResourcesPerTurn,
+      ...tileResources,
+    ]);
+  }
+
+  getProductionPerTurn(): number {
+    return this.getCurrentResourcesPerTurn().production ?? 0;
+  }
+
   public addResources(resourceQuantity: ResourceQuantity) {
-    for (let resourceStr in Object.keys(resourceQuantity)) {
-      const resource = resourceStr as AllResourceTypes;
-      if (this.resources[resource] != null) {
-        this.resources[resource]! += resourceQuantity[resource]!;
-      } else {
-        this.resources[resource] = resourceQuantity[resource];
-      }
-    }
+    this.resources = addResourceQuantities(this.resources, resourceQuantity);
   }
 
   public getResources() {

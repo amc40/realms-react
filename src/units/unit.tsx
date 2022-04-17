@@ -18,9 +18,8 @@ export type AugmentedTile = {
 abstract class Unit {
   public static WIDTH = 35;
   public static HEIGHT = Unit.WIDTH;
-  private unselectedImage: p5.Image;
-  private selectedImage: p5.Image;
-  private selected: boolean = false;
+
+  protected selected: boolean = false;
   private _currentTile: HexTile | null = null;
   // TODO: maybe add a temp target so can cancel ordering movement
   private _movementTarget: HexTile | null = null;
@@ -34,22 +33,17 @@ abstract class Unit {
   private selectingMovement = false;
   owner: Player;
   readonly _onKilled: (unit: Unit) => void;
-  private readonly icon: p5.Image;
 
   constructor(
     p5: p5,
     movementPoints: number,
     owner: Player,
-    onKilled: (unit: Unit) => void,
-    icon: p5.Image
+    onKilled: (unit: Unit) => void
   ) {
-    this.unselectedImage = owner.empire.shieldUnselectedIcon;
-    this.selectedImage = owner.empire.shieldSelectedIcon;
     this.movementPoints = movementPoints;
     this.remainingMovementPoints = movementPoints;
     this.owner = owner;
     this._onKilled = onKilled;
-    this.icon = icon;
   }
 
   toggleSelected() {
@@ -254,17 +248,7 @@ abstract class Unit {
     }
   }
 
-  abstract draw(p5: p5):void;
-  
-  {
-    p5.imageMode(p5.CENTER);
-    if (this.selected) {
-      p5.image(this.selectedImage, 0, 0, Unit.WIDTH, Unit.HEIGHT);
-    } else {
-      p5.image(this.unselectedImage, 0, 0, Unit.WIDTH, Unit.HEIGHT);
-    }
-    p5.image(this.icon, 0, 0, Unit.WIDTH * 0.6, Unit.HEIGHT * 0.6);
-  }
+  abstract draw(p5: p5): void;
 }
 
 export default Unit;

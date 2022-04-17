@@ -1,5 +1,6 @@
 import p5 from "p5";
 import RegularHexagon from "../assets/regular-hexagon";
+import City from "../cities/city";
 import Player from "../players/player";
 import { ResourceQuantity } from "../resources";
 import Unit from "../units/unit";
@@ -21,7 +22,7 @@ abstract class HexTile extends RegularHexagon {
   private readonly col: number;
   // number of movement points required to move onto the tile
   private readonly nMovementPoints: number;
-  private owner: Player | null = null;
+  protected city: City | null = null;
   private units: Unit[] = [];
   private currentUnit: Unit | null = null;
   private text: string | null;
@@ -38,16 +39,17 @@ abstract class HexTile extends RegularHexagon {
     color: RGB,
     nMovementPoints: number,
     baseResources: ResourceQuantity,
-    owner: Player | null = null,
+    city: City | null = null,
     text: string | null = null
   ) {
     super(radius, color, 3);
     this.row = row;
     this.col = col;
     this.nMovementPoints = nMovementPoints;
-    this.owner = owner;
+    this.city = city;
     this.text = text;
     this.baseResources = baseResources;
+    this.city?.addTile(this);
   }
 
   addUnit(unit: Unit) {
@@ -63,7 +65,7 @@ abstract class HexTile extends RegularHexagon {
   }
 
   getBorderColor(): RGB | null {
-    return this.owner?.getColor() ?? null;
+    return this.city?.owner.getColor() ?? null;
   }
 
   getInnerBorderColor(): RGB | null {
@@ -128,6 +130,20 @@ abstract class HexTile extends RegularHexagon {
     return this.node;
   }
 
+  setCity(city: City | null) {
+    if (this.city != null) {
+      this.city.removeTile(this);
+    }
+    this.city = city;
+    if (city != null) {
+      city.addTile(this);
+    }
+  }
+
+  getCity() {
+    return this.city;
+  }
+
   public onClick(relativeMouseX: number, relativeMouseY: number): void {
     // cycle through units by default
     if (this.currentUnit === null) {
@@ -144,15 +160,11 @@ abstract class HexTile extends RegularHexagon {
   }
 
   hasOwner() {
-    return this.owner != null;
+    return this.city?.owner != null;
   }
 
   getOwner() {
-    return this.owner;
-  }
-
-  setOwner(owner: Player | null) {
-    this.owner = owner;
+    return this.city?.owner ?? null;
   }
 
   addTileImprovement(p5: p5, tileImprovementType: TileImprovementType) {

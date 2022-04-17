@@ -391,7 +391,7 @@ class Map {
       const neighbourTile =
         this.hexagonGrid[neighbourCoords.row][neighbourCoords.col];
       if (!neighbourTile.hasOwner()) {
-        neighbourTile.setOwner(cityTile.getOwner());
+        neighbourTile.setCity(cityTile.getCity());
       }
       const neighbourTileNode = neighbourTile.getNode();
       neighbourTileNode.removeEdgeTo(originalTile.getNode());

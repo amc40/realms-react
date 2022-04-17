@@ -62,6 +62,7 @@ function App() {
                 resourceQuantity={cityModalCity!.getResources()}
               />
               <ProductionDisplay
+                productionPerTurn={cityModalCity!.getProductionPerTurn()}
                 productionItems={realmsSketch!.productionItems!.getItems()}
               />
             </Modal.Body>

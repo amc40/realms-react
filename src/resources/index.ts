@@ -13,14 +13,38 @@ export function getNoResources(): ResourceQuantity {
   return {};
 }
 
-class Resources {
-  foodIcon: p5.Image;
-  productionIcon: p5.Image;
-  populationIcon: p5.Image;
-  woodIcon: p5.Image;
-  ironIcon: p5.Image;
+export function addResourceQuantities(
+  resourceQuantity1: ResourceQuantity,
+  resourceQuantity2: ResourceQuantity
+) {
+  let currentQuantity = resourceQuantity1;
+  for (let resourceStr of Object.keys(resourceQuantity2)) {
+    const resource = resourceStr as AllResourceTypes;
+    if (currentQuantity[resource] != null) {
+      currentQuantity[resource]! += resourceQuantity2[resource]!;
+    } else {
+      currentQuantity[resource] = resourceQuantity2[resource];
+    }
+  }
+  return currentQuantity;
+}
 
-  public static getIconUrl(resourceType: AllResourceTypes) {
+export function addAllResourceQuantities(
+  resourceQuantities: ResourceQuantity[]
+) {
+  let currentQuantity = getNoResources();
+  for (let resourceQuantity of resourceQuantities) {
+    currentQuantity = addResourceQuantities(currentQuantity, resourceQuantity);
+  }
+  return currentQuantity;
+}
+
+type MiscResourceTypes = "turns";
+
+class Resources {
+  icons: { [key in AllResourceTypes | MiscResourceTypes]: p5.Image };
+
+  public static getIconUrl(resourceType: AllResourceTypes | MiscResourceTypes) {
     if (resourceType === "food") {
       return "assets/resources/food.png";
     } else if (resourceType === "production") {
@@ -31,31 +55,33 @@ class Resources {
       return "assets/resources/wood.png";
     } else if (resourceType === "iron") {
       return "assets/resources/iron.png";
+    } else if (resourceType === "turns") {
+      return "assets/turn.png";
     }
     throw Error("Unknown resource type: " + resourceType);
   }
 
   constructor(p5: p5) {
-    this.foodIcon = p5.loadImage(Resources.getIconUrl("food"));
-    this.productionIcon = p5.loadImage(Resources.getIconUrl("production"));
-    this.populationIcon = p5.loadImage(Resources.getIconUrl("population"));
-    this.woodIcon = p5.loadImage(Resources.getIconUrl("wood"));
-    this.ironIcon = p5.loadImage(Resources.getIconUrl("iron"));
+    const foodIcon = p5.loadImage(Resources.getIconUrl("food"));
+    const productionIcon = p5.loadImage(Resources.getIconUrl("production"));
+    const populationIcon = p5.loadImage(Resources.getIconUrl("population"));
+    const woodIcon = p5.loadImage(Resources.getIconUrl("wood"));
+    const ironIcon = p5.loadImage(Resources.getIconUrl("iron"));
+    const turnsIcon = p5.loadImage(Resources.getIconUrl("turns"));
+    this.icons = {
+      food: foodIcon,
+      production: productionIcon,
+      population: populationIcon,
+      wood: woodIcon,
+      iron: ironIcon,
+      turns: turnsIcon,
+    };
   }
 
-  getResourceIcon(resourceType: AllResourceTypes): p5.Image {
-    if (resourceType === "food") {
-      return this.foodIcon;
-    } else if (resourceType === "production") {
-      return this.productionIcon;
-    } else if (resourceType === "population") {
-      return this.populationIcon;
-    } else if (resourceType === "wood") {
-      return this.woodIcon;
-    } else if (resourceType === "iron") {
-      return this.ironIcon;
-    }
-    throw Error("Unknown resource type: " + resourceType);
+  getResourceIcon(
+    resourceType: AllResourceTypes | MiscResourceTypes
+  ): p5.Image {
+    return this.icons[resourceType];
   }
 }
 

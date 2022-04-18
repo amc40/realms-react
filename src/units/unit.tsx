@@ -5,6 +5,7 @@ import HexTile from "../grid/hex-tile";
 import Player from "../players/player";
 import ShortestPath from "../utils/shortest-path";
 import { CivilUnitActionType } from "./civil/civil-unit";
+import { UnitActionType } from "./unit-actions";
 
 enum State {
   WAITING_FOR_ORDERS,
@@ -248,6 +249,8 @@ abstract class Unit {
       return null;
     }
   }
+
+  abstract getUnitActionTypes(): UnitActionType[];
 
   abstract draw(p5: p5): void;
 }

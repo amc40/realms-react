@@ -11,6 +11,7 @@ import Resources from "../resources";
 import Units from "../units";
 import MillitaryUnit from "../units/millitary/millitary-unit";
 import Unit from "../units/unit";
+import UnitActions, { UnitActionType } from "../units/unit-actions";
 import { MouseButton } from "../utils/mouse-events";
 import { getSpacing } from "../utils/spacing";
 
@@ -24,17 +25,20 @@ class RealmsSketch extends p5 {
   private hexagonalGrid: Map | null = null;
   private nextTurnIndicator = new NextTurn(() => this.handleNextTurn());
   private openCityModal: (city: City) => void;
-  private unitActionButtions: UnitActionButtons | null = null;
-  private moveIcon: p5.Image | null = null;
-  private attackIcon: p5.Image | null = null;
-  private sleepIcon: p5.Image | null = null;
+  private unitActionButtons: {
+    type: UnitActionType;
+    button: CircularButton;
+  }[] = [];
   private empires: Empires | null = null;
   private units: Units | null = null;
+  private unitActions: UnitActions | null = null;
 
   private allPlayers: Player[] = [];
   private humanPlayer: Player | null = null;
   resources: Resources | null = null;
   productionItems: ProductionItems | null = null;
+
+  private prevSelectedUnit: Unit | null = null;
 
   constructor(canvasElement: HTMLElement, openCityModal: (city: City) => void) {
     super(() => {}, canvasElement);
@@ -42,9 +46,6 @@ class RealmsSketch extends p5 {
   }
 
   preload(): void {
-    this.moveIcon = this.loadImage("/assets/button-icons/move.png");
-    this.attackIcon = this.loadImage("/assets/button-icons/battle.png");
-    this.sleepIcon = this.loadImage("/assets/button-icons/sleep.png");
     this.empires = new Empires(this);
     this.resources = new Resources(this);
     this.units = new Units(this);
@@ -69,40 +70,12 @@ class RealmsSketch extends p5 {
       this.units!,
       this
     );
-    const unitActionButtonX = getSpacing(this.width / 2, 100, 3);
-    const unitActionButtonRadius = 30;
-    const unitActionButtonY = this.height - unitActionButtonRadius - 50;
 
-    this.unitActionButtions = {
-      attackButton: new CircularButton(
-        () => this.handleUnitAttack(),
-        unitActionButtonX[0],
-        unitActionButtonY,
-        unitActionButtonRadius,
-        this,
-        this.attackIcon!
-      ),
-      moveButton: new CircularButton(
-        () => this.handleUnitMove(),
-        unitActionButtonX[1],
-        unitActionButtonY,
-        unitActionButtonRadius,
-        this,
-        this.moveIcon!
-      ),
-      sleepButton: new CircularButton(
-        () => this.handleUnitSleep(),
-        unitActionButtonX[2],
-        unitActionButtonY,
-        unitActionButtonRadius,
-        this,
-        this.sleepIcon!
-      ),
-    };
-    Object.values(this.unitActionButtions!).forEach((button) =>
+    Object.values(this.unitActionButtons!).forEach(({ button }) =>
       button.setVisible()
     );
     this.productionItems = new ProductionItems(this.units!, this.humanPlayer);
+    this.unitActions = new UnitActions(this);
   }
 
   handleUnitMove() {
@@ -155,7 +128,7 @@ class RealmsSketch extends p5 {
 
   mouseClicked(event: MouseEvent): void {
     if (event.button === MouseButton.LEFT) {
-      Object.values(this.unitActionButtions!).some((button) =>
+      Object.values(this.unitActionButtons!).some(({ button }) =>
         button.handleClick(this, this.mouseX, this.mouseY)
       ) ||
         this.nextTurnIndicator.handleClick(this, this.mouseX, this.mouseY) ||
@@ -177,7 +150,45 @@ class RealmsSketch extends p5 {
     return this.getCurrentSelectedMillitaryUnit()?.isSelectingAttackTarget();
   }
 
+  isUnitActionSelected(unitActionType: UnitActionType) {
+    switch (unitActionType) {
+      case "move":
+        return this.isUnitMoveSelected();
+      case "melee-attack":
+        return this.isAttackSelected();
+      default:
+        return false;
+    }
+  }
+
+  handleUnitAction(unitActionType: UnitActionType) {
+    switch (unitActionType) {
+      case "move":
+        this.handleUnitMove();
+        break;
+      case "melee-attack":
+        this.handleUnitAttack();
+        break;
+      case "sleep":
+        this.handleUnitSleep();
+        break;
+    }
+  }
+
   draw(): void {
+    const selectedUnit = this.hexagonalGrid!.getCurrentSelectedUnit();
+    if (selectedUnit !== this.prevSelectedUnit) {
+      if (selectedUnit != null) {
+        const unitActionTypes = selectedUnit.getUnitActionTypes();
+        this.unitActionButtons = this.unitActions!.getUnitActionButtons(
+          unitActionTypes,
+          this
+        );
+      } else {
+        this.unitActionButtons = [];
+      }
+    }
+    this.prevSelectedUnit = selectedUnit;
     if (this.keyIsDown("A".charCodeAt(0))) {
       this.hexagonalGrid!.panX(3);
     } else if (this.keyIsDown("D".charCodeAt(0))) {
@@ -191,9 +202,9 @@ class RealmsSketch extends p5 {
     this.background(0);
     this.hexagonalGrid!.draw(this);
     if (this.hexagonalGrid!.getCurrentSelectedUnit() != null) {
-      this.unitActionButtions?.attackButton.draw(this, this.isAttackSelected());
-      this.unitActionButtions?.moveButton.draw(this, this.isUnitMoveSelected());
-      this.unitActionButtions?.sleepButton.draw(this);
+      this.unitActionButtons.forEach(({ button, type }) =>
+        button.draw(this, this.isUnitActionSelected(type))
+      );
     }
     this.nextTurnIndicator.draw(this);
   }

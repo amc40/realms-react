@@ -1,6 +1,7 @@
 import p5 from "p5";
 import Player from "../../players/player";
 import Unit from "../unit";
+import { UnitActionType } from "../unit-actions";
 
 export type MillitaryUnitActionType = "move" | "melee-attack" | "sleep";
 
@@ -166,6 +167,10 @@ abstract class MillitaryUnit extends Unit {
       healthBarWidth,
       MillitaryUnit.HEALTH_BAR_HEIGHT
     );
+  }
+
+  getUnitActionTypes(): UnitActionType[] {
+    return ["move", "melee-attack", "sleep"];
   }
 }
 

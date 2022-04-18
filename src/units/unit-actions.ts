@@ -1,4 +1,7 @@
 import p5 from "p5";
+import CircularButton from "../assets/circular-button";
+import RealmsSketch from "../sketch/realms-sketch";
+import { getSpacing } from "../utils/spacing";
 import { CivilUnitActionType } from "./civil/civil-unit";
 import { MillitaryUnitActionType } from "./millitary/millitary-unit";
 
@@ -46,4 +49,29 @@ class UnitActions {
   getIcon(unitActionType: UnitActionType) {
     return this.unitActionIcons[unitActionType];
   }
+
+  getUnitActionButtons(
+    unitActionsAndOnClick: UnitActionType[],
+    sketch: RealmsSketch
+  ): {
+    type: UnitActionType;
+    button: CircularButton;
+  }[] {
+    const unitActionButtonX = getSpacing(sketch.width / 2, 100, 3);
+    const unitActionButtonRadius = 30;
+    const unitActionButtonY = sketch.height - unitActionButtonRadius - 50;
+    return unitActionsAndOnClick.map((unitActionType, index) => ({
+      type: unitActionType,
+      button: new CircularButton(
+        () => sketch.handleUnitAction(unitActionType),
+        unitActionButtonX[index],
+        unitActionButtonY,
+        unitActionButtonRadius,
+        sketch,
+        this.getIcon(unitActionType)
+      ),
+    }));
+  }
 }
+
+export default UnitActions;

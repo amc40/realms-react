@@ -22,6 +22,7 @@ class Swordsman extends MillitaryUnit {
       icon
     );
   }
+
 }
 
 export default Swordsman;

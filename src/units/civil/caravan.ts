@@ -1,6 +1,7 @@
 import p5 from "p5";
 import Player from "../../players/player";
 import Unit from "../unit";
+import { UnitActionType } from "../unit-actions";
 import CivilUnit from "./civil-unit";
 
 export type CaravanActionType = "transport" | "sleep";
@@ -15,6 +16,10 @@ class Caravan extends CivilUnit {
     icon: p5.Image
   ) {
     super(p5, Caravan.nMovementPoints, owner, onKilled, icon);
+  }
+
+  getUnitActionTypes(): UnitActionType[] {
+    return ["transport", "sleep"];
   }
 }
 

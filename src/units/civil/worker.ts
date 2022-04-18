@@ -3,6 +3,8 @@ import Player from "../../players/player";
 import Unit from "../unit";
 import CivilUnit from "./civil-unit";
 
+export type WorkerUnitActionType = "move" | "sleep";
+
 class WorkerUnit extends CivilUnit {
   private static nMovementPoints = 2;
 

@@ -2,6 +2,8 @@ import p5 from "p5";
 import Player from "../../players/player";
 import Unit from "../unit";
 
+export type MillitaryUnitActionType = "move" | "melee-attack" | "sleep";
+
 abstract class MillitaryUnit extends Unit {
   private static readonly HEALTH_BAR_WIDTH = 30;
   private static readonly HEALTH_BAR_HEIGHT = 5;

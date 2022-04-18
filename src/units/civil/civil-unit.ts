@@ -2,6 +2,10 @@ import p5 from "p5";
 import Player from "../../players/player";
 import { ResourceQuantity } from "../../resources";
 import Unit from "../unit";
+import { CaravanActionType } from "./caravan";
+import { WorkerUnitActionType } from "./worker";
+
+export type CivilUnitActionType = CaravanActionType | WorkerUnitActionType;
 
 abstract class CivilUnit extends Unit {
   private resources: ResourceQuantity = {};

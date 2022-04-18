@@ -47,7 +47,7 @@ const ProductionDisplay: React.FC<Props> = ({
               </div>
             </Col>
             <Col>{item.icon}</Col>
-            <Col xs lg="3">
+            <Col xs lg="4">
               <div
                 style={{
                   display: "flex",
@@ -59,6 +59,7 @@ const ProductionDisplay: React.FC<Props> = ({
                   float="right"
                   quantity={item.productionCost}
                 />
+                <span style={{ width: 25 }} />
                 <TurnDisplay
                   nTurns={Math.ceil(item.productionCost / productionPerTurn)}
                 />

@@ -4,6 +4,7 @@ import Map from "../grid/hex-grid";
 import HexTile from "../grid/hex-tile";
 import Player from "../players/player";
 import ShortestPath from "../utils/shortest-path";
+import { CivilUnitActionType } from "./civil/civil-unit";
 
 enum State {
   WAITING_FOR_ORDERS,

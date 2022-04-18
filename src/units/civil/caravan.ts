@@ -3,6 +3,8 @@ import Player from "../../players/player";
 import Unit from "../unit";
 import CivilUnit from "./civil-unit";
 
+export type CaravanActionType = "transport" | "sleep";
+
 class Caravan extends CivilUnit {
   private static nMovementPoints = 2;
 

@@ -6,6 +6,7 @@ import { Button, Modal } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import ResourcesDisplay from "./resources/ResourcesDisplay";
 import ProductionDisplay from "./cities/ProductionDisplay";
+import BottomLeftDisplay from "./displays/BottomLeftDisplay";
 
 function App() {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -83,6 +84,7 @@ function App() {
           </Button>
         </Modal.Footer>
       </Modal> */}
+      <BottomLeftDisplay />
     </div>
   );
 }

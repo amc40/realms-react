@@ -6,6 +6,8 @@ import Unit, { AugmentedTile as MoveAugmentedTile } from "../units/unit";
 import CityTile from "./tiles/city";
 import MillitaryUnit from "../units/millitary/millitary-unit";
 import Player from "../players/player";
+import City from "../cities/city";
+import Caravan from "../units/civil/caravan";
 
 export class AxialCoordinate {
   public readonly q: number;
@@ -284,6 +286,18 @@ class Map {
     }
   }
 
+  getCityTilesBelongingToPlayer(player: Player): HexTile[] {
+    return this.hexagonGrid.reduce(
+      (cityTiles: HexTile[], row: HexTile[]) =>
+        cityTiles.concat(
+          row.filter(
+            (tile) => tile instanceof CityTile && tile.getOwner() === player
+          )
+        ),
+      []
+    );
+  }
+
   public handleClick(
     p5: p5,
     mouseScreenX: number,
@@ -317,6 +331,17 @@ class Map {
             ? millitaryEnemiesOnTile[0]
             : enemyUnitsOnTile[0];
         currentSelectedUnit.meleeAttack(attackTarget);
+      } else if (
+        currentSelectedUnit != null &&
+        currentSelectedUnit instanceof Caravan &&
+        currentSelectedUnit.havingTransportTargetSelected() &&
+        this.getCityTilesBelongingToPlayer(currentSelectedUnit.owner).includes(
+          hexTile
+        )
+      ) {
+        currentSelectedUnit.movementTarget = hexTile;
+        currentSelectedUnit.selectCurrentMovementTarget();
+        currentSelectedUnit.stopSelectingTransportTarget();
       } else {
         const hexCentreX = this.getHexCentreX(hexTile);
         const hexCentreY = this.getHexCentreY(hexTile);
@@ -508,6 +533,18 @@ class Map {
         attackableTile.showAsValidTarget()
       );
     }
+    let transportTiles: HexTile[] | null = null;
+    if (
+      currentSelectedUnit instanceof Caravan &&
+      currentSelectedUnit.havingTransportTargetSelected()
+    ) {
+      transportTiles = this.getCityTilesBelongingToPlayer(
+        currentSelectedUnit.owner
+      );
+      transportTiles.forEach((transportTile) =>
+        transportTile.showAsValidTarget()
+      );
+    }
     for (let row = 0; row < this.nRows; row++) {
       p5.push();
       p5.translate(this.firstOffset(row), 0);
@@ -528,6 +565,11 @@ class Map {
     if (attackableTiles != null) {
       attackableTiles.forEach((attackableTile) =>
         attackableTile.stopShowAsValidTarget()
+      );
+    }
+    if (transportTiles != null) {
+      transportTiles.forEach((transportTile) =>
+        transportTile.stopShowAsValidTarget()
       );
     }
     p5.pop();

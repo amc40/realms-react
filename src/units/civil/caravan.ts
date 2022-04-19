@@ -8,6 +8,7 @@ export type CaravanActionType = "transport" | "sleep";
 
 class Caravan extends CivilUnit {
   private static nMovementPoints = 2;
+  private selectingTransportTarget = false;
 
   constructor(
     p5: p5,
@@ -16,6 +17,18 @@ class Caravan extends CivilUnit {
     icon: p5.Image
   ) {
     super(p5, Caravan.nMovementPoints, owner, onKilled, icon);
+  }
+
+  havingTransportTargetSelected() {
+    return this.selectingTransportTarget;
+  }
+
+  startSelectingTransportTarget() {
+    this.selectingTransportTarget = true;
+  }
+
+  stopSelectingTransportTarget() {
+    this.selectingTransportTarget = false;
   }
 
   getUnitActionTypes(): UnitActionType[] {

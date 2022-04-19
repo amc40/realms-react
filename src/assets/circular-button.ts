@@ -22,7 +22,7 @@ class CircularButton {
     radius: number,
     p5: p5,
     icon: p5.Image,
-    visible: boolean = false
+    visible: boolean = true
   ) {
     this.onClick = onClick;
     this.x = x;

@@ -9,17 +9,12 @@ import MapGenerator from "../grid/map-generation";
 import Player from "../players/player";
 import Resources from "../resources";
 import Units from "../units";
+import Caravan from "../units/civil/caravan";
 import MillitaryUnit from "../units/millitary/millitary-unit";
 import Unit from "../units/unit";
 import UnitActions, { UnitActionType } from "../units/unit-actions";
 import { MouseButton } from "../utils/mouse-events";
 import { getSpacing } from "../utils/spacing";
-
-type UnitActionButtons = {
-  attackButton: CircularButton;
-  moveButton: CircularButton;
-  sleepButton: CircularButton;
-};
 
 class RealmsSketch extends p5 {
   private hexagonalGrid: Map | null = null;
@@ -90,9 +85,19 @@ class RealmsSketch extends p5 {
   clearAllUnitActionSelections() {
     this.hexagonalGrid!.getCurrentSelectedUnit()?.stopSelectingMovement();
     this.getCurrentSelectedMillitaryUnit()?.stopSelectingAttackTarget();
+    this.getCurrentSelectedTransportUnit()?.stopSelectingTransportTarget();
   }
 
   handleUnitSleep() {}
+
+  handleUnitTransport() {
+    if (this.isTransportSelected()) {
+      this.getCurrentSelectedTransportUnit()?.stopSelectingTransportTarget();
+    } else {
+      this.clearAllUnitActionSelections();
+      this.getCurrentSelectedTransportUnit()?.startSelectingTransportTarget();
+    }
+  }
 
   getCurrentSelectedMillitaryUnit(): MillitaryUnit | null {
     const currentSelectedUnit = this.hexagonalGrid!.getCurrentSelectedUnit();
@@ -100,6 +105,14 @@ class RealmsSketch extends p5 {
       currentSelectedUnit != null &&
       currentSelectedUnit instanceof MillitaryUnit
     ) {
+      return currentSelectedUnit;
+    }
+    return null;
+  }
+
+  getCurrentSelectedTransportUnit() {
+    const currentSelectedUnit = this.hexagonalGrid!.getCurrentSelectedUnit();
+    if (currentSelectedUnit instanceof Caravan) {
       return currentSelectedUnit;
     }
     return null;
@@ -150,12 +163,18 @@ class RealmsSketch extends p5 {
     return this.getCurrentSelectedMillitaryUnit()?.isSelectingAttackTarget();
   }
 
+  isTransportSelected() {
+    return this.getCurrentSelectedTransportUnit()?.havingTransportTargetSelected();
+  }
+
   isUnitActionSelected(unitActionType: UnitActionType) {
     switch (unitActionType) {
       case "move":
         return this.isUnitMoveSelected();
       case "melee-attack":
         return this.isAttackSelected();
+      case "transport":
+        return this.isTransportSelected();
       default:
         return false;
     }
@@ -171,6 +190,9 @@ class RealmsSketch extends p5 {
         break;
       case "sleep":
         this.handleUnitSleep();
+        break;
+      case "transport":
+        this.handleUnitTransport();
         break;
     }
   }
@@ -201,11 +223,9 @@ class RealmsSketch extends p5 {
     }
     this.background(0);
     this.hexagonalGrid!.draw(this);
-    if (this.hexagonalGrid!.getCurrentSelectedUnit() != null) {
-      this.unitActionButtons.forEach(({ button, type }) =>
-        button.draw(this, this.isUnitActionSelected(type))
-      );
-    }
+    this.unitActionButtons.forEach(({ button, type }) =>
+      button.draw(this, this.isUnitActionSelected(type))
+    );
     this.nextTurnIndicator.draw(this);
   }
 }

@@ -26,8 +26,7 @@ class CityTile extends HexTile {
       city.owner.getColor(),
       CityTile.nMovementPoints,
       CityTile.resources,
-      city,
-      city.name
+      { city, text: city.name }
     );
     this.city = city;
     this.openCityModal = openCityModal;

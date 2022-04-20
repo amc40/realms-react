@@ -170,7 +170,7 @@ abstract class MillitaryUnit extends Unit {
   }
 
   getUnitActionTypes(): UnitActionType[] {
-    return ["move", "melee-attack", "sleep"];
+    return ["melee-attack", "move", "sleep"];
   }
 }
 

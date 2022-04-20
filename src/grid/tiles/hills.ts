@@ -15,7 +15,10 @@ class HillTile extends HexTile {
       col,
       HillTile.color,
       HillTile.nMovementPoints,
-      HillTile.resources
+      HillTile.resources,
+      {
+        possibleTileImprovements: ["mine"],
+      }
     );
   }
 }

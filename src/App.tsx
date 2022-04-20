@@ -5,8 +5,11 @@ import City from "./cities/city";
 import { Button, Modal } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import ResourcesDisplay from "./resources/ResourcesDisplay";
-import ProductionDisplay from "./cities/ProductionDisplay";
+import ProductionItemDisplay from "./cities/ProductionItemDisplay";
 import BottomLeftDisplay from "./displays/BottomLeftDisplay";
+import ProgressBar from "./assets/ProgressBar";
+import ResourceProgressDisplay from "./resources/ResourceProgressDisplay";
+import Resources from "./resources";
 
 function App() {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -24,15 +27,25 @@ function App() {
   );
 
   useEffect(() => {
-    console.log("changed show city modal", showCityModal);
-  }, [showCityModal]);
-
-  useEffect(() => {
     if (canvasRef.current) {
       const canvas = canvasRef.current;
       setRealmsSketch(new RealmsSketch(canvas, openShowCityModal));
     }
   }, [canvasRef.current, openShowCityModal]);
+
+  const cityModalCityResources = cityModalCity?.getResources();
+  const cityModalCurrentProduction = cityModalCity?.getCurrentProduction();
+  const cityModalCurrentResourcesPerTurn =
+    cityModalCity?.getCurrentResourcesPerTurn();
+
+  // TODO: replace
+  const [dummyCount, setDummyCount] = useState(0);
+
+  const rerender = () => {
+    setDummyCount((dummyCount) => dummyCount + 1);
+  };
+
+  console.log("rendering");
 
   return (
     <div className="App">
@@ -62,7 +75,44 @@ function App() {
                 resources={realmsSketch!.resources!}
                 resourceQuantity={cityModalCity!.getResources()}
               />
-              <ProductionDisplay
+              <h5>Population</h5>
+              <ResourceProgressDisplay
+                resourceName="food"
+                resourceColor="#30B700"
+                resourceIconSrc={Resources.getIconUrl("food")}
+                currentQuantity={cityModalCityResources!.food ?? 0}
+                totalQuantity={cityModalCity.getFoodRequiredForPopIncrease()}
+                resourcePerTurn={cityModalCity.getSurplusFood()}
+              />
+              <h5>Production</h5>
+              <h6>Current Production:</h6>
+              {cityModalCurrentProduction != null ? (
+                <>
+                  <ResourceProgressDisplay
+                    resourceName="production"
+                    resourceColor="#9e7754"
+                    resourceIconSrc={Resources.getIconUrl("production")}
+                    currentQuantity={cityModalCityResources!.production ?? 0}
+                    totalQuantity={cityModalCurrentProduction.productionCost}
+                    resourcePerTurn={
+                      cityModalCurrentResourcesPerTurn?.production ?? 0
+                    }
+                  />
+                </>
+              ) : (
+                "Nothing"
+              )}
+
+              <ProductionItemDisplay
+                onSelect={(productionItem) => {
+                  cityModalCity.setCurrentProduction(productionItem);
+                  console.log(
+                    "set city production to ",
+                    productionItem,
+                    cityModalCity.getCurrentProduction()
+                  );
+                  rerender();
+                }}
                 productionPerTurn={cityModalCity!.getProductionPerTurn()}
                 productionItems={realmsSketch!.productionItems!.getItems()}
               />

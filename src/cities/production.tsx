@@ -54,7 +54,7 @@ class ProductionItems {
     this.millitaryUnits.push({
       name: "Swordsman",
       onProduced: () => {},
-      productionCost: 10,
+      productionCost: 30,
       icon: <UnitIcon unit={units.getSwordsman(player, () => {})} />,
     });
   }

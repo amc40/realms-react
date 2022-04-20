@@ -264,6 +264,29 @@ class Map {
     this.units.push(unit);
   }
 
+  allUnitActionsExhausted(): boolean {
+    // check that all units have orders, have run out of moves or are sleeping
+    return this.units.every((unit) => !unit.requiresOrders());
+  }
+
+  getUnitThatRequiresOrders(): Unit | undefined {
+    return this.units.find((unit) => unit.requiresOrders());
+  }
+
+  centreOnAndSelectUnit(p5: p5, unit: Unit) {
+    this.centreOnUnit(p5, unit);
+    this.currentSelectedUnit = unit;
+    unit.select();
+  }
+
+  centreOnUnit(sketch: p5, unit: Unit) {
+    const hexTile = unit.currentTile;
+    if (hexTile != null) {
+      this.xPan = -this.getHexCentreX(hexTile) * this.scale + sketch.width / 2;
+      this.yPan = -this.getHexCentreY(hexTile) * this.scale + sketch.height / 2;
+    }
+  }
+
   handleNextTurn() {
     this.units.forEach((unit) => unit.handleNextTurn());
     this.currentSelectedUnit = null;

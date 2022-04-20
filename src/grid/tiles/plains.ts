@@ -20,7 +20,10 @@ class PlainsTile extends HexTile {
       col,
       PlainsTile.color,
       PlainsTile.nMovementPoints,
-      PlainsTile.resources
+      PlainsTile.resources,
+      {
+        possibleTileImprovements: ["farm"],
+      }
     );
   }
 }

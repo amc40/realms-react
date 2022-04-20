@@ -15,7 +15,7 @@ class MarshTile extends HexTile {
       col,
       MarshTile.color,
       MarshTile.nMovementPoints,
-      MarshTile.resources
+      MarshTile.resources,
     );
   }
 }

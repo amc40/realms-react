@@ -55,8 +55,8 @@ const ResourcesDisplay: React.FC<Props> = ({
 
   return (
     <Container>
-      {resourceQuantityPairs.map((resourceQuantityPair) => (
-        <Row>
+      {resourceQuantityPairs.map((resourceQuantityPair, idx) => (
+        <Row key={`resource-pair-${idx}`}>
           {resourceQuantityPair.map((resourceQuantityPairEntry) => (
             <Col key={resourceQuantityPairEntry.resource}>
               <div

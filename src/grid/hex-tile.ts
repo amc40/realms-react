@@ -31,6 +31,7 @@ abstract class HexTile extends RegularHexagon {
   private readonly textWidth = this.radius * 1.4;
   private readonly textHeight = 60;
   private _showAsValidTarget = false;
+  readonly possibleTileImprovements: TileImprovementType[];
 
   constructor(
     radius: number,
@@ -39,17 +40,25 @@ abstract class HexTile extends RegularHexagon {
     color: RGB,
     nMovementPoints: number,
     baseResources: ResourceQuantity,
-    city: City | null = null,
-    text: string | null = null
+    {
+      possibleTileImprovements,
+      city,
+      text,
+    }: {
+      possibleTileImprovements?: TileImprovementType[];
+      city?: City;
+      text?: string;
+    } = {}
   ) {
     super(radius, color, 3);
     this.row = row;
     this.col = col;
     this.nMovementPoints = nMovementPoints;
-    this.city = city;
-    this.text = text;
+    this.city = city ?? null;
+    this.text = text ?? null;
     this.baseResources = baseResources;
     this.city?.addTile(this);
+    this.possibleTileImprovements = possibleTileImprovements ?? [];
   }
 
   addUnit(unit: Unit) {

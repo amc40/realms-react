@@ -47,6 +47,7 @@
   },
   "devDependencies": {
     "@types/bootstrap": "^5.1.9",
-    "@types/circular-dependency-plugin": "^5.0.5"
+    "@types/circular-dependency-plugin": "^5.0.5",
+    "css-loader": "^6.7.1"
   }
 }

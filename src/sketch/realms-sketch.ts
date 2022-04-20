@@ -5,7 +5,9 @@ import City from "../cities/city";
 import ProductionItems from "../cities/production";
 import { Empires } from "../empires/empire";
 import Map from "../grid/hex-grid";
+import HexTile from "../grid/hex-tile";
 import MapGenerator from "../grid/map-generation";
+import { TileImprovementType } from "../grid/tile-improvements";
 import Player from "../players/player";
 import Resources from "../resources";
 import Units from "../units";
@@ -34,6 +36,9 @@ class RealmsSketch extends p5 {
   productionItems: ProductionItems | null = null;
 
   private prevSelectedUnit: Unit | null = null;
+  private prevSelectedUnitTile: HexTile | null = null;
+
+  private static scrollSpeed = 8;
 
   constructor(canvasElement: HTMLElement, openCityModal: (city: City) => void) {
     super(() => {}, canvasElement);
@@ -82,13 +87,22 @@ class RealmsSketch extends p5 {
     }
   }
 
+  constructTileImprovement(tileImprovementType: TileImprovementType) {
+    this.hexagonalGrid!.getCurrentSelectedUnit()?.currentTile?.addTileImprovement(
+      this,
+      tileImprovementType
+    );
+  }
+
   clearAllUnitActionSelections() {
     this.hexagonalGrid!.getCurrentSelectedUnit()?.stopSelectingMovement();
     this.getCurrentSelectedMillitaryUnit()?.stopSelectingAttackTarget();
     this.getCurrentSelectedTransportUnit()?.stopSelectingTransportTarget();
   }
 
-  handleUnitSleep() {}
+  handleUnitSleep() {
+    this.hexagonalGrid!.getCurrentSelectedUnit()?.setSleeping();
+  }
 
   handleUnitTransport() {
     if (this.isTransportSelected()) {
@@ -128,6 +142,14 @@ class RealmsSketch extends p5 {
   }
 
   handleNextTurn() {
+    const unitRequiringOrders = this.hexagonalGrid!.getUnitThatRequiresOrders();
+    if (unitRequiringOrders != null) {
+      // TODO: centre map and select unit which requires orders
+      this.hexagonalGrid!.centreOnAndSelectUnit(this, unitRequiringOrders);
+      return;
+    }
+    // TODO: check that all cities have a production queue
+
     this.hexagonalGrid?.handleNextTurn();
   }
 
@@ -167,6 +189,10 @@ class RealmsSketch extends p5 {
     return this.getCurrentSelectedTransportUnit()?.havingTransportTargetSelected();
   }
 
+  isSleepSelected() {
+    return this.hexagonalGrid!.getCurrentSelectedUnit()?.isSleeping();
+  }
+
   isUnitActionSelected(unitActionType: UnitActionType) {
     switch (unitActionType) {
       case "move":
@@ -175,6 +201,8 @@ class RealmsSketch extends p5 {
         return this.isAttackSelected();
       case "transport":
         return this.isTransportSelected();
+      case "sleep":
+        return this.isSleepSelected();
       default:
         return false;
     }
@@ -194,12 +222,21 @@ class RealmsSketch extends p5 {
       case "transport":
         this.handleUnitTransport();
         break;
+      case "construct-farm":
+        this.constructTileImprovement("farm");
+        break;
+      case "construct-mine":
+        this.constructTileImprovement("mine");
+        break;
     }
   }
 
   draw(): void {
     const selectedUnit = this.hexagonalGrid!.getCurrentSelectedUnit();
-    if (selectedUnit !== this.prevSelectedUnit) {
+    if (
+      selectedUnit !== this.prevSelectedUnit ||
+      selectedUnit?.currentTile !== this.prevSelectedUnitTile
+    ) {
       if (selectedUnit != null) {
         const unitActionTypes = selectedUnit.getUnitActionTypes();
         this.unitActionButtons = this.unitActions!.getUnitActionButtons(
@@ -211,22 +248,28 @@ class RealmsSketch extends p5 {
       }
     }
     this.prevSelectedUnit = selectedUnit;
+    this.prevSelectedUnitTile = selectedUnit?.currentTile ?? null;
     if (this.keyIsDown("A".charCodeAt(0))) {
-      this.hexagonalGrid!.panX(3);
+      this.hexagonalGrid!.panX(RealmsSketch.scrollSpeed);
     } else if (this.keyIsDown("D".charCodeAt(0))) {
-      this.hexagonalGrid!.panX(-3);
+      this.hexagonalGrid!.panX(-RealmsSketch.scrollSpeed);
     }
     if (this.keyIsDown("W".charCodeAt(0))) {
-      this.hexagonalGrid!.panY(3);
+      this.hexagonalGrid!.panY(RealmsSketch.scrollSpeed);
     } else if (this.keyIsDown("S".charCodeAt(0))) {
-      this.hexagonalGrid!.panY(-3);
+      this.hexagonalGrid!.panY(-RealmsSketch.scrollSpeed);
     }
     this.background(0);
     this.hexagonalGrid!.draw(this);
     this.unitActionButtons.forEach(({ button, type }) =>
       button.draw(this, this.isUnitActionSelected(type))
     );
-    this.nextTurnIndicator.draw(this);
+    this.nextTurnIndicator.draw(
+      this,
+      this.hexagonalGrid!.allUnitActionsExhausted()
+        ? "Next Turn"
+        : "Needs Orders"
+    );
   }
 }
 

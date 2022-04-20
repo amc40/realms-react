@@ -4,7 +4,11 @@ import Unit from "../unit";
 import { UnitActionType } from "../unit-actions";
 import CivilUnit from "./civil-unit";
 
-export type WorkerUnitActionType = "move" | "sleep";
+export type WorkerUnitActionType =
+  | "move"
+  | "sleep"
+  | "construct-farm"
+  | "construct-mine";
 
 class WorkerUnit extends CivilUnit {
   private static nMovementPoints = 2;
@@ -19,9 +23,16 @@ class WorkerUnit extends CivilUnit {
   }
 
   getUnitActionTypes(): UnitActionType[] {
-    return ["move", "sleep"];
+    let possibleActionTypes: UnitActionType[] = [];
+    if (this.currentTile?.possibleTileImprovements.includes("farm")) {
+      possibleActionTypes.push("construct-farm");
+    }
+    if (this.currentTile?.possibleTileImprovements.includes("mine")) {
+      possibleActionTypes.push("construct-mine");
+    }
+    possibleActionTypes.push("move", "sleep");
+    return possibleActionTypes;
   }
-
 }
 
 export default WorkerUnit;

@@ -4,7 +4,7 @@ import TileImprovement from "./tile-improvement";
 import TileImprovementIcon from "./tile-improvement-icon";
 
 class MineTileImprovementIcon extends TileImprovementIcon {
-  static readonly iconPath = "assets/tile-improvements/mining-cart.png";
+  static readonly iconPath = "assets/tile-improvements/mine.png";
 
   constructor(p5: p5) {
     super("mine", p5.loadImage(MineTileImprovementIcon.iconPath));

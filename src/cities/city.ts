@@ -10,6 +10,7 @@ import {
 import { ProductionItem } from "./production";
 
 class City {
+  private static popIncreaseFoodSurplus = 30;
   readonly name: string;
   owner: Player;
   private resources: ResourceQuantity = {
@@ -29,6 +30,10 @@ class City {
     this.owner = owner;
   }
 
+  getCurrentProduction() {
+    return this.currentProduction;
+  }
+
   addTile(tile: HexTile) {
     this.tiles.push(tile);
   }
@@ -45,6 +50,10 @@ class City {
     ]);
   }
 
+  getFoodRequiredForPopIncrease() {
+    return City.popIncreaseFoodSurplus;
+  }
+
   getProductionPerTurn(): number {
     return this.getCurrentResourcesPerTurn().production ?? 0;
   }
@@ -55,6 +64,19 @@ class City {
 
   public getResources() {
     return this.resources;
+  }
+
+  getConsumedFoodPerTurn() {
+    return this.getResources().population ?? 0;
+  }
+
+  getSurplusFood() {
+    const { food: foodProducedPerTurn } = this.getCurrentResourcesPerTurn();
+    return (foodProducedPerTurn ?? 0) - this.getConsumedFoodPerTurn();
+  }
+
+  setCurrentProduction(production: ProductionItem) {
+    this.currentProduction = production;
   }
 }
 

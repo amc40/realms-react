@@ -1,0 +1,11 @@
+.production-item {
+  margin-left: 0px;
+  margin-right: 10px;
+  border: 2px solid black;
+  padding: 3px;
+}
+
+.production-item:hover {
+  border: 2px solid #9e7754;
+  cursor: pointer;
+}

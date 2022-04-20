@@ -10,6 +10,7 @@ import { UnitActionType } from "./unit-actions";
 enum State {
   WAITING_FOR_ORDERS,
   FOLLOWING_ORDERS,
+  SLEEPING,
 }
 
 export type AugmentedTile = {
@@ -75,6 +76,8 @@ abstract class Unit {
         );
         this._shortestPathToTarget =
           shortestPathResult != null ? shortestPathResult.path : null;
+      } else if (this._movementTarget == null) {
+        this._shortestPathToTarget = null;
       }
     }
   }
@@ -113,6 +116,15 @@ abstract class Unit {
 
   requiresOrders() {
     return this.state === State.WAITING_FOR_ORDERS && this.movementPoints > 0;
+  }
+
+  setSleeping() {
+    this.movementTarget = null;
+    this.state = State.SLEEPING;
+  }
+
+  isSleeping() {
+    return this.state === State.SLEEPING;
   }
 
   /**

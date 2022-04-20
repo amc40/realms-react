@@ -1,8 +1,8 @@
 import p5 from "p5";
 
 class NextTurn {
-  private static readonly OUTER_RADIUS = 50;
-  private static readonly INNER_RADIUS = 45;
+  private static readonly OUTER_RADIUS = 60;
+  private static readonly INNER_RADIUS = 55;
   private static readonly MARGIN = 50;
   private nextTurn: () => void;
 
@@ -29,7 +29,7 @@ class NextTurn {
     return false;
   }
 
-  draw(p5: p5) {
+  draw(p5: p5, text: "Next Turn" | "Needs Orders") {
     p5.push();
     p5.ellipseMode(p5.CENTER);
     p5.ellipse(
@@ -46,7 +46,7 @@ class NextTurn {
     );
     p5.textSize(16);
     p5.textAlign(p5.CENTER, p5.CENTER);
-    p5.text("Next Turn", this.getCentre(p5).x, this.getCentre(p5).y);
+    p5.text(text, this.getCentre(p5).x, this.getCentre(p5).y);
 
     p5.pop();
   }

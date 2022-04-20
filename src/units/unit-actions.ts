@@ -24,6 +24,10 @@ class UnitActions {
         return "/assets/actions/transport.png";
       case "melee-attack":
         return "/assets/actions/attack.png";
+      case "construct-farm":
+        return "/assets/tile-improvements/farm.png";
+      case "construct-mine":
+        return "/assets/tile-improvements/mine.png";
       default:
         throw new Error("Unknown action type", actionType);
     }
@@ -38,11 +42,19 @@ class UnitActions {
     const meleeAttack = p5.loadImage(
       UnitActions.getUnitActionIconUrl("melee-attack")
     );
+    const constructFarm = p5.loadImage(
+      UnitActions.getUnitActionIconUrl("construct-farm")
+    );
+    const constructMine = p5.loadImage(
+      UnitActions.getUnitActionIconUrl("construct-mine")
+    );
     this.unitActionIcons = {
       move,
       sleep,
       transport,
       "melee-attack": meleeAttack,
+      "construct-farm": constructFarm,
+      "construct-mine": constructMine,
     };
   }
 

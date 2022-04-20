@@ -2,28 +2,31 @@ import { Button, Col, Row } from "react-bootstrap";
 import ProductionQuantityDisplay from "../resources/ProductionQuanityDisplay";
 import TurnDisplay from "../resources/TurnDisplay";
 import { ProductionItem } from "./production";
+import styles from "./ProductionItemDisplay.module.css";
 
 interface Props {
   productionItems: ProductionItem[];
   productionPerTurn: number;
+  onSelect: (productionItem: ProductionItem) => void;
 }
 
-const ProductionDisplay: React.FC<Props> = ({
+const ProductionItemDisplay: React.FC<Props> = ({
   productionItems,
   productionPerTurn,
+  onSelect,
 }) => {
-  console.log("production per turn", productionPerTurn);
   return (
     <>
-      <h5>Production Items:</h5>
-      <div className="production-display">
+      <h6>Production Items:</h6>
+      <div>
         {productionItems.map((item, idx) => (
           <Row
+            className={styles["production-item"]}
+            onClick={() => {
+              console.log("clicked", item);
+              onSelect(item);
+            }}
             style={{
-              marginLeft: 0,
-              marginRight: 10,
-              border: "2px solid black",
-              padding: 3,
               borderTopLeftRadius: idx === 0 ? 15 : 0,
               borderTopRightRadius: idx === 0 ? 15 : 0,
               borderBottomLeftRadius:
@@ -32,7 +35,6 @@ const ProductionDisplay: React.FC<Props> = ({
                 idx === productionItems.length - 1 ? 15 : 0,
             }}
             key={item.name}
-            className="production-item"
           >
             <Col md="auto">
               <div
@@ -72,4 +74,4 @@ const ProductionDisplay: React.FC<Props> = ({
   );
 };
 
-export default ProductionDisplay;
+export default ProductionItemDisplay;

@@ -1,5 +1,6 @@
 import p5 from "p5";
 import HexTile from "../grid/hex-tile";
+import CityTile from "../grid/tiles/city";
 import Player from "../players/player";
 import {
   addAllResourceQuantities,
@@ -7,12 +8,14 @@ import {
   AllResourceTypes,
   ResourceQuantity,
 } from "../resources";
+import Unit from "../units/unit";
 import { ProductionItem } from "./production";
 
 class City {
   private static popIncreaseFoodSurplus = 30;
   readonly name: string;
   owner: Player;
+  cityTile: CityTile | null = null;
   private resources: ResourceQuantity = {
     population: 10,
     food: 10,
@@ -28,6 +31,10 @@ class City {
   constructor(name: string = "City", owner: Player) {
     this.name = name;
     this.owner = owner;
+  }
+
+  setCityTile(cityTile: CityTile) {
+    this.cityTile = cityTile;
   }
 
   getCurrentProduction() {
@@ -50,6 +57,13 @@ class City {
     ]);
   }
 
+  getCurrentNetResourcesPerTurn() {
+    const currentProducedResourcesPerTurn = this.getCurrentResourcesPerTurn();
+    return addResourceQuantities(currentProducedResourcesPerTurn, {
+      food: -this.getConsumedFoodPerTurn(),
+    });
+  }
+
   getFoodRequiredForPopIncrease() {
     return City.popIncreaseFoodSurplus;
   }
@@ -62,8 +76,30 @@ class City {
     this.resources = addResourceQuantities(this.resources, resourceQuantity);
   }
 
+  handleNextTurn() {
+    this.addResources(this.getCurrentNetResourcesPerTurn());
+    if ((this.resources.food ?? 0) >= this.getFoodRequiredForPopIncrease()) {
+      this.resources.population = (this.resources.population ?? 0) + 1;
+      this.resources.food =
+        (this.resources.food ?? 0) - this.getFoodRequiredForPopIncrease();
+    } else if ((this.resources.food ?? 0) < 0) {
+      this.resources.population = (this.resources.population ?? 0) - 1;
+      this.resources.food =
+        this.getFoodRequiredForPopIncrease() + (this.resources.food ?? 0);
+    }
+  }
+
   public getResources() {
     return this.resources;
+  }
+
+  public getTransferrableResources() {
+    let transferrableResources: ResourceQuantity = {
+      ...this.resources,
+    };
+    delete transferrableResources.population;
+    delete transferrableResources.production;
+    return transferrableResources;
   }
 
   getConsumedFoodPerTurn() {

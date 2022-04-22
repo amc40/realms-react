@@ -4,8 +4,9 @@ import ResourceIcon from "./ResourceIcon";
 interface Props {
   resourceIconSrc: string;
   resourceName: string;
-  resourceQuantity: number;
+  resourceQuantity: number | string;
   totalResourceQuantity?: number;
+  nPerTurn?: number;
   float?: "left" | "right";
 }
 
@@ -14,13 +15,18 @@ const ResourceQuantityDisplay: React.FC<Props> = ({
   resourceName,
   resourceQuantity,
   totalResourceQuantity,
+  nPerTurn,
   float = "left",
 }) => {
+  console.log(nPerTurn);
+  const nPerTurnStr = nPerTurn != null ? `(${nPerTurn})` : "";
   return (
     <>
       <span style={{ marginRight: 10, float }}>
         {resourceQuantity}
-        {totalResourceQuantity ? ` / ${totalResourceQuantity}` : ""}
+        {totalResourceQuantity != null
+          ? ` / ${totalResourceQuantity} ${nPerTurnStr}`
+          : ""}
       </span>
       <ResourceIcon
         float={float}

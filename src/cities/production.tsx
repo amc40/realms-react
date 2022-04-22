@@ -1,12 +1,14 @@
 import p5 from "p5";
 import React, { useEffect } from "react";
+import Map from "../grid/hex-grid";
 import Player from "../players/player";
-import Units from "../units";
+import Units, { UnitType } from "../units";
 import Unit from "../units/unit";
+import City from "./city";
 
 export interface ProductionItem {
   name: string;
-  onProduced: () => void;
+  onProduced: (city: City) => void;
   productionCost: number;
   icon: JSX.Element;
 }
@@ -50,10 +52,14 @@ class ProductionItems {
 
   private static getMillitaryIcon() {}
 
-  constructor(units: Units, player: Player) {
+  constructor(units: Units, player: Player, hexGridMap: Map) {
+    const produceUnit = (city: City, unitType: UnitType) =>
+      city.cityTile!.produceUnit(
+        units.getUnit(unitType, city.owner, hexGridMap.onUnitKilled)
+      );
     this.millitaryUnits.push({
       name: "Swordsman",
-      onProduced: () => {},
+      onProduced: (city: City   ) => produceUnit(city, "swordsman"),
       productionCost: 30,
       icon: <UnitIcon unit={units.getSwordsman(player, () => {})} />,
     });

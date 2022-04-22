@@ -5,11 +5,13 @@ import City from "./cities/city";
 import { Button, Modal } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import ResourcesDisplay from "./resources/ResourcesDisplay";
-import ProductionItemDisplay from "./cities/ProductionItemDisplay";
+import ProductionItemsDisplay from "./cities/ProductionItemsDisplay";
 import BottomLeftDisplay from "./displays/BottomLeftDisplay";
 import ProgressBar from "./assets/ProgressBar";
 import ResourceProgressDisplay from "./resources/ResourceProgressDisplay";
 import Resources from "./resources";
+import ResourceQuantityDisplay from "./resources/ResourceQuantityDisplay";
+import ProductionItemDisplay from "./cities/ProductionItemDisplay";
 
 function App() {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -71,11 +73,17 @@ function App() {
               <Modal.Title>{cityModalCity!.name}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
+              <h5>Resources</h5>
               <ResourcesDisplay
                 resources={realmsSketch!.resources!}
-                resourceQuantity={cityModalCity!.getResources()}
+                resourceQuantity={cityModalCity!.getTransferrableResources()}
               />
               <h5>Population</h5>
+              <ResourceQuantityDisplay
+                resourceName="Population"
+                resourceIconSrc={Resources.getIconUrl("population")}
+                resourceQuantity={cityModalCity!.getResources()!.population!}
+              />
               <ResourceProgressDisplay
                 resourceName="food"
                 resourceColor="#30B700"
@@ -88,6 +96,15 @@ function App() {
               <h6>Current Production:</h6>
               {cityModalCurrentProduction != null ? (
                 <>
+                  <div style={{ marginBottom: 5 }}>
+                    <ProductionItemDisplay
+                      productionItem={cityModalCurrentProduction}
+                      productionPerTurn={
+                        cityModalCurrentResourcesPerTurn?.production ?? 0
+                      }
+                    />
+                  </div>
+
                   <ResourceProgressDisplay
                     resourceName="production"
                     resourceColor="#9e7754"
@@ -103,7 +120,7 @@ function App() {
                 "Nothing"
               )}
 
-              <ProductionItemDisplay
+              <ProductionItemsDisplay
                 onSelect={(productionItem) => {
                   cityModalCity.setCurrentProduction(productionItem);
                   console.log(

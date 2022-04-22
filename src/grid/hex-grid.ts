@@ -137,6 +137,8 @@ class Map {
   private currentSelectedUnit: Unit | null = null;
   private units: Unit[] = [];
 
+  private cityTiles: CityTile[] = [];
+
   private static getNeighbourOffsetCoords(
     row: number,
     col: number,
@@ -203,6 +205,13 @@ class Map {
     this.horizontalDist = this.radius * Math.sqrt(3);
     this.height = height;
     this.width = width;
+    hexagonGrid.forEach((row) =>
+      row.forEach((hex) => {
+        if (hex instanceof CityTile) {
+          this.cityTiles.push(hex);
+        }
+      })
+    );
   }
 
   private firstOffset(row: number) {
@@ -282,14 +291,33 @@ class Map {
   centreOnUnit(sketch: p5, unit: Unit) {
     const hexTile = unit.currentTile;
     if (hexTile != null) {
-      this.xPan = -this.getHexCentreX(hexTile) * this.scale + sketch.width / 2;
-      this.yPan = -this.getHexCentreY(hexTile) * this.scale + sketch.height / 2;
+      this.centreOn(sketch, hexTile);
     }
+  }
+
+  centreOn(sketch: p5, hexTile: HexTile) {
+    this.xPan = -this.getHexCentreX(hexTile) * this.scale + sketch.width / 2;
+    this.yPan = -this.getHexCentreY(hexTile) * this.scale + sketch.height / 2;
+  }
+
+  getCityTileRequiringProductionChoice() {
+    return this.cityTiles.find(
+      (cityTile) => cityTile.getCity()!.getCurrentProduction() == null
+    );
+  }
+
+  citiesAllHaveProduction() {
+    return this.cityTiles.every(
+      (cityTile) => cityTile.getCity()!.getCurrentProduction() != null
+    );
   }
 
   handleNextTurn() {
     this.units.forEach((unit) => unit.handleNextTurn());
     this.currentSelectedUnit = null;
+    this.cityTiles
+      .map((cityTile) => cityTile.getCity()!)
+      .forEach((city) => city.handleNextTurn());
   }
 
   public handleMouseMove(mouseScreenX: number, mouseScreenY: number) {
@@ -446,6 +474,7 @@ class Map {
       neighbourTile.addNeighbour(cityTile);
       cityTile.addNeighbour(neighbourTile);
     }
+    this.cityTiles.push(cityTile);
   }
 
   drawPath(p5: p5, path: HexTile[]) {

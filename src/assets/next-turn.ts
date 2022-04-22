@@ -29,7 +29,7 @@ class NextTurn {
     return false;
   }
 
-  draw(p5: p5, text: "Next Turn" | "Needs Orders") {
+  draw(p5: p5, text: "Next Turn" | "Needs\nOrders" | "Choose\nProduction") {
     p5.push();
     p5.ellipseMode(p5.CENTER);
     p5.ellipse(

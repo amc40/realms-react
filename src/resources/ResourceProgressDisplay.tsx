@@ -22,14 +22,19 @@ const ResourceProgressDisplay: React.FC<Props> = ({
   resourceName,
 }) => {
   const nRemaining = totalQuantity - currentQuantity;
-  const nTurnsRemaining = Math.ceil(nRemaining / resourcePerTurn);
+  const nTurnsRemaining: number | string =
+    resourcePerTurn > 0
+      ? Math.ceil(nRemaining / resourcePerTurn)
+      : resourcePerTurn < 0
+      ? Math.ceil(currentQuantity / Math.abs(resourcePerTurn))
+      : "-";
   return (
     <div
       style={{
         display: "inline-grid",
         columnGap: 5,
         width: "100%",
-        gridTemplateColumns: "60% 25% 15%",
+        gridTemplateColumns: "55% 30% 15%",
       }}
     >
       <span
@@ -43,7 +48,7 @@ const ResourceProgressDisplay: React.FC<Props> = ({
         }}
       >
         <ProgressBar
-          color={resourceColor}
+          color={resourcePerTurn >= 0 ? resourceColor : "red"}
           progress={(currentQuantity / totalQuantity) * 100}
         />
       </span>
@@ -54,6 +59,7 @@ const ResourceProgressDisplay: React.FC<Props> = ({
           resourceName={resourceName}
           resourceQuantity={currentQuantity}
           totalResourceQuantity={totalQuantity}
+          nPerTurn={resourcePerTurn}
         />
       </span>
       <span style={{ gridColumnStart: 3, gridColumnEnd: 4 }}>

@@ -74,7 +74,11 @@ class RealmsSketch extends p5 {
     Object.values(this.unitActionButtons!).forEach(({ button }) =>
       button.setVisible()
     );
-    this.productionItems = new ProductionItems(this.units!, this.humanPlayer);
+    this.productionItems = new ProductionItems(
+      this.units!,
+      this.humanPlayer,
+      this.hexagonalGrid
+    );
     this.unitActions = new UnitActions(this);
   }
 
@@ -144,11 +148,16 @@ class RealmsSketch extends p5 {
   handleNextTurn() {
     const unitRequiringOrders = this.hexagonalGrid!.getUnitThatRequiresOrders();
     if (unitRequiringOrders != null) {
-      // TODO: centre map and select unit which requires orders
       this.hexagonalGrid!.centreOnAndSelectUnit(this, unitRequiringOrders);
       return;
     }
-    // TODO: check that all cities have a production queue
+    const cityRequiringProductionChoice =
+      this.hexagonalGrid!.getCityTileRequiringProductionChoice();
+    if (cityRequiringProductionChoice != null) {
+      this.hexagonalGrid!.centreOn(this, cityRequiringProductionChoice);
+      this.openCityModal(cityRequiringProductionChoice.getCity()!);
+      return;
+    }
 
     this.hexagonalGrid?.handleNextTurn();
   }
@@ -267,8 +276,10 @@ class RealmsSketch extends p5 {
     this.nextTurnIndicator.draw(
       this,
       this.hexagonalGrid!.allUnitActionsExhausted()
-        ? "Next Turn"
-        : "Needs Orders"
+        ? this.hexagonalGrid!.citiesAllHaveProduction()
+          ? "Next Turn"
+          : "Choose\nProduction"
+        : "Needs\nOrders"
     );
   }
 }

@@ -5,19 +5,22 @@ import {
   getNoResources,
   ResourceQuantity,
 } from "../../resources";
+import Unit from "../../units/unit";
 import HexTile from "../hex-tile";
 
 class CityTile extends HexTile {
   private static readonly nMovementPoints = 1;
   private readonly openCityModal: (city: City) => void;
   private static readonly resources = getNoResources();
+  readonly produceUnit: (unit: Unit) => void;
 
   constructor(
     radius: number,
     row: number,
     col: number,
     city: City,
-    openCityModal: (city: City) => void
+    openCityModal: (city: City) => void,
+    produceUnit: (unit: Unit) => void
   ) {
     super(
       radius,
@@ -29,7 +32,9 @@ class CityTile extends HexTile {
       { city, text: city.name }
     );
     this.city = city;
+    this.city.setCityTile(this);
     this.openCityModal = openCityModal;
+    this.produceUnit = produceUnit;
   }
 
   public addResources(resourceQuantity: ResourceQuantity) {

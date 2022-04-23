@@ -13,6 +13,7 @@ import GrasslandTile from "./tiles/grassland";
 import HillTile from "./tiles/hills";
 import MarshTile from "./tiles/marsh";
 import PlainsTile from "./tiles/plains";
+import { randomElement } from "../utils/random";
 
 type TileType = "grassland" | "desert" | "marsh" | "hills" | "plains";
 const tileTypes: TileType[] = [
@@ -233,6 +234,21 @@ class MapGenerator {
     units: Units
   ) {
     for (let player of players) {
+      let cities: CityTile[] = [];
+      for (let cityN = 0; cityN < nCities; cityN++) {
+        const cityRow = MapGenerator.getRandomRow(map);
+        const cityCol = MapGenerator.getRandomCol(map);
+        const cityTile = new CityTile(
+          tileRadius,
+          cityRow,
+          cityCol,
+          new City("City " + (cityN + 1), player),
+          this.openCityModal,
+          (unit: Unit) => map.addUnit(unit, cityRow, cityCol)
+        );
+        map.addCityTile(cityTile);
+        cities.push(cityTile);
+      }
       const unit = units.getSwordsman(player, (unit: Unit) =>
         map.onUnitKilled(unit)
       );
@@ -242,36 +258,18 @@ class MapGenerator {
       const worker = units.getWorker(player, (unit: Unit) => {
         map.onUnitKilled(unit);
       });
-      // map.addUnit(
-      //   unit,
-      //   MapGenerator.getRandomRow(map),
-      //   MapGenerator.getRandomCol(map)
-      // );
-      // map.addUnit(
-      //   caravan,
-      //   MapGenerator.getRandomRow(map),
-      //   MapGenerator.getRandomCol(map)
-      // );
-      // map.addUnit(
-      //   worker,
-      //   MapGenerator.getRandomRow(map),
-      //   MapGenerator.getRandomCol(map)
-      // );
-
-      for (let cityN = 0; cityN < nCities; cityN++) {
-        const cityRow = MapGenerator.getRandomRow(map);
-        const cityCol = MapGenerator.getRandomCol(map);
-        map.addCityTile(
-          new CityTile(
-            tileRadius,
-            cityRow,
-            cityCol,
-            new City("City " + (cityN + 1), player),
-            this.openCityModal,
-            (unit: Unit) => map.addUnit(unit, cityRow, cityCol)
-          )
-        );
-      }
+      map.addUnit(
+        unit,
+        MapGenerator.getRandomRow(map),
+        MapGenerator.getRandomCol(map)
+      );
+      const randomCity = randomElement(cities)!;
+      map.addUnit(caravan, randomCity.getRow(), randomCity.getCol());
+      map.addUnit(
+        worker,
+        MapGenerator.getRandomRow(map),
+        MapGenerator.getRandomCol(map)
+      );
     }
   }
 

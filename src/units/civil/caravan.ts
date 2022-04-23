@@ -1,10 +1,13 @@
 import p5 from "p5";
+import CityTile from "../../grid/tiles/city";
 import Player from "../../players/player";
+import { ResourceQuantity } from "../../resources";
+import { ResourceTransferSrc } from "../../resources/resource-transfer";
 import Unit from "../unit";
 import { UnitActionType } from "../unit-actions";
 import CivilUnit from "./civil-unit";
 
-export type CaravanActionType = "transport" | "sleep";
+export type CaravanActionType = "transport" | "sleep" | "transfer-resources";
 
 class Caravan extends CivilUnit {
   private static nMovementPoints = 2;
@@ -32,7 +35,14 @@ class Caravan extends CivilUnit {
   }
 
   getUnitActionTypes(): UnitActionType[] {
-    return ["transport", "sleep"];
+    let unitActions: UnitActionType[] = ["transport", "sleep"];
+    if (this.currentTile instanceof CityTile) {
+      unitActions.push("transfer-resources");
+    }
+    return unitActions;
+  }
+  getName(): string {
+    return "Caravan";
   }
 }
 

@@ -1,6 +1,7 @@
 import p5 from "p5";
 import Player from "../../players/player";
 import { ResourceQuantity } from "../../resources";
+import { ResourceTransferSrc } from "../../resources/resource-transfer";
 import Unit from "../unit";
 import { CaravanActionType } from "./caravan";
 import { WorkerUnitActionType } from "./worker";
@@ -33,8 +34,21 @@ abstract class CivilUnit extends Unit {
     }
   }
 
+  setResources(resources: ResourceQuantity) {
+    this.resources = resources;
+  }
+
   clearResources() {
     this.resources = {};
+  }
+
+  abstract getName(): string;
+
+  getTransferResourceSrc(): ResourceTransferSrc {
+    return {
+      resourceSrcName: this.getName(),
+      resourceSrcQuantity: this.resources,
+    };
   }
 
   draw(p5: p5): void {

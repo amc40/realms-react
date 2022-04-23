@@ -33,6 +33,10 @@ class WorkerUnit extends CivilUnit {
     possibleActionTypes.push("move", "sleep");
     return possibleActionTypes;
   }
+
+  getName(): string {
+    return "Worker";
+  }
 }
 
 export default WorkerUnit;

@@ -9,11 +9,7 @@ class RegularHexagon {
   private readonly color: RGB;
   private borderWidth: number;
 
-  constructor(
-    radius: number,
-    color: RGB,
-    borderWidth: number = 1,
-  ) {
+  constructor(radius: number, color: RGB, borderWidth: number = 1) {
     this.radius = radius;
     this.color = color;
     this.borderWidth = borderWidth;
@@ -61,11 +57,7 @@ class RegularHexagon {
     if (innerBorderColor) {
       const innerBorderRadius = this.radius - (this.borderWidth * 3) / 2;
       p5.strokeWeight(this.borderWidth);
-      p5.stroke(
-        innerBorderColor.r,
-        innerBorderColor.g,
-        innerBorderColor.b
-      );
+      p5.stroke(innerBorderColor.r, innerBorderColor.g, innerBorderColor.b);
       RegularHexagon.drawHexagon(p5, innerBorderRadius);
     }
     p5.pop();

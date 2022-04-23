@@ -18,6 +18,7 @@ import UnitActions, { UnitActionType } from "../units/unit-actions";
 import { MouseButton } from "../utils/mouse-events";
 import { getSpacing } from "../utils/spacing";
 import { ResourceTransferSrc } from "../resources/resource-transfer";
+import CityTile from "../grid/tiles/city";
 
 type TransferResources = (
   resourceSrc1: ResourceTransferSrc,
@@ -280,6 +281,27 @@ class RealmsSketch extends p5 {
     }
   }
 
+  handleUnitTransferResources() {
+    const currentSelectedUnit = this.getCurrentSelectedTransportUnit();
+    const unitTile = currentSelectedUnit?.currentTile;
+    if (currentSelectedUnit != null && unitTile instanceof CityTile) {
+      const city = unitTile.getCity()!;
+      this.transferResources(
+        currentSelectedUnit.getTransferResourceSrc(),
+        city.getResourceTransferSrc(),
+        (unitQuantity: ResourceQuantity, cityQuantity: ResourceQuantity) => {
+          if (unitQuantity != null) {
+            currentSelectedUnit.setResources(unitQuantity);
+          }
+
+          if (cityQuantity != null) {
+            city.setTransferableResources(cityQuantity);
+          }
+        }
+      );
+    }
+  }
+
   handleUnitAction(unitActionType: UnitActionType) {
     switch (unitActionType) {
       case "move":
@@ -300,6 +322,8 @@ class RealmsSketch extends p5 {
       case "construct-mine":
         this.constructTileImprovement("mine");
         break;
+      case "transfer-resources":
+        this.handleUnitTransferResources();
     }
   }
 

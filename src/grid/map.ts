@@ -461,7 +461,7 @@ class Map {
   }
 
   public panX(x: number) {
-    this.xPan += x;
+    this.xPan = Math.max(0, Math.min(this.xPan + x, this.width));
   }
 
   public panY(y: number) {
@@ -598,12 +598,27 @@ class Map {
     }
   }
 
+  drawHex(p5: p5, drawFunc: (p5: p5, hexTile: HexTile) => void) {
+    p5.push();
+    p5.translate(this.horizontalDist / 2, this.radius);
+    for (let row = 0; row < this.nRows; row++) {
+      p5.push();
+      p5.translate(this.firstOffset(row), 0);
+      for (let col = 0; col < this.nCols; col++) {
+        drawFunc(p5, this.hexagonGrid[row][col]);
+        p5.translate(this.horizontalDist, 0);
+      }
+      p5.pop();
+      p5.translate(0, this.radius * 1.5);
+    }
+    p5.pop();
+  }
+
   draw(p5: p5) {
     p5.push();
     p5.translate(this.xPan, this.yPan);
     p5.scale(this.scale);
-    p5.push();
-    p5.translate(this.horizontalDist / 2, this.radius);
+
     const currentSelectedUnit = this.getCurrentSelectedUnit();
     let attackableTiles: HexTile[] | null = null;
     if (
@@ -627,17 +642,8 @@ class Map {
         transportTile.showAsValidTarget()
       );
     }
-    for (let row = 0; row < this.nRows; row++) {
-      p5.push();
-      p5.translate(this.firstOffset(row), 0);
-      for (let col = 0; col < this.nCols; col++) {
-        this.hexagonGrid[row][col].draw(p5);
-        p5.translate(this.horizontalDist, 0);
-      }
-      p5.pop();
-      p5.translate(0, this.radius * 1.5);
-    }
-    p5.pop();
+
+    this.drawHex(p5, (p5, hexTile) => hexTile.drawBackground(p5));
 
     const augmentedPath =
       currentSelectedUnit?.getMoveAugmentedShortestPathToTarget();
@@ -654,6 +660,7 @@ class Map {
         transportTile.stopShowAsValidTarget()
       );
     }
+    this.drawHex(p5, (p5, hexTile) => hexTile.drawUnitsAndText(p5));
     p5.pop();
   }
 }

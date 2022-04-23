@@ -28,6 +28,8 @@ class UnitActions {
         return "/assets/tile-improvements/farm.png";
       case "construct-mine":
         return "/assets/tile-improvements/mine.png";
+      case "transfer-resources":
+        return "/assets/actions/transfer-resources.png";
       default:
         throw new Error("Unknown action type", actionType);
     }
@@ -48,6 +50,9 @@ class UnitActions {
     const constructMine = p5.loadImage(
       UnitActions.getUnitActionIconUrl("construct-mine")
     );
+    const transferResources = p5.loadImage(
+      UnitActions.getUnitActionIconUrl("transfer-resources")
+    );
     this.unitActionIcons = {
       move,
       sleep,
@@ -55,6 +60,7 @@ class UnitActions {
       "melee-attack": meleeAttack,
       "construct-farm": constructFarm,
       "construct-mine": constructMine,
+      "transfer-resources": transferResources,
     };
   }
 

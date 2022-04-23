@@ -8,6 +8,7 @@ import {
   AllResourceTypes,
   ResourceQuantity,
 } from "../resources";
+import { ResourceTransferSrc } from "../resources/resource-transfer";
 import Unit from "../units/unit";
 import { ProductionItem } from "./production";
 
@@ -117,6 +118,28 @@ class City {
   getSurplusFood() {
     const { food: foodProducedPerTurn } = this.getCurrentResourcesPerTurn();
     return (foodProducedPerTurn ?? 0) - this.getConsumedFoodPerTurn();
+  }
+
+  public getResourceTransferSrc(): ResourceTransferSrc {
+    return {
+      resourceSrcName: this.name,
+      resourceSrcQuantity: this.getTransferrableResources(),
+    };
+  }
+
+  setTransferableResources(transferableResourceQuantity: ResourceQuantity) {
+    if (transferableResourceQuantity.population != null) {
+      delete transferableResourceQuantity.population;
+    }
+    if (transferableResourceQuantity.production != null) {
+      delete transferableResourceQuantity.production;
+    }
+
+    this.resources = {
+      population: this.resources.population,
+      production: this.resources.production,
+      ...transferableResourceQuantity,
+    };
   }
 
   setCurrentProduction(production: ProductionItem) {

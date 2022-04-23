@@ -54,7 +54,7 @@ function App() {
       setFirstResourceTransferQuantity(resourceSrc1.resourceSrcQuantity);
       setSecondResourceTransferSrcName(resourceSrc2.resourceSrcName);
       setSecondResourceTransferQuantity(resourceSrc2.resourceSrcQuantity);
-      setOnResourceTransferCompleted(onCompleted);
+      setOnResourceTransferCompleted(() => onCompleted);
       setShowResourceTransferModal(true);
     },
     []
@@ -216,6 +216,7 @@ function App() {
                 secondResourceQuantity
               );
             }
+            rerender();
           }}
           initialFirstResourceQuantity={firstResourceTransferQuantity}
           initialSecondResourceQuantity={secondResourceTransferQuantity}

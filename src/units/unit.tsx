@@ -1,6 +1,6 @@
 import p5 from "p5";
 import { ProductionItem } from "../cities/production";
-import Map from "../grid/hex-grid";
+import Map from "../grid/map";
 import HexTile from "../grid/hex-tile";
 import Player from "../players/player";
 import ShortestPath from "../utils/shortest-path";

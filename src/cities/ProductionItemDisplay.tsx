@@ -22,7 +22,9 @@ const ProductionItemDisplay: React.FC<Props> = ({
 }) => {
   return (
     <Row
-      className={styles["production-item"]}
+      className={`${styles["production-item"]} ${
+        onSelect ? styles["production-item-button"] : ""
+      }`}
       onClick={() => {
         if (onSelect) {
           onSelect(productionItem);

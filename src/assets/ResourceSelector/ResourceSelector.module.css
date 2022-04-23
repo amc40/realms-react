@@ -1,0 +1,12 @@
+.resource-option {
+  padding: 5px;
+}
+
+.resource-option:hover {
+  cursor: pointer;
+  background-color: #90caf9;
+}
+
+.selected-resource {
+  background-color: #42a5f5;
+}

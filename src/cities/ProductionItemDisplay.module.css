@@ -5,7 +5,7 @@
   padding: 3px;
 }
 
-.production-item:hover {
+.production-item-button:hover {
   border: 2px solid #9e7754;
   cursor: pointer;
 }

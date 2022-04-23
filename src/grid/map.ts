@@ -273,13 +273,21 @@ class Map {
     this.units.push(unit);
   }
 
-  allUnitActionsExhausted(): boolean {
-    // check that all units have orders, have run out of moves or are sleeping
-    return this.units.every((unit) => !unit.requiresOrders());
+  getUnitsBelongingToPlayer(player: Player): Unit[] {
+    return this.units.filter((unit) => unit.owner === player);
   }
 
-  getUnitThatRequiresOrders(): Unit | undefined {
-    return this.units.find((unit) => unit.requiresOrders());
+  allUnitActionsExhausted(player: Player): boolean {
+    // check that all units have orders, have run out of moves or are sleeping
+    return this.getUnitsBelongingToPlayer(player).every(
+      (unit) => !unit.requiresOrders()
+    );
+  }
+
+  getUnitThatRequiresOrders(player: Player): Unit | undefined {
+    return this.getUnitsBelongingToPlayer(player).find((unit) =>
+      unit.requiresOrders()
+    );
   }
 
   centreOnAndSelectUnit(p5: p5, unit: Unit) {
@@ -300,14 +308,18 @@ class Map {
     this.yPan = -this.getHexCentreY(hexTile) * this.scale + sketch.height / 2;
   }
 
-  getCityTileRequiringProductionChoice() {
-    return this.cityTiles.find(
+  getCityTilesBelongingToPlayer(player: Player): CityTile[] {
+    return this.cityTiles.filter((cityTile) => cityTile.getOwner() === player);
+  }
+
+  getCityTileRequiringProductionChoice(player: Player) {
+    return this.getCityTilesBelongingToPlayer(player).find(
       (cityTile) => cityTile.getCity()!.getCurrentProduction() == null
     );
   }
 
-  citiesAllHaveProduction() {
-    return this.cityTiles.every(
+  citiesAllHaveProduction(player: Player) {
+    return this.getCityTilesBelongingToPlayer(player).every(
       (cityTile) => cityTile.getCity()!.getCurrentProduction() != null
     );
   }
@@ -320,25 +332,34 @@ class Map {
       .forEach((city) => city.handleNextTurn());
   }
 
-  public handleMouseMove(mouseScreenX: number, mouseScreenY: number) {
-    const currentSelectedUnit = this.getCurrentSelectedUnit();
-    if (
-      currentSelectedUnit != null &&
-      currentSelectedUnit.havingMovementSelected()
-    ) {
-      const mouseX = (mouseScreenX - this.xPan) / this.scale;
-      const mouseY = (mouseScreenY - this.yPan) / this.scale;
-      const offsetCoordinate = this.mouseXYToOffset(mouseX, mouseY);
-      if (offsetCoordinate.inBounds(this.nRows, this.nCols)) {
-        const newMovementTarget =
-          this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
-        currentSelectedUnit.movementTarget = newMovementTarget;
+  public handleMouseMove(
+    mouseScreenX: number,
+    mouseScreenY: number,
+    humanPlayersTurn: boolean
+  ) {
+    if (humanPlayersTurn) {
+      const currentSelectedUnit = this.getCurrentSelectedUnit();
+      if (
+        currentSelectedUnit != null &&
+        currentSelectedUnit.havingMovementSelected()
+      ) {
+        const mouseX = (mouseScreenX - this.xPan) / this.scale;
+        const mouseY = (mouseScreenY - this.yPan) / this.scale;
+        const offsetCoordinate = this.mouseXYToOffset(mouseX, mouseY);
+        if (offsetCoordinate.inBounds(this.nRows, this.nCols)) {
+          const newMovementTarget =
+            this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
+          currentSelectedUnit.movementTarget = newMovementTarget;
+        }
       }
     }
   }
 
-  getCityTilesBelongingToPlayer(player: Player): HexTile[] {
-    return this.hexagonGrid.reduce(
+  static getCityTilesBelongingToPlayer(
+    hexagonGrid: HexTile[][],
+    player: Player
+  ): HexTile[] {
+    return hexagonGrid.reduce(
       (cityTiles: HexTile[], row: HexTile[]) =>
         cityTiles.concat(
           row.filter(
@@ -352,8 +373,11 @@ class Map {
   public handleClick(
     p5: p5,
     mouseScreenX: number,
-    mouseScreenY: number
+    mouseScreenY: number,
+    currentPlayer: Player,
+    humanPlayersTurn: boolean
   ): boolean {
+    if (!humanPlayersTurn) return false;
     const mouseX = (mouseScreenX - this.xPan) / this.scale;
     const mouseY = (mouseScreenY - this.yPan) / this.scale;
     const offsetCoordinate = this.mouseXYToOffset(mouseX, mouseY);
@@ -386,6 +410,7 @@ class Map {
         currentSelectedUnit != null &&
         currentSelectedUnit instanceof Caravan &&
         currentSelectedUnit.havingTransportTargetSelected() &&
+        hexTile instanceof CityTile &&
         this.getCityTilesBelongingToPlayer(currentSelectedUnit.owner).includes(
           hexTile
         )
@@ -399,11 +424,16 @@ class Map {
         const mouseRelativeToCentre = p5
           .createVector(mouseX, mouseY)
           .sub(hexCentreX, hexCentreY);
-        hexTile.onClick(mouseRelativeToCentre.x, mouseRelativeToCentre.y);
+        hexTile.onClick(
+          mouseRelativeToCentre.x,
+          mouseRelativeToCentre.y,
+          currentPlayer
+        );
         if (this.currentSelectedUnit != null) {
           this.currentSelectedUnit.unselect();
         }
-        this.currentSelectedUnit = hexTile.getCurrentSelectedUnit();
+        const hexTileUnit = hexTile.getCurrentSelectedUnit();
+        this.currentSelectedUnit = hexTileUnit;
         this.currentSelectedUnit?.select();
       }
       // return true if processed click

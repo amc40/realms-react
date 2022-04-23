@@ -87,6 +87,14 @@ class City {
       this.resources.food =
         this.getFoodRequiredForPopIncrease() + (this.resources.food ?? 0);
     }
+    if (
+      this.currentProduction != null &&
+      (this.resources.production ?? 0) >= this.currentProduction.productionCost
+    ) {
+      this.resources.production = 0;
+      this.currentProduction!.onProduced(this);
+      this.currentProduction = null;
+    }
   }
 
   public getResources() {

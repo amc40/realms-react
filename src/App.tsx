@@ -2,16 +2,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 import RealmsSketch from "./sketch/realms-sketch";
 import City from "./cities/city";
-import { Button, Modal } from "react-bootstrap";
+import { Col, Modal, Row } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import ResourcesDisplay from "./resources/ResourcesDisplay";
 import ProductionItemsDisplay from "./cities/ProductionItemsDisplay";
 import BottomLeftDisplay from "./displays/BottomLeftDisplay";
-import ProgressBar from "./assets/ProgressBar";
 import ResourceProgressDisplay from "./resources/ResourceProgressDisplay";
-import Resources from "./resources";
+import Resources, { ResourceQuantity } from "./resources";
 import ResourceQuantityDisplay from "./resources/ResourceQuantityDisplay";
 import ProductionItemDisplay from "./cities/ProductionItemDisplay";
+import CurrentPlayerIndicator from "./assets/CurrentPlayerIndicator/CurrentPlayerIndicator";
+import ResourceTransferModal from "./assets/ResourceTransfer/ResourceTransferModal";
+import { ResourceTransferSrc } from "./resources/resource-transfer";
 
 function App() {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -20,6 +22,44 @@ function App() {
   const [showCityModal, setShowCityModal] = useState(false);
   const [cityModalCity, setCityModalCity] = useState<City | null>(null);
 
+  const [firstResourceTransferQuantity, setFirstResourceTransferQuantity] =
+    useState<ResourceQuantity | null>(null);
+  const [firstResourceTransferSrcName, setFirstResourceTransferSrcName] =
+    useState<string | null>(null);
+  const [secondResourceTransferQuantity, setSecondResourceTransferQuantity] =
+    useState<ResourceQuantity | null>(null);
+  const [secondResourceTransferSrcName, setSecondResourceTransferSrcName] =
+    useState<string | null>(null);
+  const [onResourceTransferCompleted, setOnResourceTransferCompleted] =
+    useState<
+      | ((
+          firstResourceQuantity: ResourceQuantity,
+          secondResourceQuantity: ResourceQuantity
+        ) => void)
+      | null
+    >(null);
+  const [showResourceTransferModal, setShowResourceTransferModal] =
+    useState(false);
+
+  const transferResources = useCallback(
+    (
+      resourceSrc1: ResourceTransferSrc,
+      resourceSrc2: ResourceTransferSrc,
+      onCompleted: (
+        src1Quantity: ResourceQuantity,
+        src2Quantity: ResourceQuantity
+      ) => void
+    ) => {
+      setFirstResourceTransferSrcName(resourceSrc1.resourceSrcName);
+      setFirstResourceTransferQuantity(resourceSrc1.resourceSrcQuantity);
+      setSecondResourceTransferSrcName(resourceSrc2.resourceSrcName);
+      setSecondResourceTransferQuantity(resourceSrc2.resourceSrcQuantity);
+      setOnResourceTransferCompleted(onCompleted);
+      setShowResourceTransferModal(true);
+    },
+    []
+  );
+
   const openShowCityModal = useCallback(
     (city: City) => {
       setCityModalCity(city);
@@ -27,11 +67,25 @@ function App() {
     },
     [setShowCityModal, setCityModalCity]
   );
+  // TODO: replace
+  const [dummyCount, setDummyCount] = useState(0);
+
+  const rerender = () => {
+    setDummyCount((dummyCount) => dummyCount + 1);
+  };
 
   useEffect(() => {
     if (canvasRef.current) {
       const canvas = canvasRef.current;
-      setRealmsSketch(new RealmsSketch(canvas, openShowCityModal));
+      setRealmsSketch(
+        new RealmsSketch(
+          canvas,
+          4,
+          openShowCityModal,
+          rerender,
+          transferResources
+        )
+      );
     }
   }, [canvasRef.current, openShowCityModal]);
 
@@ -39,13 +93,6 @@ function App() {
   const cityModalCurrentProduction = cityModalCity?.getCurrentProduction();
   const cityModalCurrentResourcesPerTurn =
     cityModalCity?.getCurrentResourcesPerTurn();
-
-  // TODO: replace
-  const [dummyCount, setDummyCount] = useState(0);
-
-  const rerender = () => {
-    setDummyCount((dummyCount) => dummyCount + 1);
-  };
 
   console.log("rendering");
 
@@ -62,6 +109,12 @@ function App() {
         }}
         id="canvas"
       />
+      {realmsSketch?.currentPlayer != null ? (
+        <CurrentPlayerIndicator
+          currentPlayer={realmsSketch?.currentPlayer}
+          humanPlayer={realmsSketch?.humanPlayer}
+        />
+      ) : null}
       <Modal
         centered
         show={showCityModal && cityModalCity != null}
@@ -84,14 +137,19 @@ function App() {
                 resourceIconSrc={Resources.getIconUrl("population")}
                 resourceQuantity={cityModalCity!.getResources()!.population!}
               />
-              <ResourceProgressDisplay
-                resourceName="food"
-                resourceColor="#30B700"
-                resourceIconSrc={Resources.getIconUrl("food")}
-                currentQuantity={cityModalCityResources!.food ?? 0}
-                totalQuantity={cityModalCity.getFoodRequiredForPopIncrease()}
-                resourcePerTurn={cityModalCity.getSurplusFood()}
-              />
+              <Row>
+                <Col>
+                  <ResourceProgressDisplay
+                    resourceName="food"
+                    resourceColor="#30B700"
+                    resourceIconSrc={Resources.getIconUrl("food")}
+                    currentQuantity={cityModalCityResources!.food ?? 0}
+                    totalQuantity={cityModalCity.getFoodRequiredForPopIncrease()}
+                    resourcePerTurn={cityModalCity.getSurplusFood()}
+                  />
+                </Col>
+              </Row>
+
               <h5>Production</h5>
               <h6>Current Production:</h6>
               {cityModalCurrentProduction != null ? (
@@ -137,6 +195,35 @@ function App() {
           </>
         ) : null}
       </Modal>
+      {firstResourceTransferQuantity != null &&
+      secondResourceTransferQuantity != null &&
+      firstResourceTransferSrcName != null &&
+      secondResourceTransferSrcName != null ? (
+        <ResourceTransferModal
+          show={showResourceTransferModal}
+          onHide={(
+            firstResourceQuantity: ResourceQuantity,
+            secondResourceQuantity: ResourceQuantity
+          ) => {
+            setFirstResourceTransferQuantity(null);
+            setSecondResourceTransferQuantity(null);
+            setFirstResourceTransferSrcName(null);
+            setSecondResourceTransferSrcName(null);
+            setShowResourceTransferModal(false);
+            if (onResourceTransferCompleted) {
+              onResourceTransferCompleted(
+                firstResourceQuantity,
+                secondResourceQuantity
+              );
+            }
+          }}
+          initialFirstResourceQuantity={firstResourceTransferQuantity}
+          initialSecondResourceQuantity={secondResourceTransferQuantity}
+          firstResourceSrcName={firstResourceTransferSrcName}
+          secondResourceSrcName={secondResourceTransferSrcName}
+        />
+      ) : null}
+
       {/* <Modal show={showCityModal} onHide={() => setShowCityModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Modal heading</Modal.Title>

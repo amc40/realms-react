@@ -41,11 +41,18 @@ class CityTile extends HexTile {
     this.city!.addResources(resourceQuantity);
   }
 
-  public onClick(mouseRelativeX: number, mouseRelativeY: number): void {
-    if (this.intersectsWithText(mouseRelativeX, mouseRelativeY)) {
+  public onClick(
+    mouseRelativeX: number,
+    mouseRelativeY: number,
+    player: Player
+  ): void {
+    if (
+      this.intersectsWithText(mouseRelativeX, mouseRelativeY) &&
+      player === this.getOwner()
+    ) {
       this.openCityModal(this.city!);
     } else {
-      super.onClick(mouseRelativeX, mouseRelativeY);
+      super.onClick(mouseRelativeX, mouseRelativeY, player);
     }
   }
 }

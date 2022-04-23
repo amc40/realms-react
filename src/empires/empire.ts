@@ -4,12 +4,14 @@ import RGB from "../utils/RGB";
 export type EmpireColor = "blue";
 
 class Empire {
+  readonly name: string;
   readonly color: RGB;
   readonly colorName: string;
   readonly shieldSelectedIcon: p5.Image;
   readonly shieldUnselectedIcon: p5.Image;
 
-  constructor(color: RGB, colorName: string, p5: p5) {
+  constructor(name: string, color: RGB, colorName: string, p5: p5) {
+    this.name = name;
     this.color = color;
     this.colorName = colorName;
     this.shieldSelectedIcon = p5.loadImage(
@@ -27,6 +29,7 @@ export class Empires {
   constructor(p5: p5) {
     this.empires = [
       new Empire(
+        "Dark Green",
         {
           r: 7,
           g: 107,
@@ -36,6 +39,7 @@ export class Empires {
         p5
       ),
       new Empire(
+        "Dark Blue",
         {
           r: 46,
           g: 45,
@@ -45,6 +49,7 @@ export class Empires {
         p5
       ),
       new Empire(
+        "Orange",
         {
           r: 255,
           g: 185,
@@ -54,6 +59,7 @@ export class Empires {
         p5
       ),
       new Empire(
+        "Red",
         {
           r: 124,
           g: 0,
@@ -63,6 +69,7 @@ export class Empires {
         p5
       ),
       new Empire(
+        "Pink",
         {
           r: 255,
           g: 135,
@@ -72,6 +79,7 @@ export class Empires {
         p5
       ),
       new Empire(
+        "Purple",
         {
           r: 122,
           g: 33,
@@ -81,6 +89,7 @@ export class Empires {
         p5
       ),
       new Empire(
+        "Brown",
         {
           r: 101,
           g: 72,

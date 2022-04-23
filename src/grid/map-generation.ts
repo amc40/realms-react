@@ -5,7 +5,7 @@ import Units from "../units";
 import MillitaryUnit from "../units/millitary/millitary-unit";
 import Swordsman from "../units/millitary/swordsman";
 import Unit from "../units/unit";
-import Map, { CubeCoordinate, OffsetCoordinate } from "./hex-grid";
+import Map, { CubeCoordinate, OffsetCoordinate } from "./map";
 import HexTile from "./hex-tile";
 import CityTile from "./tiles/city";
 import DesertTile from "./tiles/desert";

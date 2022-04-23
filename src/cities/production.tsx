@@ -1,6 +1,6 @@
 import p5 from "p5";
 import React, { useEffect } from "react";
-import Map from "../grid/hex-grid";
+import Map from "../grid/map";
 import Player from "../players/player";
 import Units, { UnitType } from "../units";
 import Unit from "../units/unit";

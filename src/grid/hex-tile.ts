@@ -153,7 +153,7 @@ abstract class HexTile extends RegularHexagon {
     return this.city;
   }
 
-  public onClick(relativeMouseX: number, relativeMouseY: number): void {
+  public onClick(relativeMouseX: number, relativeMouseY: number, player: Player): void {
     // cycle through units by default
     if (this.currentUnit === null) {
       this.currentUnit = this.units[0];

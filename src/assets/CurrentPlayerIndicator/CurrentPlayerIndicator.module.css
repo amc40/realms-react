@@ -9,6 +9,7 @@
 .current-player-container {
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 .current-player-indicator {
@@ -25,4 +26,5 @@
   font-size: 20px;
   font-weight: bold;
   border-radius: 10px;
+  padding: 0px 5px;
 }

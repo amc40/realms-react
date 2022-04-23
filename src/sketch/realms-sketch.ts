@@ -30,7 +30,9 @@ type TransferResources = (
 ) => void;
 
 class RealmsSketch extends p5 {
-  private hexagonalGrid: Map | null = null;
+  private static instanceCount = 0;
+  private maps: Map[] = [];
+  currentMap: Map | null = null;
   private nextTurnIndicator = new NextTurn(() => this.handleNextTurn());
   private openCityModal: (city: City) => void;
   private transferResources: TransferResources;
@@ -56,6 +58,7 @@ class RealmsSketch extends p5 {
 
   private static scrollSpeed = 8;
   private readonly nPlayers;
+  private instanceN = ++RealmsSketch.instanceCount;
 
   constructor(
     canvasElement: HTMLElement,
@@ -95,18 +98,28 @@ class RealmsSketch extends p5 {
     );
     this.humanPlayer = this.allPlayers[0];
     this.currentPlayer = this.humanPlayer;
-    const mapGenerator = new MapGenerator(this.openCityModal);
-    this.hexagonalGrid = mapGenerator.generateMap(
+    const mapGenerator = new MapGenerator(
+      this.openCityModal,
+      this.selectMapAndCentreOn.bind(this)
+    );
+    const { mainRealm, otherRealms } = mapGenerator.generateMaps(
       this.width,
       this.height,
       0,
       0,
       20,
       20,
+      5,
+      20,
+      5,
+      20,
       this.allPlayers,
       this.units!,
       this
     );
+    this.currentMap = mainRealm;
+    this.maps = [mainRealm, ...otherRealms];
+    this.rerender();
 
     Object.values(this.unitActionButtons!).forEach(({ button }) =>
       button.setVisible()
@@ -114,35 +127,35 @@ class RealmsSketch extends p5 {
     this.productionItems = new ProductionItems(
       this.units!,
       this.humanPlayer,
-      this.hexagonalGrid
+      this.currentMap
     );
     this.unitActions = new UnitActions(this);
   }
 
   handleUnitMove() {
     if (this.isUnitMoveSelected()) {
-      this.hexagonalGrid!.getCurrentSelectedUnit()!.stopSelectingMovement();
+      this.currentMap!.getCurrentSelectedUnit()!.stopSelectingMovement();
     } else {
       this.clearAllUnitActionSelections();
-      this.hexagonalGrid!.getCurrentSelectedUnit()!.toggleSelectingMovement();
+      this.currentMap!.getCurrentSelectedUnit()!.toggleSelectingMovement();
     }
   }
 
   constructTileImprovement(tileImprovementType: TileImprovementType) {
-    this.hexagonalGrid!.getCurrentSelectedUnit()?.currentTile?.addTileImprovement(
+    this.currentMap!.getCurrentSelectedUnit()?.currentTile?.addTileImprovement(
       this,
       tileImprovementType
     );
   }
 
   clearAllUnitActionSelections() {
-    this.hexagonalGrid!.getCurrentSelectedUnit()?.stopSelectingMovement();
+    this.currentMap!.getCurrentSelectedUnit()?.stopSelectingMovement();
     this.getCurrentSelectedMillitaryUnit()?.stopSelectingAttackTarget();
     this.getCurrentSelectedTransportUnit()?.stopSelectingTransportTarget();
   }
 
   handleUnitSleep() {
-    this.hexagonalGrid!.getCurrentSelectedUnit()?.setSleeping();
+    this.currentMap!.getCurrentSelectedUnit()?.setSleeping();
   }
 
   handleUnitTransport() {
@@ -155,7 +168,7 @@ class RealmsSketch extends p5 {
   }
 
   getCurrentSelectedMillitaryUnit(): MillitaryUnit | null {
-    const currentSelectedUnit = this.hexagonalGrid!.getCurrentSelectedUnit();
+    const currentSelectedUnit = this.currentMap!.getCurrentSelectedUnit();
     if (
       currentSelectedUnit != null &&
       currentSelectedUnit instanceof MillitaryUnit
@@ -166,7 +179,7 @@ class RealmsSketch extends p5 {
   }
 
   getCurrentSelectedTransportUnit() {
-    const currentSelectedUnit = this.hexagonalGrid!.getCurrentSelectedUnit();
+    const currentSelectedUnit = this.currentMap!.getCurrentSelectedUnit();
     if (currentSelectedUnit instanceof Caravan) {
       return currentSelectedUnit;
     }
@@ -183,24 +196,24 @@ class RealmsSketch extends p5 {
   }
 
   handleNextTurn() {
-    const unitRequiringOrders = this.hexagonalGrid!.getUnitThatRequiresOrders(
+    const unitRequiringOrders = this.currentMap!.getUnitThatRequiresOrders(
       this.currentPlayer!
     );
     if (unitRequiringOrders != null) {
-      this.hexagonalGrid!.centreOnAndSelectUnit(this, unitRequiringOrders);
+      this.currentMap!.centreOnAndSelectUnit(this, unitRequiringOrders);
       return;
     }
     const cityRequiringProductionChoice =
-      this.hexagonalGrid!.getCityTileRequiringProductionChoice(
+      this.currentMap!.getCityTileRequiringProductionChoice(
         this.currentPlayer!
       );
     if (cityRequiringProductionChoice != null) {
-      this.hexagonalGrid!.centreOn(this, cityRequiringProductionChoice);
+      this.currentMap!.centreOn(this, cityRequiringProductionChoice);
       this.openCityModal(cityRequiringProductionChoice.getCity()!);
       return;
     }
 
-    this.hexagonalGrid?.handleNextTurn();
+    this.currentMap?.handleNextTurn();
     this.currentPlayer = this.getNextPlayer();
   }
   getNextPlayer(): Player | null {
@@ -222,7 +235,7 @@ class RealmsSketch extends p5 {
   }
 
   mouseMoved(event?: MouseEvent): void {
-    this.hexagonalGrid?.handleMouseMove(
+    this.currentMap?.handleMouseMove(
       this.mouseX,
       this.mouseY,
       this.isHumanPlayersTurn()
@@ -236,7 +249,7 @@ class RealmsSketch extends p5 {
       ) ||
         this.nextTurnIndicator.handleClick(this, this.mouseX, this.mouseY) ||
         (this.currentPlayer &&
-          this.hexagonalGrid?.handleClick(
+          this.currentMap?.handleClick(
             this,
             this.mouseX,
             this.mouseY,
@@ -247,11 +260,11 @@ class RealmsSketch extends p5 {
   }
 
   mouseWheel(e: WheelEvent): boolean {
-    return this.hexagonalGrid!.handleMouseWheel(e, this.mouseX, this.mouseY);
+    return this.currentMap!.handleMouseWheel(e, this.mouseX, this.mouseY);
   }
 
   isUnitMoveSelected() {
-    return this.hexagonalGrid!.getCurrentSelectedUnit()?.havingMovementSelected();
+    return this.currentMap!.getCurrentSelectedUnit()?.havingMovementSelected();
   }
 
   isAttackSelected() {
@@ -263,7 +276,7 @@ class RealmsSketch extends p5 {
   }
 
   isSleepSelected() {
-    return this.hexagonalGrid!.getCurrentSelectedUnit()?.isSleeping();
+    return this.currentMap!.getCurrentSelectedUnit()?.isSleeping();
   }
 
   isUnitActionSelected(unitActionType: UnitActionType) {
@@ -327,8 +340,33 @@ class RealmsSketch extends p5 {
     }
   }
 
+  nextRightRealm() {
+    if (this.maps.length > 0 && this.currentMap != null) {
+      const nextRealmIdx =
+        (this.maps.findIndex((m) => m === this.currentMap) + 1) %
+        this.maps.length;
+      this.currentMap = this.maps[nextRealmIdx];
+      this.rerender();
+    }
+  }
+
+  nextLeftRealm() {
+    if (this.maps.length > 0 && this.currentMap != null) {
+      const currentIdx = this.maps.findIndex((m) => m === this.currentMap);
+      const nextIdx = currentIdx <= 0 ? this.maps.length - 1 : currentIdx - 1;
+      this.currentMap = this.maps[nextIdx];
+      this.rerender();
+    }
+  }
+
+  selectMapAndCentreOn(mapToSelect: Map, centreOn: HexTile): void {
+    this.currentMap = mapToSelect;
+    this.currentMap!.centreOn(this, centreOn);
+    this.rerender();
+  }
+
   draw(): void {
-    const selectedUnit = this.hexagonalGrid!.getCurrentSelectedUnit();
+    const selectedUnit = this.currentMap!.getCurrentSelectedUnit();
     if (
       selectedUnit !== this.prevSelectedUnit ||
       selectedUnit?.currentTile !== this.prevSelectedUnitTile ||
@@ -350,25 +388,26 @@ class RealmsSketch extends p5 {
     this.prevSelectedUnitTile = selectedUnit?.currentTile ?? null;
     this.prevIsHumanPlayersTurn = this.isHumanPlayersTurn();
     if (this.keyIsDown("A".charCodeAt(0))) {
-      this.hexagonalGrid!.panX(RealmsSketch.scrollSpeed);
+      this.currentMap!.panX(RealmsSketch.scrollSpeed);
     } else if (this.keyIsDown("D".charCodeAt(0))) {
-      this.hexagonalGrid!.panX(-RealmsSketch.scrollSpeed);
+      this.currentMap!.panX(-RealmsSketch.scrollSpeed);
     }
     if (this.keyIsDown("W".charCodeAt(0))) {
-      this.hexagonalGrid!.panY(RealmsSketch.scrollSpeed);
+      this.currentMap!.panY(RealmsSketch.scrollSpeed);
     } else if (this.keyIsDown("S".charCodeAt(0))) {
-      this.hexagonalGrid!.panY(-RealmsSketch.scrollSpeed);
+      this.currentMap!.panY(-RealmsSketch.scrollSpeed);
     }
     this.background(0);
-    this.hexagonalGrid!.draw(this);
+    this.currentMap!.draw(this);
     this.unitActionButtons.forEach(({ button, type }) =>
       button.draw(this, this.isUnitActionSelected(type))
     );
+    console.log(this, "rendering", this.currentMap);
     if (this.currentPlayer != null) {
       this.nextTurnIndicator.draw(
         this,
-        this.hexagonalGrid!.allUnitActionsExhausted(this.currentPlayer)
-          ? this.hexagonalGrid!.citiesAllHaveProduction(this.currentPlayer)
+        this.currentMap!.allUnitActionsExhausted(this.currentPlayer)
+          ? this.currentMap!.citiesAllHaveProduction(this.currentPlayer)
             ? "Next Turn"
             : "Choose\nProduction"
           : "Needs\nOrders"

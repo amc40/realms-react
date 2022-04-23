@@ -1,0 +1,17 @@
+.realm-scroller-container {
+  position: fixed;
+  bottom: 50px;
+  border-radius: 10px;
+  border: 2px solid black;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  background-color: white;
+  column-gap: 10px;
+}
+
+.realm-scroller-button {
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0);
+}

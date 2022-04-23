@@ -232,7 +232,7 @@ abstract class HexTile extends RegularHexagon {
       p5.strokeWeight(1);
       p5.fill(0);
       p5.textAlign(p5.CENTER, p5.CENTER);
-      p5.textSize(26);
+      p5.textSize(18);
       p5.text(this.text, 0, 0);
       p5.pop();
     }

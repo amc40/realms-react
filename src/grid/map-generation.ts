@@ -13,7 +13,9 @@ import GrasslandTile from "./tiles/grassland";
 import HillTile from "./tiles/hills";
 import MarshTile from "./tiles/marsh";
 import PlainsTile from "./tiles/plains";
-import { randomElement } from "../utils/random";
+import { randomElement, randomInt } from "../utils/random";
+import PortalTile, { SelectMapAndCentreOn } from "./tiles/portal";
+import Portal from "../portals/portal";
 
 type TileType = "grassland" | "desert" | "marsh" | "hills" | "plains";
 const tileTypes: TileType[] = [
@@ -66,9 +68,15 @@ class MapGenerator {
   };
 
   private readonly openCityModal: (city: City) => void;
+  private readonly radius = 100;
+  private readonly selectMapAndCentreOn: SelectMapAndCentreOn;
 
-  constructor(openCityModal: (city: City) => void) {
+  constructor(
+    openCityModal: (city: City) => void,
+    selectMapAndCentreOn: SelectMapAndCentreOn
+  ) {
     this.openCityModal = openCityModal;
+    this.selectMapAndCentreOn = selectMapAndCentreOn;
   }
 
   private static getPreviousGeneratedNeighbourOffsetCoords(
@@ -273,24 +281,57 @@ class MapGenerator {
     }
   }
 
+  addPortals(mainRealm: Map, otherRealm: Map, nPortals: number) {
+    for (let portalN = 0; portalN < nPortals; portalN++) {
+      const mainRealmPortalRow = MapGenerator.getRandomRow(mainRealm);
+      const mainRealmPortalCol = MapGenerator.getRandomCol(mainRealm);
+      const otherRealmPortalRow = MapGenerator.getRandomRow(otherRealm);
+      const otherRealmPortalCol = MapGenerator.getRandomCol(otherRealm);
+      const portal = new Portal(
+        mainRealm,
+        mainRealmPortalRow,
+        mainRealmPortalCol,
+        otherRealm,
+        otherRealmPortalRow,
+        otherRealmPortalCol
+      );
+      // TODO: entur: This is a hack to make sure the portal is not on top of a city
+      const mainRealmPortalTile = new PortalTile(
+        `${portalN + 1} ${otherRealm.realmName}`,
+        portal,
+        this.radius,
+        mainRealmPortalRow,
+        mainRealmPortalCol,
+        this.selectMapAndCentreOn
+      );
+      mainRealm.addPortalTile(mainRealmPortalTile);
+      const otherRealmPortalTile = new PortalTile(
+        `${portalN + 1} ${mainRealm.realmName}`,
+        portal,
+        this.radius,
+        otherRealmPortalRow,
+        otherRealmPortalCol,
+        this.selectMapAndCentreOn
+      );
+      otherRealm.addPortalTile(otherRealmPortalTile);
+    }
+  }
+
   generateMap(
+    name: string,
     width: number,
     height: number,
     x: number,
     y: number,
     nRows: number,
-    nCols: number,
-    players: Player[],
-    units: Units,
-    p5: p5
-  ): Map {
-    const radius = 100;
+    nCols: number
+  ) {
     // random initial tile type
     const initialTileType =
       tileTypes[Math.floor(Math.random() * tileTypes.length)];
     const initialTile = MapGenerator.getTileOfType(
       initialTileType,
-      radius,
+      this.radius,
       0,
       0
     );
@@ -318,24 +359,110 @@ class MapGenerator {
           const tileType = MapGenerator.sampleProbabilities(
             tileTypeProbabilities
           );
-          const tile = MapGenerator.getTileOfType(tileType, radius, row, col);
+          const tile = MapGenerator.getTileOfType(
+            tileType,
+            this.radius,
+            row,
+            col
+          );
           hexagonGrid[row][col] = tile;
         }
       }
     }
-    const hexGrid = new Map(
+    const map = new Map(
+      name,
       width,
       height,
       x,
       y,
       nRows,
       nCols,
-      radius,
+      this.radius,
       hexagonGrid
     );
-    this.addPlayers(hexGrid, players, 3, radius, units);
-    hexagonGrid[1][1].addTileImprovement(p5, "mine");
-    return hexGrid;
+    return map;
+  }
+
+  generateMainRealmMap(
+    width: number,
+    height: number,
+    x: number,
+    y: number,
+    nRows: number,
+    nCols: number,
+    players: Player[],
+    units: Units,
+    p5: p5
+  ) {
+    const map = this.generateMap("Terra", width, height, x, y, nRows, nCols);
+    this.addPlayers(map, players, 3, this.radius, units);
+    return map;
+  }
+
+  /**
+   *
+   * @param width the width of the sketch in pixels
+   * @param height the height of the sketch in pixels
+   * @param x the x coordinate of the top left corner of the map
+   * @param y the u coordinate of the top left corner of the map
+   * @param mainRealmNRows the number of rows of hexes in the main realm
+   * @param mainRealmNCols the number of columns of hexes in the main realm
+   * @param otherRealmsMinRows the minimum number of rows of hexes in other realms
+   * @param otherRealmsMaxRows the maximum number of rows of hexes in other realms
+   * @param otherRealmsMinCols the minimum number of columns of hexes in other realms
+   * @param otherRealmsMaxCols the maximum number of columns of hexes in other realms
+   * @param nOtherRealms the number of other realms
+   * @param players the players in the game
+   * @param units the units in the game
+   * @param p5 the sketchdd
+   */
+  generateMaps(
+    width: number,
+    height: number,
+    x: number,
+    y: number,
+    mainRealmNRows: number,
+    mainRealmNCols: number,
+    otherRealmsMinRows: number,
+    otherRealmsMaxRows: number,
+    otherRealmsMinCols: number,
+    otherRealmsMaxCols: number,
+    players: Player[],
+    units: Units,
+    p5: p5
+  ): {
+    mainRealm: Map;
+    otherRealms: Map[];
+  } {
+    const nOtherRealms = players.length;
+    const mainRealm = this.generateMainRealmMap(
+      width,
+      height,
+      x,
+      y,
+      mainRealmNRows,
+      mainRealmNCols,
+      players,
+      units,
+      p5
+    );
+    let otherRealms: Map[] = [];
+    for (let i = 0; i < nOtherRealms; i++) {
+      const nRows = randomInt(otherRealmsMinRows, otherRealmsMaxRows + 1);
+      const nCols = randomInt(otherRealmsMinCols, otherRealmsMaxCols + 1);
+      const otherRealm = this.generateMap(
+        `Realm ${i + 1}`,
+        width,
+        height,
+        x,
+        y,
+        nRows,
+        nCols
+      );
+      otherRealms.push(otherRealm);
+      this.addPortals(mainRealm, otherRealm, randomInt(1, 2));
+    }
+    return { mainRealm, otherRealms };
   }
 }
 

@@ -14,6 +14,7 @@ import ProductionItemDisplay from "./cities/ProductionItemDisplay";
 import CurrentPlayerIndicator from "./assets/CurrentPlayerIndicator/CurrentPlayerIndicator";
 import ResourceTransferModal from "./assets/ResourceTransfer/ResourceTransferModal";
 import { ResourceTransferSrc } from "./resources/resource-transfer";
+import RealmScroller from "./assets/RealmScroller/RealmScroller";
 
 function App() {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -75,7 +76,7 @@ function App() {
   };
 
   useEffect(() => {
-    if (canvasRef.current) {
+    if (canvasRef.current && !realmsSketch) {
       const canvas = canvasRef.current;
       setRealmsSketch(
         new RealmsSketch(
@@ -87,7 +88,8 @@ function App() {
         )
       );
     }
-  }, [canvasRef.current, openShowCityModal]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvasRef.current]);
 
   const cityModalCityResources = cityModalCity?.getResources();
   const cityModalCurrentProduction = cityModalCity?.getCurrentProduction();
@@ -222,6 +224,21 @@ function App() {
           initialSecondResourceQuantity={secondResourceTransferQuantity}
           firstResourceSrcName={firstResourceTransferSrcName}
           secondResourceSrcName={secondResourceTransferSrcName}
+        />
+      ) : null}
+      {realmsSketch?.currentMap != null ? (
+        <RealmScroller
+          currentMap={realmsSketch?.currentMap}
+          onLeft={() => {
+            if (realmsSketch != null) {
+              realmsSketch.nextLeftRealm();
+            }
+          }}
+          onRight={() => {
+            if (realmsSketch != null) {
+              realmsSketch.nextRightRealm();
+            }
+          }}
         />
       ) : null}
 

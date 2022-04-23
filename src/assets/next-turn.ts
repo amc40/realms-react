@@ -1,9 +1,9 @@
 import p5 from "p5";
 
 class NextTurn {
-  private static readonly OUTER_RADIUS = 60;
-  private static readonly INNER_RADIUS = 55;
-  private static readonly MARGIN = 50;
+  static readonly OUTER_RADIUS = 60;
+  static readonly INNER_RADIUS = 55;
+  static readonly MARGIN = 50;
   private nextTurn: () => void;
 
   constructor(nextTurn: () => void) {

@@ -8,6 +8,7 @@ import MillitaryUnit from "../units/millitary/millitary-unit";
 import Player from "../players/player";
 import City from "../cities/city";
 import Caravan from "../units/civil/caravan";
+import PortalTile from "./tiles/portal";
 
 export class AxialCoordinate {
   public readonly q: number;
@@ -120,6 +121,7 @@ export class OffsetCoordinate {
 }
 
 class Map {
+  readonly realmName: string;
   private readonly x: number;
   private readonly y: number;
   private readonly width: number;
@@ -184,6 +186,7 @@ class Map {
   }
 
   public constructor(
+    realmName: string,
     width: number,
     height: number,
     x: number,
@@ -195,6 +198,7 @@ class Map {
   ) {
     if (nRows <= 0) throw new Error("nRows must be > 0");
     if (nCols <= 0) throw new Error("nCols must be > 0");
+    this.realmName = realmName;
     this.x = x;
     this.y = y;
     this.radius = radius;
@@ -461,7 +465,7 @@ class Map {
   }
 
   public panX(x: number) {
-    this.xPan = Math.max(0, Math.min(this.xPan + x, this.width));
+    this.xPan += x;
   }
 
   public panY(y: number) {
@@ -480,14 +484,14 @@ class Map {
     return this.radius * (1 + hexTile.getRow() * 1.5);
   }
 
-  addCityTile(cityTile: CityTile) {
-    const row = cityTile.getRow();
-    const col = cityTile.getCol();
+  addTile(tile: HexTile) {
+    const row = tile.getRow();
+    const col = tile.getCol();
     const originalTile = this.hexagonGrid[row][col];
     for (let unit of originalTile.getUnits()) {
-      unit.currentTile = cityTile;
+      unit.currentTile = tile;
     }
-    this.hexagonGrid[row][col] = cityTile;
+    this.hexagonGrid[row][col] = tile;
     for (let neighbourCoords of Map.getNeighbourOffsetCoords(
       row,
       col,
@@ -497,13 +501,24 @@ class Map {
       const neighbourTile =
         this.hexagonGrid[neighbourCoords.row][neighbourCoords.col];
       if (!neighbourTile.hasOwner()) {
-        neighbourTile.setCity(cityTile.getCity());
+        neighbourTile.setCity(tile.getCity());
       }
       const neighbourTileNode = neighbourTile.getNode();
       neighbourTileNode.removeEdgeTo(originalTile.getNode());
-      neighbourTile.addNeighbour(cityTile);
-      cityTile.addNeighbour(neighbourTile);
+      neighbourTile.addNeighbour(tile);
+      tile.addNeighbour(neighbourTile);
     }
+  }
+
+  addPortalTile(portalTile: PortalTile) {
+    this.addTile(portalTile);
+    const { tile: connectedTile } =
+      portalTile.portal.getOtherEndMapAndTile(portalTile);
+    portalTile.addNeighbour(connectedTile);
+  }
+
+  addCityTile(cityTile: CityTile) {
+    this.addTile(cityTile);
     this.cityTiles.push(cityTile);
   }
 
@@ -596,6 +611,13 @@ class Map {
     if (this.getCurrentSelectedUnit() === unit) {
       this.currentSelectedUnit = null;
     }
+  }
+
+  getTile(row: number, col: number): HexTile | null {
+    if (row < 0 || row >= this.nRows || col < 0 || col >= this.nCols) {
+      return null;
+    }
+    return this.hexagonGrid[row][col];
   }
 
   drawHex(p5: p5, drawFunc: (p5: p5, hexTile: HexTile) => void) {

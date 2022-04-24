@@ -4,9 +4,16 @@ import TileImprovementIcon from "./tile-improvement-icon";
 class TileImprovement {
   readonly resourceYield: ResourceQuantity;
   readonly icon: TileImprovementIcon;
-  constructor(resourceYield: ResourceQuantity, icon: TileImprovementIcon) {
+  readonly displayName: string;
+
+  constructor(
+    displayName: string,
+    resourceYield: ResourceQuantity,
+    icon: TileImprovementIcon
+  ) {
     this.resourceYield = resourceYield;
     this.icon = icon;
+    this.displayName = displayName;
   }
 }
 

@@ -101,7 +101,6 @@ function App() {
   const cityModalCurrentResourcesPerTurn =
     cityModalCity?.getCurrentResourcesPerTurn();
 
-  console.log("rendering");
 
   return (
     <div className="App">

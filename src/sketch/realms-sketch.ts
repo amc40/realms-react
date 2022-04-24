@@ -408,7 +408,6 @@ class RealmsSketch extends p5 {
     this.unitActionButtons.forEach(({ button, type }) =>
       button.draw(this, this.isUnitActionSelected(type))
     );
-    console.log(this, "rendering", this.currentMap);
     if (this.currentPlayer != null) {
       this.nextTurnIndicator.draw(
         this,

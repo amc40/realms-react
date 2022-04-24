@@ -1,13 +1,20 @@
 import p5 from "p5";
 import RegularHexagon from "../assets/regular-hexagon";
+import { objectToArrOfEntries } from "../utils/object-utils";
 import { BasicResourceTypes } from "./base-resource";
-import { ExtraResourceTypes } from "./extra-resources";
+import { SpecialResourceTypes } from "./special-resources";
 
-export type AllResourceTypes = BasicResourceTypes | ExtraResourceTypes;
+export type AllResourceTypes = BasicResourceTypes | SpecialResourceTypes;
 
 export type ResourceQuantity = {
   [key in AllResourceTypes]?: number;
 };
+
+export function resourceQuantityToArray(
+  resourceQuantity: ResourceQuantity
+): [AllResourceTypes, number][] {
+  return objectToArrOfEntries(resourceQuantity);
+}
 
 export function getNoResources(): ResourceQuantity {
   return {};

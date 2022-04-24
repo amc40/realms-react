@@ -2,7 +2,7 @@ import p5 from "p5";
 import RegularHexagon from "../assets/regular-hexagon";
 import City from "../cities/city";
 import Player from "../players/player";
-import { ResourceQuantity } from "../resources";
+import { addResourceQuantities, ResourceQuantity } from "../resources";
 import Unit from "../units/unit";
 import RGB from "../utils/RGB";
 import ShortestPath, {
@@ -187,9 +187,27 @@ abstract class HexTile extends RegularHexagon {
     this.tileImprovement = getTileImprovementInstance(tileImprovementType, p5);
   }
 
-  getResources(): ResourceQuantity {
-    // TODO: add tile improvement resources
+  getBaseResources() {
     return this.baseResources;
+  }
+
+  getTileImprovementResources(): ResourceQuantity | null {
+    return this.tileImprovement?.resourceYield ?? null;
+  }
+
+  getTileImprovement() {
+    return this.tileImprovement;
+  }
+
+  /**
+   *
+   * @returns {number} the number of resource per turn including the tile improvement
+   */
+  getAllResources(): ResourceQuantity {
+    return addResourceQuantities(
+      this.baseResources,
+      this.tileImprovement?.resourceYield ?? {}
+    );
   }
 
   minTextX() {

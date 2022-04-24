@@ -16,6 +16,7 @@ import PlainsTile from "./tiles/plains";
 import { randomElement, randomInt } from "../utils/random";
 import PortalTile, { SelectMapAndCentreOn } from "./tiles/portal";
 import Portal from "../portals/portal";
+import FarmTileImprovement from "./tile-improvements/farm-tile-improvement";
 
 type TileType = "grassland" | "desert" | "marsh" | "hills" | "plains";
 const tileTypes: TileType[] = [
@@ -396,6 +397,7 @@ class MapGenerator {
   ) {
     const map = this.generateMap("Terra", width, height, x, y, nRows, nCols);
     this.addPlayers(map, players, 3, this.radius, units);
+    map.getTile(1, 1)?.addTileImprovement(p5, "farm");
     return map;
   }
 

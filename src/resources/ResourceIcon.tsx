@@ -4,12 +4,16 @@ interface Props {
   resourceIconSrc: string;
   resourceName: string;
   float?: "left" | "right";
+  width?: string | number;
+  height?: string | number;
 }
 
 const ResourceIcon: React.FC<Props> = ({
   resourceIconSrc,
   resourceName,
   float = "left",
+  width = "1.5em",
+  height = "1.5em",
 }) => {
   return (
     <span
@@ -24,8 +28,8 @@ const ResourceIcon: React.FC<Props> = ({
         src={resourceIconSrc}
         alt={resourceName}
         style={{
-          width: "1.5em",
-          height: "1.5em",
+          width,
+          height,
         }}
       />
     </span>

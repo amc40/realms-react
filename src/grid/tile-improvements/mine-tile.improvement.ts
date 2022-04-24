@@ -17,7 +17,11 @@ class MineTileImprovement extends TileImprovement {
   };
 
   constructor(p5: p5) {
-    super(MineTileImprovement.resourceYield, new MineTileImprovementIcon(p5));
+    super(
+      "Mine",
+      MineTileImprovement.resourceYield,
+      new MineTileImprovementIcon(p5)
+    );
   }
 }
 

@@ -17,7 +17,7 @@ class FarmTileImprovement extends TileImprovement {
   };
 
   constructor(p5: p5) {
-    super(FarmTileImprovement.resourceYield, new FarmTileImprovementIcon(p5));
+    super("Farm", FarmTileImprovement.resourceYield, new FarmTileImprovementIcon(p5));
   }
 }
 

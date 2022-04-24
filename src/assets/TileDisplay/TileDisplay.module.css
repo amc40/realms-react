@@ -1,7 +1,8 @@
 .tile-display {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 125px 1fr;
   grid-template-rows: 1fr 1fr;
+  column-gap: 10px;
   width: 100%;
   height: 100%;
 }

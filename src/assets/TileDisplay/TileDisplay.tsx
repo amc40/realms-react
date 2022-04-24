@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import HexTile from "../../grid/hex-tile";
 import RGB, { rgbToCssString } from "../../utils/RGB";
+import TileResourcesSummary from "../TileResourcesSummary/TileResourcesSummary";
 import TileIconSketch from "./tile-icon-sketch";
 import styles from "./TileDisplay.module.css";
 
@@ -62,7 +63,9 @@ const TileDisplay: React.FC<Props> = ({ hexTile }) => {
       <div className={styles["tile-display-title-container"]}>
         <h5>{hexTile.name}</h5>
       </div>
-      <div className={styles["tile-display-description"]}></div>
+      <div className={styles["tile-display-description"]}>
+        <TileResourcesSummary hexTile={hexTile} />
+      </div>
     </div>
   );
 };

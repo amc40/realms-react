@@ -22,6 +22,9 @@ const BottomLeftDisplay: React.FC<Props> = ({
         background: "white",
         borderRight: border,
         borderTop: border,
+        boxShadow: "0 0 5px black",
+        padding: 5,
+        borderTopRightRadius: 5,
       }}
     >
       {children}

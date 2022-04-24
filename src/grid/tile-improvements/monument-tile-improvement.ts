@@ -18,6 +18,7 @@ class MonumentTileImprovement extends TileImprovement {
 
   constructor(p5: p5) {
     super(
+      "Monument",
       MonumentTileImprovement.resourceYield,
       new MonumentTileImprovementIcon(p5)
     );

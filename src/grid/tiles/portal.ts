@@ -30,6 +30,7 @@ class PortalTile extends HexTile {
     selectMapAndCentreOn: SelectMapAndCentreOn
   ) {
     super(
+      "Portal",
       radius,
       row,
       col,

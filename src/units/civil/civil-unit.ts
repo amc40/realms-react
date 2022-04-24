@@ -67,6 +67,8 @@ abstract class CivilUnit extends Unit {
       Unit.HEIGHT * this.iconRatio
     );
   }
+
+
 }
 
 export default CivilUnit;

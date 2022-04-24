@@ -13,9 +13,18 @@ class GrasslandTile extends HexTile {
   };
 
   constructor(radius: number, row: number, col: number) {
-    super(radius, row, col, GrasslandTile.color, 1, GrasslandTile.resources, {
-      possibleTileImprovements: ["farm"],
-    });
+    super(
+      "Grassland",
+      radius,
+      row,
+      col,
+      GrasslandTile.color,
+      1,
+      GrasslandTile.resources,
+      {
+        possibleTileImprovements: ["farm"],
+      }
+    );
   }
 }
 

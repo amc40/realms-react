@@ -15,6 +15,8 @@ import CurrentPlayerIndicator from "./assets/CurrentPlayerIndicator/CurrentPlaye
 import ResourceTransferModal from "./assets/ResourceTransfer/ResourceTransferModal";
 import { ResourceTransferSrc } from "./resources/resource-transfer";
 import RealmScroller from "./assets/RealmScroller/RealmScroller";
+import TileDisplay from "./assets/TileDisplay/TileDisplay";
+import HexTile from "./grid/hex-tile";
 
 function App() {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -68,7 +70,9 @@ function App() {
     },
     [setShowCityModal, setCityModalCity]
   );
-  // TODO: replace
+
+  const [hoverHexTile, setHoverHexTile] = useState<HexTile | null>(null);
+
   const [dummyCount, setDummyCount] = useState(0);
 
   const rerender = () => {
@@ -84,7 +88,8 @@ function App() {
           4,
           openShowCityModal,
           rerender,
-          transferResources
+          transferResources,
+          setHoverHexTile
         )
       );
     }
@@ -256,7 +261,9 @@ function App() {
           </Button>
         </Modal.Footer>
       </Modal> */}
-      <BottomLeftDisplay />
+      <BottomLeftDisplay>
+        {hoverHexTile != null ? <TileDisplay hexTile={hoverHexTile} /> : null}
+      </BottomLeftDisplay>
     </div>
   );
 }

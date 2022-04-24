@@ -10,6 +10,7 @@ class MarshTile extends HexTile {
 
   constructor(radius: number, row: number, col: number) {
     super(
+      "Marsh",
       radius,
       row,
       col,

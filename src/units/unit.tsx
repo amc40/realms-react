@@ -264,7 +264,22 @@ abstract class Unit {
 
   abstract getUnitActionTypes(): UnitActionType[];
 
+  protected static drawAdditionalUnitsIcon(p5: p5) {}
+
   abstract draw(p5: p5): void;
+
+  drawAdditionalUnitsIcon(p5: p5): void {
+    p5.translate(Unit.WIDTH / 2, -Unit.HEIGHT / 2);
+    p5.ellipseMode(p5.CENTER);
+    p5.stroke(0);
+    p5.strokeWeight(1);
+    const ellipseDiameter = 10;
+    p5.fill(255);
+    p5.ellipse(0, 0, ellipseDiameter, ellipseDiameter);
+    const lineLength = ellipseDiameter - 4;
+    p5.line(-lineLength / 2, 0, lineLength / 2, 0);
+    p5.line(0, -lineLength / 2, 0, lineLength / 2);
+  }
 }
 
 export default Unit;

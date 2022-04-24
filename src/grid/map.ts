@@ -340,23 +340,25 @@ class Map {
     mouseScreenX: number,
     mouseScreenY: number,
     humanPlayersTurn: boolean
-  ) {
-    if (humanPlayersTurn) {
-      const currentSelectedUnit = this.getCurrentSelectedUnit();
+  ): HexTile | null {
+    const currentSelectedUnit = this.getCurrentSelectedUnit();
+    const mouseX = (mouseScreenX - this.xPan) / this.scale;
+    const mouseY = (mouseScreenY - this.yPan) / this.scale;
+    const offsetCoordinate = this.mouseXYToOffset(mouseX, mouseY);
+    if (offsetCoordinate.inBounds(this.nRows, this.nCols)) {
+      const hex = this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
       if (
         currentSelectedUnit != null &&
         currentSelectedUnit.havingMovementSelected()
       ) {
-        const mouseX = (mouseScreenX - this.xPan) / this.scale;
-        const mouseY = (mouseScreenY - this.yPan) / this.scale;
-        const offsetCoordinate = this.mouseXYToOffset(mouseX, mouseY);
-        if (offsetCoordinate.inBounds(this.nRows, this.nCols)) {
-          const newMovementTarget =
-            this.hexagonGrid[offsetCoordinate.row][offsetCoordinate.col];
-          currentSelectedUnit.movementTarget = newMovementTarget;
-        }
+        const newMovementTarget = hex;
+
+        currentSelectedUnit.movementTarget = newMovementTarget;
       }
+      return hex;
     }
+
+    return null;
   }
 
   static getCityTilesBelongingToPlayer(

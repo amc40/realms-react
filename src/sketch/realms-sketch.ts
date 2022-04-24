@@ -34,8 +34,11 @@ class RealmsSketch extends p5 {
   private maps: Map[] = [];
   currentMap: Map | null = null;
   private nextTurnIndicator = new NextTurn(() => this.handleNextTurn());
+
   private openCityModal: (city: City) => void;
   private transferResources: TransferResources;
+  private setHoverHexTile: (hoverHexTile: HexTile | null) => void;
+
   private unitActionButtons: {
     type: UnitActionType;
     button: CircularButton;
@@ -65,13 +68,15 @@ class RealmsSketch extends p5 {
     nPlayers = 4,
     openCityModal: (city: City) => void,
     rerender: () => void,
-    transferResources: TransferResources
+    transferResources: TransferResources,
+    setHoverHexTile: (hoverHexTile: HexTile | null) => void
   ) {
     super(() => {}, canvasElement);
     this.rerender = rerender;
     this.nPlayers = nPlayers;
     this.openCityModal = openCityModal;
     this.transferResources = transferResources;
+    this.setHoverHexTile = setHoverHexTile;
   }
 
   preload(): void {
@@ -235,11 +240,12 @@ class RealmsSketch extends p5 {
   }
 
   mouseMoved(event?: MouseEvent): void {
-    this.currentMap?.handleMouseMove(
+    const hexTile = this.currentMap?.handleMouseMove(
       this.mouseX,
       this.mouseY,
       this.isHumanPlayersTurn()
     );
+    this.setHoverHexTile(hexTile ?? null);
   }
 
   mouseClicked(event: MouseEvent): void {

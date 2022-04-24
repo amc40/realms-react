@@ -10,6 +10,7 @@ class HillTile extends HexTile {
 
   constructor(radius: number, row: number, col: number) {
     super(
+      "Hills",
       radius,
       row,
       col,

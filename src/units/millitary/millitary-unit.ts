@@ -9,7 +9,7 @@ abstract class MillitaryUnit extends Unit {
   private static readonly HEALTH_BAR_WIDTH = 30;
   private static readonly HEALTH_BAR_HEIGHT = 5;
   private readonly strength: number;
-  private health = 50;
+  private health = 100;
   private selectingAttackTarget = false;
   private readonly icon: p5.Image;
   private unselectedImage: p5.Image;

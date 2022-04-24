@@ -32,8 +32,10 @@ abstract class HexTile extends RegularHexagon {
   private readonly textHeight = 60;
   private _showAsValidTarget = false;
   readonly possibleTileImprovements: TileImprovementType[];
+  readonly name: string;
 
   constructor(
+    name: string,
     radius: number,
     row: number,
     col: number,
@@ -51,6 +53,7 @@ abstract class HexTile extends RegularHexagon {
     } = {}
   ) {
     super(radius, color, 3);
+    this.name = name;
     this.row = row;
     this.col = col;
     this.nMovementPoints = nMovementPoints;
@@ -239,7 +242,13 @@ abstract class HexTile extends RegularHexagon {
     this.tileImprovement?.icon.draw(p5);
     p5.push();
     p5.translate(0, -this.radius / 1.6);
-    this.currentUnit?.draw(p5);
+    if (this.currentUnit != null) {
+      this.currentUnit.draw(p5);
+      if (this.units.length > 1) {
+        this.currentUnit.drawAdditionalUnitsIcon(p5);
+      }
+    }
+
     p5.pop();
   }
 }

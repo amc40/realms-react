@@ -23,6 +23,7 @@ class CityTile extends HexTile {
     produceUnit: (unit: Unit) => void
   ) {
     super(
+      "City",
       radius,
       row,
       col,

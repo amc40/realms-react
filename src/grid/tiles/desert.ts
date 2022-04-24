@@ -8,6 +8,7 @@ class DesertTile extends HexTile {
 
   constructor(radius: number, row: number, col: number) {
     super(
+      "Desert",
       radius,
       row,
       col,

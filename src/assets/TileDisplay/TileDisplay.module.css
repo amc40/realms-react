@@ -1,0 +1,27 @@
+.tile-display {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  width: 100%;
+  height: 100%;
+}
+
+.tile-display-tile-icon-container {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+}
+
+.tile-display-tile-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.tile-display-title-container {
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+}
+
+.tile-display-description {
+  grid-column: 2 / 3;
+  grid-row: 1 / 3;
+}

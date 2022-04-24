@@ -15,6 +15,7 @@ class PlainsTile extends HexTile {
 
   constructor(radius: number, row: number, col: number) {
     super(
+      "Plains",
       radius,
       row,
       col,

@@ -1,5 +1,6 @@
 import p5 from "p5";
 import { ResourceQuantity } from "../../resources";
+import HexTile from "../hex-tile";
 import TileImprovement from "./tile-improvement";
 import TileImprovementIcon from "./tile-improvement-icon";
 
@@ -12,14 +13,19 @@ class MineTileImprovementIcon extends TileImprovementIcon {
 }
 
 class MineTileImprovement extends TileImprovement {
-  static readonly resourceYield: ResourceQuantity = {
+  static readonly baseResourceYield: ResourceQuantity = {
     production: 2,
   };
 
   constructor(p5: p5) {
     super(
       "Mine",
-      MineTileImprovement.resourceYield,
+      (hex: HexTile) => {
+        return {
+          ...MineTileImprovement.baseResourceYield,
+          iron: hex.hasSpecialResource("iron") ? 1 : 0,
+        };
+      },
       new MineTileImprovementIcon(p5)
     );
   }

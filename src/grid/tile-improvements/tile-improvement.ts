@@ -1,17 +1,19 @@
 import { ResourceQuantity } from "../../resources";
+import ResourceQuantityDisplay from "../../resources/ResourceQuantityDisplay";
+import HexTile from "../hex-tile";
 import TileImprovementIcon from "./tile-improvement-icon";
 
 class TileImprovement {
-  readonly resourceYield: ResourceQuantity;
   readonly icon: TileImprovementIcon;
   readonly displayName: string;
+  readonly getResourceYield: (hexTile: HexTile) => ResourceQuantity;
 
   constructor(
     displayName: string,
-    resourceYield: ResourceQuantity,
+    getResourceYield: (hexTile: HexTile) => ResourceQuantity,
     icon: TileImprovementIcon
   ) {
-    this.resourceYield = resourceYield;
+    this.getResourceYield = getResourceYield;
     this.icon = icon;
     this.displayName = displayName;
   }

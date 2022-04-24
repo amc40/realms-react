@@ -2,7 +2,14 @@ import p5 from "p5";
 import RegularHexagon from "../assets/regular-hexagon";
 import City from "../cities/city";
 import Player from "../players/player";
-import { addResourceQuantities, ResourceQuantity } from "../resources";
+import Resources, {
+  addResourceQuantities,
+  ResourceQuantity,
+} from "../resources";
+import {
+  SpecialResourceQuantity,
+  SpecialResourceTypes,
+} from "../resources/special-resources";
 import Unit from "../units/unit";
 import RGB from "../utils/RGB";
 import ShortestPath, {
@@ -28,6 +35,8 @@ abstract class HexTile extends RegularHexagon {
   private text: string | null;
   private tileImprovement: TileImprovement | null = null;
   private readonly baseResources: ResourceQuantity;
+  private readonly specialResources: SpecialResourceQuantity;
+  private readonly resourceIconRepo: Resources;
   private readonly textWidth = this.radius * 1.4;
   private readonly textHeight = 60;
   private _showAsValidTarget = false;
@@ -42,14 +51,17 @@ abstract class HexTile extends RegularHexagon {
     color: RGB,
     nMovementPoints: number,
     baseResources: ResourceQuantity,
+    resourceIconRepo: Resources,
     {
       possibleTileImprovements,
       city,
       text,
+      extraResources,
     }: {
       possibleTileImprovements?: TileImprovementType[];
       city?: City;
       text?: string;
+      extraResources?: SpecialResourceQuantity;
     } = {}
   ) {
     super(radius, color, 3);
@@ -62,6 +74,8 @@ abstract class HexTile extends RegularHexagon {
     this.baseResources = baseResources;
     this.city?.addTile(this);
     this.possibleTileImprovements = possibleTileImprovements ?? [];
+    this.specialResources = extraResources ?? {};
+    this.resourceIconRepo = resourceIconRepo;
   }
 
   addUnit(unit: Unit) {
@@ -192,7 +206,7 @@ abstract class HexTile extends RegularHexagon {
   }
 
   getTileImprovementResources(): ResourceQuantity | null {
-    return this.tileImprovement?.resourceYield ?? null;
+    return this.tileImprovement?.getResourceYield(this) ?? null;
   }
 
   getTileImprovement() {
@@ -206,7 +220,7 @@ abstract class HexTile extends RegularHexagon {
   getAllResources(): ResourceQuantity {
     return addResourceQuantities(
       this.baseResources,
-      this.tileImprovement?.resourceYield ?? {}
+      this.tileImprovement?.getResourceYield(this) ?? {}
     );
   }
 
@@ -242,6 +256,38 @@ abstract class HexTile extends RegularHexagon {
     super.draw(p5);
   }
 
+  public getIconOffset() {
+    return this.radius / 1.6;
+  }
+
+  public getFirstSpecialResource(): SpecialResourceTypes | null {
+    const specialResources = Object.keys(
+      this.specialResources
+    ) as SpecialResourceTypes[];
+    if (specialResources != null && specialResources.length > 0) {
+      return (
+        specialResources.find(
+          (specialResource) => this.specialResources[specialResource]! > 0
+        ) ?? null
+      );
+    }
+    return null;
+  }
+
+  hasSpecialResource(specialResource: SpecialResourceTypes) {
+    return this.specialResources[specialResource] != null;
+  }
+
+  private drawSpecialResource(p5: p5, specialResource: SpecialResourceTypes) {
+    p5.ellipseMode(p5.CENTER);
+    const ellipseDiameter = 35;
+    p5.ellipse(0, 0, ellipseDiameter, ellipseDiameter);
+    const specialResourceIcon = this.resourceIconRepo.icons[specialResource];
+    p5.imageMode(p5.CENTER);
+    const iconDiameter = ellipseDiameter * 0.8;
+    p5.image(specialResourceIcon, 0, 0, iconDiameter, iconDiameter);
+  }
+
   public drawUnitsAndText(p5: p5): void {
     if (this.text) {
       p5.rectMode(p5.CENTER);
@@ -259,14 +305,20 @@ abstract class HexTile extends RegularHexagon {
     }
     this.tileImprovement?.icon.draw(p5);
     p5.push();
-    p5.translate(0, -this.radius / 1.6);
+    p5.translate(0, -this.getIconOffset());
     if (this.currentUnit != null) {
       this.currentUnit.draw(p5);
       if (this.units.length > 1) {
         this.currentUnit.drawAdditionalUnitsIcon(p5);
       }
     }
-
+    p5.pop();
+    p5.push();
+    p5.translate(0, this.getIconOffset());
+    const specialResource = this.getFirstSpecialResource();
+    if (specialResource != null) {
+      this.drawSpecialResource(p5, specialResource);
+    }
     p5.pop();
   }
 }

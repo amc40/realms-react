@@ -1,6 +1,6 @@
 import City from "../../cities/city";
 import Player from "../../players/player";
-import {
+import Resources, {
   AllResourceTypes,
   getNoResources,
   ResourceQuantity,
@@ -19,6 +19,7 @@ class CityTile extends HexTile {
     row: number,
     col: number,
     city: City,
+    resourceIconRepo: Resources,
     openCityModal: (city: City) => void,
     produceUnit: (unit: Unit) => void
   ) {
@@ -30,6 +31,7 @@ class CityTile extends HexTile {
       city.owner.getColor(),
       CityTile.nMovementPoints,
       CityTile.resources,
+      resourceIconRepo,
       { city, text: city.name }
     );
     this.city = city;

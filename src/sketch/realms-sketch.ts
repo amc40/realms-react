@@ -105,7 +105,8 @@ class RealmsSketch extends p5 {
     this.currentPlayer = this.humanPlayer;
     const mapGenerator = new MapGenerator(
       this.openCityModal,
-      this.selectMapAndCentreOn.bind(this)
+      this.selectMapAndCentreOn.bind(this),
+      this.resources!
     );
     const { mainRealm, otherRealms } = mapGenerator.generateMaps(
       this.width,
@@ -340,6 +341,9 @@ class RealmsSketch extends p5 {
         break;
       case "construct-mine":
         this.constructTileImprovement("mine");
+        break;
+      case "construct-lumber-mill":
+        this.constructTileImprovement("lumber-mill");
         break;
       case "transfer-resources":
         this.handleUnitTransferResources();

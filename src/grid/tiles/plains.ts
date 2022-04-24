@@ -1,4 +1,4 @@
-import { ResourceQuantity } from "../../resources";
+import Resources, { ResourceQuantity } from "../../resources";
 import HexTile from "../hex-tile";
 
 class PlainsTile extends HexTile {
@@ -13,7 +13,12 @@ class PlainsTile extends HexTile {
     production: 1,
   };
 
-  constructor(radius: number, row: number, col: number) {
+  constructor(
+    radius: number,
+    row: number,
+    col: number,
+    resourceIconRepo: Resources
+  ) {
     super(
       "Plains",
       radius,
@@ -22,6 +27,7 @@ class PlainsTile extends HexTile {
       PlainsTile.color,
       PlainsTile.nMovementPoints,
       PlainsTile.resources,
+      resourceIconRepo,
       {
         possibleTileImprovements: ["farm"],
       }

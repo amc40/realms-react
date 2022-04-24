@@ -1,4 +1,4 @@
-import { ResourceQuantity } from "../../resources";
+import Resources, { ResourceQuantity } from "../../resources";
 import HexTile from "../hex-tile";
 
 class MarshTile extends HexTile {
@@ -8,7 +8,12 @@ class MarshTile extends HexTile {
     food: 1,
   };
 
-  constructor(radius: number, row: number, col: number) {
+  constructor(
+    radius: number,
+    row: number,
+    col: number,
+    resourceIconRepo: Resources
+  ) {
     super(
       "Marsh",
       radius,
@@ -17,6 +22,7 @@ class MarshTile extends HexTile {
       MarshTile.color,
       MarshTile.nMovementPoints,
       MarshTile.resources,
+      resourceIconRepo
     );
   }
 }

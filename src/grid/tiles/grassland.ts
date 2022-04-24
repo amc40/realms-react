@@ -1,6 +1,7 @@
-import { ResourceQuantity } from "../../resources";
+import Resources, { ResourceQuantity } from "../../resources";
 import RGB from "../../utils/RGB";
 import HexTile from "../hex-tile";
+import { TileImprovementType } from "../tile-improvements";
 
 class GrasslandTile extends HexTile {
   private static readonly color = {
@@ -12,7 +13,13 @@ class GrasslandTile extends HexTile {
     food: 2,
   };
 
-  constructor(radius: number, row: number, col: number) {
+  constructor(
+    radius: number,
+    row: number,
+    col: number,
+    resourceIconRepo: Resources,
+    wood: number = 0
+  ) {
     super(
       "Grassland",
       radius,
@@ -21,8 +28,15 @@ class GrasslandTile extends HexTile {
       GrasslandTile.color,
       1,
       GrasslandTile.resources,
+      resourceIconRepo,
       {
-        possibleTileImprovements: ["farm"],
+        possibleTileImprovements: [
+          "farm",
+          ...(wood > 0 ? ["lumber-mill" as TileImprovementType] : []),
+        ],
+        extraResources: {
+          wood,
+        },
       }
     );
   }

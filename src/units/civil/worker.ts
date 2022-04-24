@@ -8,7 +8,8 @@ export type WorkerUnitActionType =
   | "move"
   | "sleep"
   | "construct-farm"
-  | "construct-mine";
+  | "construct-mine"
+  | "construct-lumber-mill";
 
 class WorkerUnit extends CivilUnit {
   private static nMovementPoints = 2;
@@ -29,6 +30,9 @@ class WorkerUnit extends CivilUnit {
     }
     if (this.currentTile?.possibleTileImprovements.includes("mine")) {
       possibleActionTypes.push("construct-mine");
+    }
+    if (this.currentTile?.possibleTileImprovements.includes("lumber-mill")) {
+      possibleActionTypes.push("construct-lumber-mill");
     }
     possibleActionTypes.push("move", "sleep");
     return possibleActionTypes;

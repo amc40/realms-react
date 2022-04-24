@@ -1,6 +1,6 @@
 import Player from "../../players/player";
 import Portal from "../../portals/portal";
-import { ResourceQuantity } from "../../resources";
+import Resources, { ResourceQuantity } from "../../resources";
 import RGB from "../../utils/RGB";
 import HexTile from "../hex-tile";
 import Map from "../map";
@@ -27,6 +27,7 @@ class PortalTile extends HexTile {
     radius: number,
     row: number,
     col: number,
+    resourceIconRepo: Resources,
     selectMapAndCentreOn: SelectMapAndCentreOn
   ) {
     super(
@@ -37,6 +38,7 @@ class PortalTile extends HexTile {
       PortalTile.color,
       PortalTile.nMovementPoints,
       PortalTile.resources,
+      resourceIconRepo,
       { text: `Portal ${name}` }
     );
     this.portal = portal;

@@ -17,6 +17,7 @@ import { randomElement, randomInt } from "../utils/random";
 import PortalTile, { SelectMapAndCentreOn } from "./tiles/portal";
 import Portal from "../portals/portal";
 import FarmTileImprovement from "./tile-improvements/farm-tile-improvement";
+import Resources from "../resources";
 
 type TileType = "grassland" | "desert" | "marsh" | "hills" | "plains";
 const tileTypes: TileType[] = [
@@ -71,13 +72,16 @@ class MapGenerator {
   private readonly openCityModal: (city: City) => void;
   private readonly radius = 100;
   private readonly selectMapAndCentreOn: SelectMapAndCentreOn;
+  private readonly resourceIcons: Resources;
 
   constructor(
     openCityModal: (city: City) => void,
-    selectMapAndCentreOn: SelectMapAndCentreOn
+    selectMapAndCentreOn: SelectMapAndCentreOn,
+    resourceIcons: Resources
   ) {
     this.openCityModal = openCityModal;
     this.selectMapAndCentreOn = selectMapAndCentreOn;
+    this.resourceIcons = resourceIcons;
   }
 
   private static getPreviousGeneratedNeighbourOffsetCoords(
@@ -177,23 +181,35 @@ class MapGenerator {
     return tileTypeProbabilities;
   }
 
-  private static getTileOfType(
-    tileType: TileType,
-    radius: number,
-    row: number,
-    col: number
-  ) {
+  private getTileOfType(tileType: TileType, row: number, col: number) {
     switch (tileType) {
       case "grassland":
-        return new GrasslandTile(radius, row, col);
+        const proportionWood = 0.3;
+        const minWood = 3;
+        const maxWood = 30;
+        const wood =
+          Math.random() < proportionWood ? randomInt(minWood, maxWood) : 0;
+
+        return new GrasslandTile(
+          this.radius,
+          row,
+          col,
+          this.resourceIcons,
+          wood
+        );
       case "desert":
-        return new DesertTile(radius, row, col);
+        return new DesertTile(this.radius, row, col, this.resourceIcons);
       case "marsh":
-        return new MarshTile(radius, row, col);
+        return new MarshTile(this.radius, row, col, this.resourceIcons);
       case "hills":
-        return new HillTile(radius, row, col);
+        const proportionIron = 0.2;
+        const minIron = 5;
+        const maxIron = 30;
+        const iron =
+          Math.random() < proportionIron ? randomInt(minIron, maxIron) : 0;
+        return new HillTile(this.radius, row, col, this.resourceIcons, iron);
       case "plains":
-        return new PlainsTile(radius, row, col);
+        return new PlainsTile(this.radius, row, col, this.resourceIcons);
       default:
         throw new Error(`Unknown tile type: ${tileType}`);
     }
@@ -252,6 +268,7 @@ class MapGenerator {
           cityRow,
           cityCol,
           new City("City " + (cityN + 1), player),
+          this.resourceIcons,
           this.openCityModal,
           (unit: Unit) => map.addUnit(unit, cityRow, cityCol)
         );
@@ -303,6 +320,7 @@ class MapGenerator {
         this.radius,
         mainRealmPortalRow,
         mainRealmPortalCol,
+        this.resourceIcons,
         this.selectMapAndCentreOn
       );
       mainRealm.addPortalTile(mainRealmPortalTile);
@@ -312,6 +330,7 @@ class MapGenerator {
         this.radius,
         otherRealmPortalRow,
         otherRealmPortalCol,
+        this.resourceIcons,
         this.selectMapAndCentreOn
       );
       otherRealm.addPortalTile(otherRealmPortalTile);
@@ -330,12 +349,7 @@ class MapGenerator {
     // random initial tile type
     const initialTileType =
       tileTypes[Math.floor(Math.random() * tileTypes.length)];
-    const initialTile = MapGenerator.getTileOfType(
-      initialTileType,
-      this.radius,
-      0,
-      0
-    );
+    const initialTile = this.getTileOfType(initialTileType, 0, 0);
     const hexagonGrid = new Array<Array<HexTile>>(nRows);
     for (let row = 0; row < nRows; row++) {
       hexagonGrid[row] = new Array<HexTile>(nCols);
@@ -360,12 +374,7 @@ class MapGenerator {
           const tileType = MapGenerator.sampleProbabilities(
             tileTypeProbabilities
           );
-          const tile = MapGenerator.getTileOfType(
-            tileType,
-            this.radius,
-            row,
-            col
-          );
+          const tile = this.getTileOfType(tileType, row, col);
           hexagonGrid[row][col] = tile;
         }
       }

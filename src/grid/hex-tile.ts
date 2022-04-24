@@ -274,6 +274,17 @@ abstract class HexTile extends RegularHexagon {
     return null;
   }
 
+  public getFirstSpecialResouceQuantity():
+    | [SpecialResourceTypes, number]
+    | null {
+    const firstSpecialResouce = this.getFirstSpecialResource();
+    if (firstSpecialResouce != null) {
+      return [firstSpecialResouce, this.specialResources[firstSpecialResouce]!];
+    } else {
+      return null;
+    }
+  }
+
   hasSpecialResource(specialResource: SpecialResourceTypes) {
     return this.specialResources[specialResource] != null;
   }

@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import HexTile from "../../grid/hex-tile";
+import Resources from "../../resources";
+import ResourceQuantityDisplay from "../../resources/ResourceQuantityDisplay";
+import { SpecialResourceTypes } from "../../resources/special-resources";
 import RGB, { rgbToCssString } from "../../utils/RGB";
 import TileResourcesSummary from "../TileResourcesSummary/TileResourcesSummary";
 import TileIconSketch from "./tile-icon-sketch";
@@ -48,6 +51,9 @@ const TileDisplay: React.FC<Props> = ({ hexTile }) => {
     }
   }, [hexTile, tileIconSketch]);
 
+  const specialResouceQuantity: [SpecialResourceTypes, number] | null =
+    hexTile.getFirstSpecialResouceQuantity();
+
   return (
     <div
       className={styles["tile-display"]}
@@ -62,6 +68,15 @@ const TileDisplay: React.FC<Props> = ({ hexTile }) => {
       </div>
       <div className={styles["tile-display-title-container"]}>
         <h5>{hexTile.name}</h5>
+        {specialResouceQuantity != null ? (
+          <div className={styles["tile-display-special-resource-container"]}>
+            <ResourceQuantityDisplay
+              resourceIconSrc={Resources.getIconUrl(specialResouceQuantity[0])}
+              resourceName={specialResouceQuantity[0]}
+              resourceQuantity={specialResouceQuantity[1]}
+            />
+          </div>
+        ) : null}
       </div>
       <div className={styles["tile-display-description"]}>
         <TileResourcesSummary hexTile={hexTile} />

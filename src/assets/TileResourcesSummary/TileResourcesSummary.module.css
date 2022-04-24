@@ -1,3 +1,9 @@
 .tile-per-turn-table-container {
   padding: 5px;
 }
+
+.tile-display-special-resource-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

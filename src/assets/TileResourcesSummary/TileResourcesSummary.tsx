@@ -67,6 +67,7 @@ const TileResourcesSummary: React.FC<Props> = ({ hexTile }) => {
 
   return (
     <div className={styles["tile-per-turn-table-container"]}>
+      <h6>Resources Per Turn</h6>
       <Table>
         <thead>
           <tr>

@@ -3,7 +3,7 @@ import { ProductionItem } from "../cities/production";
 import GameMap from "../grid/game-map";
 import HexTile from "../grid/hex-tile";
 import Player from "../players/player";
-import ShortestPath from "../utils/shortest-path";
+import ShortestPath, { Node } from "../utils/shortest-path";
 import { CivilUnitActionType } from "./civil/civil-unit";
 import { UnitActionType } from "./unit-actions";
 
@@ -27,7 +27,31 @@ abstract class Unit {
   // TODO: maybe add a temp target so can cancel ordering movement
   private _movementTarget: HexTile | null = null;
   readonly hexTileShortestPath = new ShortestPath<HexTile>(
-    GameMap.distBetweenHexTileNodes
+    (nodeA: Node<HexTile>, nodeB: Node<HexTile>): number => {
+      const { gamePoint: hexA } = nodeA;
+      const { gamePoint: hexB } = nodeB;
+      const nodeAMap = hexA.getMap()!;
+      const nodeBMap = hexB.getMap()!;
+      // if in the same map apply simple distance heuristic within the same map
+      if (nodeAMap === nodeBMap) {
+        return GameMap.distBetweenHexTiles(hexA, hexB);
+      }
+      // if in a different map we find the distance to the closest portal to the other realm and then
+      // sum the straight line distance with the distance of the portal to the tile in the other realm
+      const portalDistanceA = nodeAMap.getClosestPortalTo(hexA, nodeBMap);
+      // if not reachable then set as infinite distance so will be checked last
+      if (portalDistanceA == null) {
+        return Infinity;
+      }
+      const portalTileA = portalDistanceA.portalTile;
+      const portal = portalTileA.portal;
+      const { tile: portalTileB } = portal.getOtherEndMapAndTile(portalTileA);
+      const distanceFromPortalB = GameMap.distBetweenHexTiles(
+        portalTileB,
+        hexB
+      );
+      return distanceFromPortalB + portalDistanceA.distance;
+    }
   );
   private _shortestPathToTarget: HexTile[] | null = null;
   private state: State = State.WAITING_FOR_ORDERS;

@@ -104,6 +104,10 @@ abstract class HexTile extends RegularHexagon {
     return this.map === map;
   }
 
+  getMap() {
+    return this.map;
+  }
+
   getInnerBorderColor(): RGB | null {
     if (this._showAsValidTarget) {
       return {

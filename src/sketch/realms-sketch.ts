@@ -254,6 +254,7 @@ class RealmsSketch extends p5 {
 
   mouseClicked(event: MouseEvent): void {
     if (event.button === MouseButton.LEFT) {
+      console.log("click in sketch");
       Object.values(this.unitActionButtons!).some(({ button }) =>
         button.handleClick(this, this.mouseX, this.mouseY)
       ) ||

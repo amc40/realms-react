@@ -18,7 +18,6 @@ const ResourceQuantityDisplay: React.FC<Props> = ({
   nPerTurn,
   float = "left",
 }) => {
-  console.log(nPerTurn);
   const nPerTurnStr = nPerTurn != null ? `(${nPerTurn})` : "";
   return (
     <>

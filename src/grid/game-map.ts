@@ -140,6 +140,7 @@ class GameMap {
   private readonly getCurrentSelectedUnit: () => Unit | null;
   private readonly setCurrentSelectedUnit: (unit: Unit | null) => void;
 
+  private portalTiles: PortalTile[] = [];
   private cityTiles: CityTile[] = [];
 
   private static getNeighbourOffsetCoords(
@@ -248,9 +249,7 @@ class GameMap {
     return cubeCoordinate.toOffsetCoordinate();
   }
 
-  static distBetweenHexTileNodes(node1: Node<HexTile>, node2: Node<HexTile>) {
-    const hexTile1 = node1.gamePoint;
-    const hexTile2 = node2.gamePoint;
+  static distBetweenHexTiles(hexTile1: HexTile, hexTile2: HexTile): number {
     const hexTile1CubeCoord = new OffsetCoordinate(
       hexTile1.getRow(),
       hexTile1.getCol()
@@ -260,6 +259,12 @@ class GameMap {
       hexTile2.getCol()
     ).toCubeCoordinate();
     return hexTile1CubeCoord.diff(hexTile2CubeCoord).totalCoordMag();
+  }
+
+  static distBetweenHexTileNodes(node1: Node<HexTile>, node2: Node<HexTile>) {
+    const hexTile1 = node1.gamePoint;
+    const hexTile2 = node2.gamePoint;
+    return GameMap.distBetweenHexTiles(hexTile1, hexTile2);
   }
 
   inBounds(row: number, col: number) {
@@ -375,6 +380,34 @@ class GameMap {
         ),
       []
     );
+  }
+
+  getClosestPortalTo(
+    startTile: HexTile,
+    mapDest: GameMap
+  ): {
+    portalTile: PortalTile;
+    distance: number;
+  } | null {
+    const portalsToDest = this.portalTiles.filter((portalTile) =>
+      portalTile.portal.isPortalBetween(this, mapDest)
+    );
+    if (portalsToDest.length === 0) {
+      return null;
+    }
+    const portalTileDistances = portalsToDest.map((portalTile) => ({
+      portalTile,
+      distance: GameMap.distBetweenHexTiles(startTile, portalTile),
+    }));
+    const portalTileDistance = portalTileDistances.reduce(
+      (closest, { portalTile, distance }) => {
+        if (distance < closest.distance) {
+          return { portalTile, distance };
+        }
+        return closest;
+      }
+    );
+    return portalTileDistance;
   }
 
   public handleClick(
@@ -496,6 +529,7 @@ class GameMap {
       unit.currentTile = tile;
     }
     this.hexagonGrid[row][col] = tile;
+    tile.setMap(this);
     for (let neighbourCoords of GameMap.getNeighbourOffsetCoords(
       row,
       col,
@@ -519,6 +553,7 @@ class GameMap {
     const { tile: connectedTile } =
       portalTile.portal.getOtherEndMapAndTile(portalTile);
     portalTile.addNeighbour(connectedTile);
+    this.portalTiles.push(portalTile);
   }
 
   addCityTile(cityTile: CityTile) {
@@ -569,7 +604,10 @@ class GameMap {
         const currentHex = path[i].tile;
         const currentHexX = this.getHexCentreX(currentHex);
         const currentHexY = this.getHexCentreY(currentHex);
-        if (prevHex.containedInMap(currentMap)) {
+        if (
+          prevHex.containedInMap(currentMap) &&
+          currentHex.containedInMap(currentMap)
+        ) {
           p5.line(prevHexX, prevHexY, currentHexX, currentHexY);
         }
         prevHex = currentHex;

@@ -53,6 +53,14 @@ class Portal {
       };
     }
   }
+
+  isPortalBetween(gameMap1: GameMap, gameMap2: GameMap) {
+    return (
+      (this.firstMap === gameMap1 && this.secondMap === gameMap2) ||
+      (this.firstMap === gameMap2 && this.secondMap === gameMap1)
+    );
+    }
+
 }
 
 export default Portal;

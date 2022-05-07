@@ -20,14 +20,20 @@ const RealmScroller: React.FC<Props> = ({ currentMap, onLeft, onRight }) => {
     >
       <button
         className={styles["realm-scroller-button"]}
-        onClick={() => onLeft()}
+        onClick={(e) => {
+          onLeft();
+          e.stopPropagation();
+        }}
       >
         <FontAwesomeIcon icon={faAngleLeft} />
       </button>
       <span>{currentMap.realmName}</span>
       <button
         className={styles["realm-scroller-button"]}
-        onClick={() => onRight()}
+        onClick={(e) => {
+          onRight();
+          e.stopPropagation();
+        }}
       >
         <FontAwesomeIcon icon={faAngleRight} />
       </button>

@@ -26,6 +26,7 @@ const BottomLeftDisplay: React.FC<Props> = ({
         padding: 5,
         borderTopRightRadius: 5,
       }}
+      onClick={(e) => e.stopPropagation()}
     >
       {children}
     </div>

@@ -56,14 +56,11 @@ const TileResourcesSummary: React.FC<Props> = ({ hexTile }) => {
     return resourcesPerTurn;
   }, [baseResourcePerTurn, tileImprovementResourcePerTurn]);
 
-  console.log("resource per turn", resourcesPerTurn);
 
   const resourcesPerTurnArray = useMemo(
     () => resourcePerTurnToArray(resourcesPerTurn),
     [resourcesPerTurn]
   );
-
-  console.log("resources per turn array", resourcesPerTurnArray);
 
   return (
     <div className={styles["tile-per-turn-table-container"]}>

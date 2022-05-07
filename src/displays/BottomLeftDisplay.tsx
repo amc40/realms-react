@@ -8,7 +8,7 @@ interface Props {
 const BottomLeftDisplay: React.FC<Props> = ({
   children,
   width = "25%",
-  height = "25%",
+  height = 300,
 }) => {
   const border = "2px solid black";
   return (

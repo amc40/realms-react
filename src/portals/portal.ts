@@ -1,12 +1,12 @@
 import HexTile from "../grid/hex-tile";
-import Map from "../grid/map";
+import GameMap from "../grid/game-map";
 
 class Portal {
-  readonly firstMap: Map;
+  readonly firstMap: GameMap;
   readonly firstRow: number;
   readonly firstCol: number;
 
-  readonly secondMap: Map;
+  readonly secondMap: GameMap;
   readonly secondRow: number;
   readonly secondCol: number;
 
@@ -19,10 +19,10 @@ class Portal {
   }
 
   constructor(
-    firstMap: Map,
+    firstMap: GameMap,
     firstRow: number,
     firstCol: number,
-    secondMap: Map,
+    secondMap: GameMap,
     secondRow: number,
     secondCol: number
   ) {
@@ -36,7 +36,7 @@ class Portal {
   }
 
   getOtherEndMapAndTile(hexTile: HexTile): {
-    map: Map;
+    map: GameMap;
     tile: HexTile;
   } {
     const firstTile = this.firstTile;

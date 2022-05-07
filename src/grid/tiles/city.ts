@@ -21,7 +21,7 @@ class CityTile extends HexTile {
     city: City,
     resourceIconRepo: Resources,
     openCityModal: (city: City) => void,
-    produceUnit: (unit: Unit) => void
+    produceUnit: (unit: Unit) => void,
   ) {
     super(
       "City",

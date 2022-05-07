@@ -4,7 +4,7 @@ import NextTurn from "../assets/next-turn";
 import City from "../cities/city";
 import ProductionItems from "../cities/production";
 import { Empires } from "../empires/empire";
-import Map from "../grid/map";
+import GameMap from "../grid/game-map";
 import HexTile from "../grid/hex-tile";
 import MapGenerator from "../grid/map-generation";
 import { TileImprovementType } from "../grid/tile-improvements";
@@ -31,8 +31,8 @@ type TransferResources = (
 
 class RealmsSketch extends p5 {
   private static instanceCount = 0;
-  private maps: Map[] = [];
-  currentMap: Map | null = null;
+  private maps: GameMap[] = [];
+  currentMap: GameMap | null = null;
   private nextTurnIndicator = new NextTurn(() => this.handleNextTurn());
 
   private openCityModal: (city: City) => void;
@@ -55,6 +55,7 @@ class RealmsSketch extends p5 {
   resources: Resources | null = null;
   productionItems: ProductionItems | null = null;
 
+  private selectedUnit: Unit | null = null;
   private prevSelectedUnit: Unit | null = null;
   private prevSelectedUnitTile: HexTile | null = null;
   private prevIsHumanPlayersTurn = false;
@@ -106,7 +107,11 @@ class RealmsSketch extends p5 {
     const mapGenerator = new MapGenerator(
       this.openCityModal,
       this.selectMapAndCentreOn.bind(this),
-      this.resources!
+      this.resources!,
+      () => this.selectedUnit,
+      (newSelectedUnit: Unit | null) => {
+        this.selectedUnit = newSelectedUnit;
+      }
     );
     const { mainRealm, otherRealms } = mapGenerator.generateMaps(
       this.width,
@@ -140,28 +145,28 @@ class RealmsSketch extends p5 {
 
   handleUnitMove() {
     if (this.isUnitMoveSelected()) {
-      this.currentMap!.getCurrentSelectedUnit()!.stopSelectingMovement();
+      this.selectedUnit?.stopSelectingMovement();
     } else {
       this.clearAllUnitActionSelections();
-      this.currentMap!.getCurrentSelectedUnit()!.toggleSelectingMovement();
+      this.selectedUnit?.toggleSelectingMovement();
     }
   }
 
   constructTileImprovement(tileImprovementType: TileImprovementType) {
-    this.currentMap!.getCurrentSelectedUnit()?.currentTile?.addTileImprovement(
+    this.selectedUnit!.currentTile?.addTileImprovement(
       this,
       tileImprovementType
     );
   }
 
   clearAllUnitActionSelections() {
-    this.currentMap!.getCurrentSelectedUnit()?.stopSelectingMovement();
+    this.selectedUnit?.stopSelectingMovement();
     this.getCurrentSelectedMillitaryUnit()?.stopSelectingAttackTarget();
     this.getCurrentSelectedTransportUnit()?.stopSelectingTransportTarget();
   }
 
   handleUnitSleep() {
-    this.currentMap!.getCurrentSelectedUnit()?.setSleeping();
+    this.selectedUnit?.setSleeping();
   }
 
   handleUnitTransport() {
@@ -174,20 +179,18 @@ class RealmsSketch extends p5 {
   }
 
   getCurrentSelectedMillitaryUnit(): MillitaryUnit | null {
-    const currentSelectedUnit = this.currentMap!.getCurrentSelectedUnit();
     if (
-      currentSelectedUnit != null &&
-      currentSelectedUnit instanceof MillitaryUnit
+      this.selectedUnit != null &&
+      this.selectedUnit instanceof MillitaryUnit
     ) {
-      return currentSelectedUnit;
+      return this.selectedUnit;
     }
     return null;
   }
 
   getCurrentSelectedTransportUnit() {
-    const currentSelectedUnit = this.currentMap!.getCurrentSelectedUnit();
-    if (currentSelectedUnit instanceof Caravan) {
-      return currentSelectedUnit;
+    if (this.selectedUnit instanceof Caravan) {
+      return this.selectedUnit;
     }
     return null;
   }
@@ -271,7 +274,7 @@ class RealmsSketch extends p5 {
   }
 
   isUnitMoveSelected() {
-    return this.currentMap!.getCurrentSelectedUnit()?.havingMovementSelected();
+    return this.selectedUnit?.havingMovementSelected();
   }
 
   isAttackSelected() {
@@ -283,7 +286,7 @@ class RealmsSketch extends p5 {
   }
 
   isSleepSelected() {
-    return this.currentMap!.getCurrentSelectedUnit()?.isSleeping();
+    return this.selectedUnit?.isSleeping();
   }
 
   isUnitActionSelected(unitActionType: UnitActionType) {
@@ -369,33 +372,32 @@ class RealmsSketch extends p5 {
     }
   }
 
-  selectMapAndCentreOn(mapToSelect: Map, centreOn: HexTile): void {
+  selectMapAndCentreOn(mapToSelect: GameMap, centreOn: HexTile): void {
     this.currentMap = mapToSelect;
     this.currentMap!.centreOn(this, centreOn);
     this.rerender();
   }
 
   draw(): void {
-    const selectedUnit = this.currentMap!.getCurrentSelectedUnit();
     if (
-      selectedUnit !== this.prevSelectedUnit ||
-      selectedUnit?.currentTile !== this.prevSelectedUnitTile ||
+      this.selectedUnit !== this.prevSelectedUnit ||
+      this.selectedUnit?.currentTile !== this.prevSelectedUnitTile ||
       this.isHumanPlayersTurn() !== this.prevIsHumanPlayersTurn
     ) {
       if (
-        selectedUnit != null &&
-        selectedUnit.owner === this.humanPlayer &&
+        this.selectedUnit != null &&
+        this.selectedUnit.owner === this.humanPlayer &&
         this.isHumanPlayersTurn()
       ) {
-        const unitActionTypes = selectedUnit.getUnitActionTypes();
+        const unitActionTypes = this.selectedUnit.getUnitActionTypes();
         this.unitActionButtons = this.unitActions!.getUnitActionButtons(
           unitActionTypes,
           this
         );
       }
     }
-    this.prevSelectedUnit = selectedUnit;
-    this.prevSelectedUnitTile = selectedUnit?.currentTile ?? null;
+    this.prevSelectedUnit = this.selectedUnit;
+    this.prevSelectedUnitTile = this.selectedUnit?.currentTile ?? null;
     this.prevIsHumanPlayersTurn = this.isHumanPlayersTurn();
     if (this.keyIsDown("A".charCodeAt(0))) {
       this.currentMap!.panX(RealmsSketch.scrollSpeed);

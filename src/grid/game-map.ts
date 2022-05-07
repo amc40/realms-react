@@ -120,7 +120,7 @@ export class OffsetCoordinate {
   }
 }
 
-class Map {
+class GameMap {
   readonly realmName: string;
   private readonly x: number;
   private readonly y: number;
@@ -136,8 +136,9 @@ class Map {
   private yPan = 0;
   private scale = 1;
 
-  private currentSelectedUnit: Unit | null = null;
   private units: Unit[] = [];
+  private readonly getCurrentSelectedUnit: () => Unit | null;
+  private readonly setCurrentSelectedUnit: (unit: Unit | null) => void;
 
   private cityTiles: CityTile[] = [];
 
@@ -169,7 +170,7 @@ class Map {
   addGridEdges() {
     for (let row = 0; row < this.nRows; row++) {
       for (let col = 0; col < this.nCols; col++) {
-        for (let neighbourOffsetCoord of Map.getNeighbourOffsetCoords(
+        for (let neighbourOffsetCoord of GameMap.getNeighbourOffsetCoords(
           row,
           col,
           this.nRows,
@@ -194,10 +195,14 @@ class Map {
     nRows: number,
     nCols: number,
     radius: number,
-    hexagonGrid: HexTile[][]
+    hexagonGrid: HexTile[][],
+    getCurrentSelectedUnit: () => Unit | null,
+    setCurrentSelectedUnit: (unit: Unit | null) => void
   ) {
     if (nRows <= 0) throw new Error("nRows must be > 0");
     if (nCols <= 0) throw new Error("nCols must be > 0");
+    this.getCurrentSelectedUnit = getCurrentSelectedUnit;
+    this.setCurrentSelectedUnit = setCurrentSelectedUnit;
     this.realmName = realmName;
     this.x = x;
     this.y = y;
@@ -257,10 +262,6 @@ class Map {
     return hexTile1CubeCoord.diff(hexTile2CubeCoord).totalCoordMag();
   }
 
-  getCurrentSelectedUnit(): Unit | null {
-    return this.currentSelectedUnit;
-  }
-
   inBounds(row: number, col: number) {
     return row >= 0 && row < this.nRows && col >= 0 && col < this.nCols;
   }
@@ -296,7 +297,7 @@ class Map {
 
   centreOnAndSelectUnit(p5: p5, unit: Unit) {
     this.centreOnUnit(p5, unit);
-    this.currentSelectedUnit = unit;
+    this.setCurrentSelectedUnit(unit);
     unit.select();
   }
 
@@ -330,7 +331,7 @@ class Map {
 
   handleNextTurn() {
     this.units.forEach((unit) => unit.handleNextTurn());
-    this.currentSelectedUnit = null;
+    this.setCurrentSelectedUnit(null);
     this.cityTiles
       .map((cityTile) => cityTile.getCity()!)
       .forEach((city) => city.handleNextTurn());
@@ -435,12 +436,13 @@ class Map {
           mouseRelativeToCentre.y,
           currentPlayer
         );
-        if (this.currentSelectedUnit != null) {
-          this.currentSelectedUnit.unselect();
+        const prevSelectedUnit = this.getCurrentSelectedUnit();
+        if (prevSelectedUnit != null) {
+          prevSelectedUnit.unselect();
         }
         const hexTileUnit = hexTile.getCurrentSelectedUnit();
-        this.currentSelectedUnit = hexTileUnit;
-        this.currentSelectedUnit?.select();
+        this.setCurrentSelectedUnit(hexTileUnit);
+        hexTileUnit?.select();
       }
       // return true if processed click
       return true;
@@ -494,7 +496,7 @@ class Map {
       unit.currentTile = tile;
     }
     this.hexagonGrid[row][col] = tile;
-    for (let neighbourCoords of Map.getNeighbourOffsetCoords(
+    for (let neighbourCoords of GameMap.getNeighbourOffsetCoords(
       row,
       col,
       this.nRows,
@@ -557,7 +559,7 @@ class Map {
     p5.text(text, x, y);
   }
 
-  drawAugmentedPath(p5: p5, path: MoveAugmentedTile[]) {
+  drawAugmentedPath(p5: p5, path: MoveAugmentedTile[], currentMap: GameMap) {
     if (path.length > 1) {
       p5.strokeWeight(3);
       let prevHex = path[0].tile;
@@ -567,23 +569,27 @@ class Map {
         const currentHex = path[i].tile;
         const currentHexX = this.getHexCentreX(currentHex);
         const currentHexY = this.getHexCentreY(currentHex);
-        p5.line(prevHexX, prevHexY, currentHexX, currentHexY);
+        if (prevHex.containedInMap(currentMap)) {
+          p5.line(prevHexX, prevHexY, currentHexX, currentHexY);
+        }
         prevHex = currentHex;
         prevHexX = currentHexX;
         prevHexY = currentHexY;
       }
 
       const finalHex = path[path.length - 1];
-      drawArrow(
-        p5,
-        prevHexX,
-        prevHexY,
-        this.getHexCentreX(finalHex.tile),
-        this.getHexCentreY(finalHex.tile)
-      );
+      if (finalHex.tile.containedInMap(currentMap)) {
+        drawArrow(
+          p5,
+          prevHexX,
+          prevHexY,
+          this.getHexCentreX(finalHex.tile),
+          this.getHexCentreY(finalHex.tile)
+        );
+      }
       for (let i = 1; i < path.length - 1; i++) {
         const { nMoves, tile } = path[i];
-        if (nMoves != null) {
+        if (nMoves != null && tile.containedInMap(currentMap)) {
           this.drawEllipseWithText(
             this.getHexCentreX(tile),
             this.getHexCentreY(tile),
@@ -611,7 +617,7 @@ class Map {
   onUnitKilled(unit: Unit) {
     unit.currentTile?.removeUnit(unit);
     if (this.getCurrentSelectedUnit() === unit) {
-      this.currentSelectedUnit = null;
+      this.setCurrentSelectedUnit(null);
     }
   }
 
@@ -672,7 +678,7 @@ class Map {
     const augmentedPath =
       currentSelectedUnit?.getMoveAugmentedShortestPathToTarget();
     if (augmentedPath != null) {
-      this.drawAugmentedPath(p5, augmentedPath);
+      this.drawAugmentedPath(p5, augmentedPath, this);
     }
     if (attackableTiles != null) {
       attackableTiles.forEach((attackableTile) =>
@@ -689,4 +695,4 @@ class Map {
   }
 }
 
-export default Map;
+export default GameMap;

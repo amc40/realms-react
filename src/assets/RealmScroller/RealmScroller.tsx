@@ -2,12 +2,12 @@ import { faAngleLeft, faAngleRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { Button } from "react-bootstrap";
-import Map from "../../grid/map";
+import GameMap from "../../grid/game-map";
 import NextTurn from "../next-turn";
 import styles from "./RealmScroller.module.css";
 
 interface Props {
-  currentMap: Map;
+  currentMap: GameMap;
   onLeft: () => void;
   onRight: () => void;
 }

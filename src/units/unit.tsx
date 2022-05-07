@@ -1,6 +1,6 @@
 import p5 from "p5";
 import { ProductionItem } from "../cities/production";
-import Map from "../grid/map";
+import GameMap from "../grid/game-map";
 import HexTile from "../grid/hex-tile";
 import Player from "../players/player";
 import ShortestPath from "../utils/shortest-path";
@@ -27,7 +27,7 @@ abstract class Unit {
   // TODO: maybe add a temp target so can cancel ordering movement
   private _movementTarget: HexTile | null = null;
   readonly hexTileShortestPath = new ShortestPath<HexTile>(
-    Map.distBetweenHexTileNodes
+    GameMap.distBetweenHexTileNodes
   );
   private _shortestPathToTarget: HexTile[] | null = null;
   private state: State = State.WAITING_FOR_ORDERS;

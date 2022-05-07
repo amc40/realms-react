@@ -3,10 +3,10 @@ import Portal from "../../portals/portal";
 import Resources, { ResourceQuantity } from "../../resources";
 import RGB from "../../utils/RGB";
 import HexTile from "../hex-tile";
-import Map from "../map";
+import GameMap from "../game-map";
 
 export type SelectMapAndCentreOn = (
-  mapToSelect: Map,
+  mapToSelect: GameMap,
   centreOn: HexTile
 ) => void;
 

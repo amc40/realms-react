@@ -5,7 +5,7 @@ import Units from "../units";
 import MillitaryUnit from "../units/millitary/millitary-unit";
 import Swordsman from "../units/millitary/swordsman";
 import Unit from "../units/unit";
-import Map, { CubeCoordinate, OffsetCoordinate } from "./map";
+import GameMap, { CubeCoordinate, OffsetCoordinate } from "./game-map";
 import HexTile from "./hex-tile";
 import CityTile from "./tiles/city";
 import DesertTile from "./tiles/desert";
@@ -73,15 +73,21 @@ class MapGenerator {
   private readonly radius = 100;
   private readonly selectMapAndCentreOn: SelectMapAndCentreOn;
   private readonly resourceIcons: Resources;
+  private readonly getCurrentSelectedUnit: () => Unit | null;
+  private readonly setCurrentSelectedUnit: (unit: Unit | null) => void;
 
   constructor(
     openCityModal: (city: City) => void,
     selectMapAndCentreOn: SelectMapAndCentreOn,
-    resourceIcons: Resources
+    resourceIcons: Resources,
+    getCurrentSelectedUnit: () => Unit | null,
+    setCurrentSelectedUnit: (unit: Unit | null) => void
   ) {
     this.openCityModal = openCityModal;
     this.selectMapAndCentreOn = selectMapAndCentreOn;
     this.resourceIcons = resourceIcons;
+    this.getCurrentSelectedUnit = getCurrentSelectedUnit;
+    this.setCurrentSelectedUnit = setCurrentSelectedUnit;
   }
 
   private static getPreviousGeneratedNeighbourOffsetCoords(
@@ -243,16 +249,16 @@ class MapGenerator {
     throw new Error(`Invalid probability distribution: ${probabilities}`);
   }
 
-  private static getRandomRow(map: Map) {
+  private static getRandomRow(map: GameMap) {
     return Math.floor(Math.random() * map.nRows);
   }
 
-  private static getRandomCol(map: Map) {
+  private static getRandomCol(map: GameMap) {
     return Math.floor(Math.random() * map.nCols);
   }
 
   private addPlayers(
-    map: Map,
+    map: GameMap,
     players: Player[],
     nCities: number,
     tileRadius: number,
@@ -299,7 +305,7 @@ class MapGenerator {
     }
   }
 
-  addPortals(mainRealm: Map, otherRealm: Map, nPortals: number) {
+  addPortals(mainRealm: GameMap, otherRealm: GameMap, nPortals: number) {
     for (let portalN = 0; portalN < nPortals; portalN++) {
       const mainRealmPortalRow = MapGenerator.getRandomRow(mainRealm);
       const mainRealmPortalCol = MapGenerator.getRandomCol(mainRealm);
@@ -379,7 +385,7 @@ class MapGenerator {
         }
       }
     }
-    const map = new Map(
+    const map = new GameMap(
       name,
       width,
       height,
@@ -388,8 +394,16 @@ class MapGenerator {
       nRows,
       nCols,
       this.radius,
-      hexagonGrid
+      hexagonGrid,
+      this.getCurrentSelectedUnit,
+      this.setCurrentSelectedUnit
     );
+    for (let row = 0; row < nRows; row++) {
+      for (let col = 0; col < nCols; col++) {
+        const tile = hexagonGrid[row][col];
+        tile.setMap(map);
+      }
+    }
     return map;
   }
 
@@ -442,8 +456,8 @@ class MapGenerator {
     units: Units,
     p5: p5
   ): {
-    mainRealm: Map;
-    otherRealms: Map[];
+    mainRealm: GameMap;
+    otherRealms: GameMap[];
   } {
     const nOtherRealms = players.length;
     const mainRealm = this.generateMainRealmMap(
@@ -457,7 +471,7 @@ class MapGenerator {
       units,
       p5
     );
-    let otherRealms: Map[] = [];
+    let otherRealms: GameMap[] = [];
     for (let i = 0; i < nOtherRealms; i++) {
       const nRows = randomInt(otherRealmsMinRows, otherRealmsMaxRows + 1);
       const nCols = randomInt(otherRealmsMinCols, otherRealmsMaxCols + 1);

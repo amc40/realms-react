@@ -16,6 +16,7 @@ import ShortestPath, {
   Node,
   WeightedDirectedEdge,
 } from "../utils/shortest-path";
+import GameMap from "./game-map";
 import {
   getTileImprovementInstance,
   TileImprovementType,
@@ -29,6 +30,7 @@ abstract class HexTile extends RegularHexagon {
   private readonly col: number;
   // number of movement points required to move onto the tile
   private readonly nMovementPoints: number;
+  private map: GameMap | undefined;
   protected city: City | null = null;
   private units: Unit[] = [];
   private currentUnit: Unit | null = null;
@@ -92,6 +94,14 @@ abstract class HexTile extends RegularHexagon {
 
   getBorderColor(): RGB | null {
     return this.city?.owner.getColor() ?? null;
+  }
+
+  setMap(map: GameMap) {
+    this.map = map;
+  }
+
+  containedInMap(map: GameMap) {
+    return this.map === map;
   }
 
   getInnerBorderColor(): RGB | null {

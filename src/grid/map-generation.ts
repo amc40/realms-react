@@ -18,9 +18,10 @@ import PortalTile, { SelectMapAndCentreOn } from "./tiles/portal";
 import Portal from "../portals/portal";
 import FarmTileImprovement from "./tile-improvements/farm-tile-improvement";
 import Resources from "../resources";
+import RealmsSketch from "../sketch/realms-sketch";
 
-type TileType = "grassland" | "desert" | "marsh" | "hills" | "plains";
-const tileTypes: TileType[] = [
+type NaturalTileType = "grassland" | "desert" | "marsh" | "hills" | "plains";
+const tileTypes: NaturalTileType[] = [
   "grassland",
   "desert",
   "marsh",
@@ -28,9 +29,11 @@ const tileTypes: TileType[] = [
   "plains",
 ];
 
+type AllTileTypes = NaturalTileType | "city" | "portal";
+
 class MapGenerator {
   private static readonly TILE_ADJACENCY_PROBABILITIES: {
-    [key in TileType]: { [key in TileType]: number };
+    [key in NaturalTileType]: { [key in NaturalTileType]: number };
   } = {
     grassland: {
       grassland: 0.55,
@@ -133,7 +136,7 @@ class MapGenerator {
     return neighbours;
   }
 
-  private static hexTileToTileType(hexTile: HexTile): TileType {
+  private static hexTileToTileType(hexTile: HexTile): NaturalTileType {
     if (hexTile instanceof GrasslandTile) {
       return "grassland";
     } else if (hexTile instanceof DesertTile) {
@@ -162,11 +165,11 @@ class MapGenerator {
   }
 
   private static getTileTypeProbabilityDistribution(
-    adjacentTileTypes: TileType[]
+    adjacentTileTypes: NaturalTileType[]
   ): {
-    [key in TileType]: number;
+    [key in NaturalTileType]: number;
   } {
-    const tileTypeProbabilities: { [key in TileType]: number } = {
+    const tileTypeProbabilities: { [key in NaturalTileType]: number } = {
       grassland: 0,
       desert: 0,
       marsh: 0,
@@ -181,13 +184,18 @@ class MapGenerator {
       )) {
         const weightedProbability =
           unweightedProbability / adjacentTileTypes.length;
-        tileTypeProbabilities[tileType as TileType] += weightedProbability;
+        tileTypeProbabilities[tileType as NaturalTileType] +=
+          weightedProbability;
       }
     }
     return tileTypeProbabilities;
   }
 
-  private getTileOfType(tileType: TileType, row: number, col: number) {
+  private getTileOfType(
+    tileType: NaturalTileType,
+    row: number,
+    col: number
+  ): HexTile {
     switch (tileType) {
       case "grassland":
         const proportionWood = 0.3;
@@ -217,30 +225,38 @@ class MapGenerator {
       case "plains":
         return new PlainsTile(this.radius, row, col, this.resourceIcons);
       default:
-        throw new Error(`Unknown tile type: ${tileType}`);
+        throw new Error("Unknown tile type", tileType);
     }
   }
 
-  private static getRadius(
-    width: number,
-    height: number,
-    nRows: number,
-    nCols: number
-  ): number {
-    const widthDiv = width / ((2 * nCols + 1) * Math.sqrt(2 / 3));
-    const heightDiv = height / ((nRows - 1) * 1.5 + 2);
-    return Math.min(widthDiv, heightDiv);
+  getCityTile(row: number, col: number, owner: Player, map: GameMap): CityTile {
+    return new CityTile(
+      this.radius,
+      row,
+      col,
+      new City("City " + owner.incrementThenGetNCities(), owner),
+      this.resourceIcons,
+      this.openCityModal,
+      (unit: Unit) => map.addUnit(unit, row, col)
+    );
+  }
+
+  public getRadius() {
+    return this.radius;
   }
 
   private static sampleProbabilities(probabilities: {
-    [key in TileType]: number;
-  }): TileType {
+    [key in NaturalTileType]: number;
+  }): NaturalTileType {
     const random = Math.random();
     let aggregated_probability = 0;
     const randomElement = Object.entries(probabilities)
       .map(([type, probability]) => {
         aggregated_probability += probability;
-        return { type: type as TileType, probability: aggregated_probability };
+        return {
+          type: type as NaturalTileType,
+          probability: aggregated_probability,
+        };
       })
       .find(({ type, probability }) => probability >= random)?.type;
     if (randomElement != null) {
@@ -258,10 +274,10 @@ class MapGenerator {
   }
 
   private addPlayers(
+    sketch: RealmsSketch,
     map: GameMap,
     players: Player[],
     nCities: number,
-    tileRadius: number,
     units: Units
   ) {
     for (let player of players) {
@@ -269,36 +285,30 @@ class MapGenerator {
       for (let cityN = 0; cityN < nCities; cityN++) {
         const cityRow = MapGenerator.getRandomRow(map);
         const cityCol = MapGenerator.getRandomCol(map);
-        const cityTile = new CityTile(
-          tileRadius,
-          cityRow,
-          cityCol,
-          new City("City " + (cityN + 1), player),
-          this.resourceIcons,
-          this.openCityModal,
-          (unit: Unit) => map.addUnit(unit, cityRow, cityCol)
-        );
+        const cityTile = this.getCityTile(cityRow, cityCol, player, map);
         map.addCityTile(cityTile);
         cities.push(cityTile);
       }
-      const unit = units.getSwordsman(player, (unit: Unit) =>
-        map.onUnitKilled(unit)
-      );
-      const caravan = units.getCaravan(player, (unit: Unit) => {
-        map.onUnitKilled(unit);
-      });
-      const worker = units.getWorker(player, (unit: Unit) => {
-        map.onUnitKilled(unit);
-      });
+
+      const onKilled = (unit: Unit) => sketch.onUnitKilled(unit);
+      const unit = units.getSwordsman(player, onKilled);
+      const caravan = units.getCaravan(player, onKilled);
+      const worker = units.getWorker(player, onKilled);
+      const settler = units.getSettler(player, onKilled);
+      // map.addUnit(
+      //   unit,
+      //   MapGenerator.getRandomRow(map),
+      //   MapGenerator.getRandomCol(map)
+      // );
+      // const randomCity = randomElement(cities)!;
+      // map.addUnit(caravan, randomCity.getRow(), randomCity.getCol());
+      // map.addUnit(
+      //   worker,
+      //   MapGenerator.getRandomRow(map),
+      //   MapGenerator.getRandomCol(map)
+      // );
       map.addUnit(
-        unit,
-        MapGenerator.getRandomRow(map),
-        MapGenerator.getRandomCol(map)
-      );
-      const randomCity = randomElement(cities)!;
-      map.addUnit(caravan, randomCity.getRow(), randomCity.getCol());
-      map.addUnit(
-        worker,
+        settler,
         MapGenerator.getRandomRow(map),
         MapGenerator.getRandomCol(map)
       );
@@ -416,11 +426,11 @@ class MapGenerator {
     nCols: number,
     players: Player[],
     units: Units,
-    p5: p5
+    sketch: RealmsSketch
   ) {
     const map = this.generateMap("Terra", width, height, x, y, nRows, nCols);
-    this.addPlayers(map, players, 3, this.radius, units);
-    map.getTile(1, 1)?.addTileImprovement(p5, "farm");
+    this.addPlayers(sketch, map, players, 3, units);
+    map.getTile(1, 1)?.addTileImprovement(sketch, "farm");
     return map;
   }
 
@@ -454,7 +464,7 @@ class MapGenerator {
     otherRealmsMaxCols: number,
     players: Player[],
     units: Units,
-    p5: p5
+    sketch: RealmsSketch
   ): {
     mainRealm: GameMap;
     otherRealms: GameMap[];
@@ -469,7 +479,7 @@ class MapGenerator {
       mainRealmNCols,
       players,
       units,
-      p5
+      sketch
     );
     let otherRealms: GameMap[] = [];
     for (let i = 0; i < nOtherRealms; i++) {

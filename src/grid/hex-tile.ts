@@ -23,6 +23,7 @@ import {
 } from "./tile-improvements";
 import TileImprovement from "./tile-improvements/tile-improvement";
 import TileImprovementIcon from "./tile-improvements/tile-improvement-icon";
+import CityTile from "./tiles/city";
 
 abstract class HexTile extends RegularHexagon {
   private readonly node = new Node<HexTile>(this);
@@ -305,6 +306,47 @@ abstract class HexTile extends RegularHexagon {
 
   hasSpecialResource(specialResource: SpecialResourceTypes) {
     return this.specialResources[specialResource] != null;
+  }
+
+  /**
+   * Finds the distance to the nearest hex matching a given predicate.
+   * @param predicate the predicate to match against.
+   * @param tile the start point of the search (distance 0)
+   * @param maxDistance the maximum depth (inclusive) of the search. Highly advisable to use otherwise search will be extremely expensive.
+   */
+  distanceToTileMatchingPredicate(
+    predicate: (tile: HexTile) => boolean,
+    maxDistance: number = Infinity
+  ): HexTile | null {
+    if (maxDistance < 0) return null;
+    if (predicate(this)) return this;
+    const neighbours = this.getNeighbours();
+    const visited = new Set<HexTile>();
+    visited.add(this);
+    let toVisit: {
+      tile: HexTile;
+      distance: number;
+    }[] = neighbours.map((n) => ({ tile: n, distance: 1 }));
+    while (toVisit.length > 0) {
+      const { tile, distance } = toVisit.shift()!;
+      if (predicate(tile)) return tile;
+      visited.add(tile);
+      if (distance < maxDistance) {
+        for (let neightbour of tile.getNeighbours()) {
+          if (!visited.has(neightbour)) {
+            toVisit.push({ tile: neightbour, distance: distance + 1 });
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  findDistanceToCityTile(maxDistance?: number): CityTile | null {
+    return this.distanceToTileMatchingPredicate(
+      (tile) => tile instanceof CityTile,
+      maxDistance
+    ) as CityTile | null;
   }
 
   private drawSpecialResource(p5: p5, specialResource: SpecialResourceTypes) {

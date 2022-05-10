@@ -33,8 +33,8 @@ const ProductionItemDisplay: React.FC<Props> = ({
       style={{
         borderTopLeftRadius: roundedBorderTop ? 15 : 0,
         borderTopRightRadius: roundedBorderTop ? 15 : 0,
-        borderBottomLeftRadius: roundedBorderTop ? 15 : 0,
-        borderBottomRightRadius: roundedBorderTop ? 15 : 0,
+        borderBottomLeftRadius: roundedBorderBottom ? 15 : 0,
+        borderBottomRightRadius: roundedBorderBottom ? 15 : 0,
       }}
     >
       <Col md="auto">

@@ -2,6 +2,7 @@ import Empire from "../empires/empire";
 import RGB from "../utils/RGB";
 
 class Player {
+  nCities = 0;
   readonly empire: Empire;
 
   constructor(empire: Empire) {
@@ -10,6 +11,10 @@ class Player {
 
   public getColor(): RGB {
     return this.empire.color;
+  }
+
+  public incrementThenGetNCities(): number {
+    return ++this.nCities;
   }
 }
 

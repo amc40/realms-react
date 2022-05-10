@@ -22,6 +22,7 @@ import CityTile from "../grid/tiles/city";
 import { randomElement, randomInt } from "../utils/random";
 import AIPlayer from "../players/ai-player";
 import RandomAIPlayer from "../players/random-ai-player";
+import Settler from "../units/civil/settler";
 
 type TransferResources = (
   resourceSrc1: ResourceTransferSrc,
@@ -41,6 +42,8 @@ class RealmsSketch extends p5 {
   private openCityModal: (city: City) => void;
   private transferResources: TransferResources;
   private setHoverHexTile: (hoverHexTile: HexTile | null) => void;
+
+  private mapGenerator: MapGenerator | null = null;
 
   private unitActionButtons: {
     type: UnitActionType;
@@ -108,7 +111,7 @@ class RealmsSketch extends p5 {
     }
     this.humanPlayer = this.allPlayers[0];
     this.currentPlayer = this.humanPlayer;
-    const mapGenerator = new MapGenerator(
+    this.mapGenerator = new MapGenerator(
       this.openCityModal,
       this.selectMapAndCentreOn.bind(this),
       this.resources!,
@@ -117,7 +120,7 @@ class RealmsSketch extends p5 {
         this.selectedUnit = newSelectedUnit;
       }
     );
-    const { mainRealm, otherRealms } = mapGenerator.generateMaps(
+    const { mainRealm, otherRealms } = this.mapGenerator.generateMaps(
       this.width,
       this.height,
       0,
@@ -142,7 +145,7 @@ class RealmsSketch extends p5 {
     this.productionItems = new ProductionItems(
       this.units!,
       this.humanPlayer,
-      this.currentMap
+      this
     );
     this.unitActions = new UnitActions(this);
   }
@@ -349,7 +352,41 @@ class RealmsSketch extends p5 {
     }
   }
 
+  getCurrentSelectedSettler(): Settler | null {
+    if (this.selectedUnit instanceof Settler) {
+      return this.selectedUnit;
+    }
+    return null;
+  }
+
+  handleUnitSettleCity() {
+    const currentSelectedSettler = this.getCurrentSelectedSettler();
+    if (currentSelectedSettler != null) {
+      const unitTile = currentSelectedSettler.currentTile;
+      const map = unitTile?.getMap();
+      if (map != null && unitTile != null) {
+        const unitTileRow = unitTile?.getRow();
+        const unitTileCol = unitTile?.getCol();
+        const owner = currentSelectedSettler.owner;
+        map.addCityTile(
+          this.mapGenerator!.getCityTile(unitTileRow, unitTileCol, owner, map)
+        );
+        currentSelectedSettler.onSettleCity();
+      }
+    }
+  }
+
+  onUnitKilled(unit: Unit) {
+    unit.currentTile?.removeUnit(unit);
+    unit.currentTile = null;
+    if (this.selectedUnit === unit) {
+      this.selectedUnit = null;
+    }
+    this.rerender();
+  }
+
   handleUnitAction(unitActionType: UnitActionType) {
+    console.log("handling unit action", unitActionType);
     switch (unitActionType) {
       case "move":
         this.handleUnitMove();
@@ -374,6 +411,12 @@ class RealmsSketch extends p5 {
         break;
       case "transfer-resources":
         this.handleUnitTransferResources();
+        break;
+      case "settle-city":
+        this.handleUnitSettleCity();
+        break;
+      default:
+        throw new Error("Unknown unit action type", unitActionType);
     }
   }
 
@@ -462,7 +505,7 @@ class RealmsSketch extends p5 {
   draw(): void {
     if (
       this.selectedUnit !== this.prevSelectedUnit ||
-      this.selectedUnit?.currentTile !== this.prevSelectedUnitTile ||
+      (this.selectedUnit?.currentTile ?? null) !== this.prevSelectedUnitTile ||
       this.isHumanPlayersTurn() !== this.prevIsHumanPlayersTurn
     ) {
       if (
@@ -476,6 +519,8 @@ class RealmsSketch extends p5 {
           unitActionTypes,
           this
         );
+      } else {
+        this.unitActionButtons = [];
       }
     }
     this.prevSelectedUnit = this.selectedUnit;

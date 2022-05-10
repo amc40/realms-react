@@ -4,9 +4,13 @@ import { ResourceQuantity } from "../../resources";
 import { ResourceTransferSrc } from "../../resources/resource-transfer";
 import Unit from "../unit";
 import { CaravanActionType } from "./caravan";
+import { SettlerActionType } from "./settler";
 import { WorkerUnitActionType } from "./worker";
 
-export type CivilUnitActionType = CaravanActionType | WorkerUnitActionType;
+export type CivilUnitActionType =
+  | CaravanActionType
+  | WorkerUnitActionType
+  | SettlerActionType;
 
 abstract class CivilUnit extends Unit {
   private resources: ResourceQuantity = {};

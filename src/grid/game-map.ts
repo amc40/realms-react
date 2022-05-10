@@ -557,6 +557,13 @@ class GameMap {
     return this.radius * (1 + hexTile.getRow() * 1.5);
   }
 
+  public registerUnit(unit: Unit) {
+    this.units.push(unit);
+  }
+  public unregisterUnit(unit: Unit) {
+    this.units = this.units.filter((u) => u !== unit);
+  }
+
   addTile(tile: HexTile) {
     const row = tile.getRow();
     const col = tile.getCol();
@@ -672,13 +679,6 @@ class GameMap {
           );
         }
       }
-    }
-  }
-
-  onUnitKilled(unit: Unit) {
-    unit.currentTile?.removeUnit(unit);
-    if (this.getCurrentSelectedUnit() === unit) {
-      this.setCurrentSelectedUnit(null);
     }
   }
 

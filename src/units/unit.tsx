@@ -117,12 +117,19 @@ abstract class Unit {
   }
 
   set currentTile(hexTile: HexTile | null) {
-    this._currentTile?.removeUnit(this);
+    const oldTile = this._currentTile;
+    oldTile?.removeUnit(this);
     this._currentTile = hexTile;
     this._currentTile?.addUnit(this);
+    const oldTileMap = oldTile?.getMap();
+    const newTileMap = hexTile?.getMap();
+    if (oldTileMap !== newTileMap) {
+      oldTileMap?.unregisterUnit(this);
+      newTileMap?.registerUnit(this);
+    }
   }
 
-  get currentTile() {
+  get currentTile(): HexTile | null {
     return this._currentTile;
   }
 

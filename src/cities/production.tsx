@@ -2,6 +2,7 @@ import p5 from "p5";
 import React, { useEffect } from "react";
 import GameMap from "../grid/game-map";
 import Player from "../players/player";
+import RealmsSketch from "../sketch/realms-sketch";
 import Units, { UnitType } from "../units";
 import Unit from "../units/unit";
 import City from "./city";
@@ -49,13 +50,14 @@ const UnitIcon: React.FC<{ unit: Unit }> = ({ unit }) => {
 
 class ProductionItems {
   readonly millitaryUnits: ProductionItem[] = [];
+  readonly civilUnits: ProductionItem[] = [];
 
   private static getMillitaryIcon() {}
 
-  constructor(units: Units, player: Player, hexGridMap: GameMap) {
+  constructor(units: Units, player: Player, sketch: RealmsSketch) {
     const produceUnit = (city: City, unitType: UnitType) =>
       city.cityTile!.produceUnit(
-        units.getUnit(unitType, city.owner, hexGridMap.onUnitKilled)
+        units.getUnit(unitType, city.owner, sketch.onUnitKilled)
       );
     this.millitaryUnits.push({
       name: "Swordsman",
@@ -63,10 +65,28 @@ class ProductionItems {
       productionCost: 30,
       icon: <UnitIcon unit={units.getSwordsman(player, () => {})} />,
     });
+    this.civilUnits.push({
+      name: "Worker",
+      onProduced: (city: City) => produceUnit(city, "worker"),
+      productionCost: 30,
+      icon: <UnitIcon unit={units.getWorker(player, () => {})} />,
+    });
+    this.civilUnits.push({
+      name: "Settler",
+      onProduced: (city: City) => produceUnit(city, "settler"),
+      productionCost: 60,
+      icon: <UnitIcon unit={units.getSettler(player, () => {})} />,
+    });
+    this.civilUnits.push({
+      name: "Caravan",
+      onProduced: (city: City) => produceUnit(city, "caravan"),
+      productionCost: 30,
+      icon: <UnitIcon unit={units.getCaravan(player, () => {})} />,
+    });
   }
 
   public getItems() {
-    return this.millitaryUnits;
+    return [...this.millitaryUnits, ...this.civilUnits];
   }
 }
 

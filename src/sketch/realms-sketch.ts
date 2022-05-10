@@ -217,6 +217,15 @@ class RealmsSketch extends p5 {
     }
   }
 
+  handleUnitSiege() {
+    if (this.isAttackSelected()) {
+      this.getCurrentSelectedMillitaryUnit()?.toggleSelectingSiegeTarget();
+    } else {
+      this.clearAllUnitActionSelections();
+      this.getCurrentSelectedMillitaryUnit()?.toggleSelectingSiegeTarget();
+    }
+  }
+
   getCityTilesRequiringProductionChoice(): CityTile[] {
     return this.maps.flatMap((map) =>
       map.getCityTilesRequiringProductionChoice(this.currentPlayer!)
@@ -296,7 +305,6 @@ class RealmsSketch extends p5 {
 
   mouseClicked(event: MouseEvent): void {
     if (event.button === MouseButton.LEFT) {
-      console.log("click in sketch");
       Object.values(this.unitActionButtons!).some(({ button }) =>
         button.handleClick(this, this.mouseX, this.mouseY)
       ) ||
@@ -398,8 +406,6 @@ class RealmsSketch extends p5 {
     }
   }
 
-  handleUnitSeige() {}
-
   onUnitKilled(unit: Unit) {
     unit.currentTile?.removeUnit(unit);
     unit.currentTile = null;
@@ -410,7 +416,6 @@ class RealmsSketch extends p5 {
   }
 
   handleUnitAction(unitActionType: UnitActionType) {
-    console.log("handling unit action", unitActionType);
     switch (unitActionType) {
       case "move":
         this.handleUnitMove();
@@ -440,7 +445,7 @@ class RealmsSketch extends p5 {
         this.handleUnitSettleCity();
         break;
       case "siege":
-        this.handleUnitSeige();
+        this.handleUnitSiege();
         break;
       default:
         throw new Error("Unknown unit action type", unitActionType);

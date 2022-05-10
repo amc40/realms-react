@@ -13,7 +13,6 @@ class CityTile extends HexTile {
   private readonly openCityModal: (city: City) => void;
   private static readonly resources = getNoResources();
   readonly produceUnit: (unit: Unit) => void;
-  health = 100;
 
   constructor(
     radius: number,
@@ -45,6 +44,10 @@ class CityTile extends HexTile {
     this.city!.addResources(resourceQuantity);
   }
 
+  protected getHealth(): number | null {
+    return this.city?.health ?? null;
+  }
+
   public onClick(
     mouseRelativeX: number,
     mouseRelativeY: number,
@@ -59,7 +62,6 @@ class CityTile extends HexTile {
       super.onClick(mouseRelativeX, mouseRelativeY, player);
     }
   }
-
 }
 
 export default CityTile;

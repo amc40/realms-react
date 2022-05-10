@@ -28,6 +28,9 @@ class City {
   };
   private currentProduction: ProductionItem | null = null;
   private readonly tiles: HexTile[] = [];
+  private siegedThisRound = false;
+  health = 100;
+  strength = 20;
 
   constructor(name: string = "City", owner: Player) {
     this.name = name;
@@ -96,6 +99,11 @@ class City {
       this.currentProduction!.onProduced(this);
       this.currentProduction = null;
     }
+    // heal 20 percent of the city's health if not sieged this round
+    if (!this.siegedThisRound) {
+      this.health = Math.min(100, this.health + 20);
+    }
+    this.siegedThisRound = false;
   }
 
   public getResources() {

@@ -490,6 +490,15 @@ class GameMap {
         currentSelectedUnit.meleeAttack(attackTarget);
       } else if (
         currentSelectedUnit != null &&
+        currentSelectedUnit instanceof MillitaryUnit &&
+        currentSelectedUnit.isSelectingSeigeTarget() &&
+        currentSelectedUnit.getPossibleSiegeTiles().includes(hexTile)
+      ) {
+        if (hexTile instanceof CityTile) {
+          currentSelectedUnit.siege(hexTile);
+        }
+      } else if (
+        currentSelectedUnit != null &&
         currentSelectedUnit instanceof Caravan &&
         currentSelectedUnit.havingTransportTargetSelected() &&
         hexTile instanceof CityTile &&
@@ -746,6 +755,14 @@ class GameMap {
         attackableTile.showAsValidTarget()
       );
     }
+    let siegeTiles: HexTile[] | null = null;
+    if (
+      currentSelectedUnit instanceof MillitaryUnit &&
+      currentSelectedUnit.isSelectingSeigeTarget()
+    ) {
+      siegeTiles = currentSelectedUnit.getPossibleSiegeTiles();
+      siegeTiles.forEach((siegeTile) => siegeTile.showAsValidTarget());
+    }
     let transportTiles: HexTile[] | null = null;
     if (
       currentSelectedUnit instanceof Caravan &&
@@ -770,6 +787,9 @@ class GameMap {
       attackableTiles.forEach((attackableTile) =>
         attackableTile.stopShowAsValidTarget()
       );
+    }
+    if (siegeTiles != null) {
+      siegeTiles.forEach((siegeTile) => siegeTile.stopShowAsValidTarget());
     }
     if (transportTiles != null) {
       transportTiles.forEach((transportTile) =>

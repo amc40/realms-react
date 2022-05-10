@@ -10,6 +10,7 @@ import {
   SpecialResourceQuantity,
   SpecialResourceTypes,
 } from "../resources/special-resources";
+import MillitaryUnit from "../units/millitary/millitary-unit";
 import Unit from "../units/unit";
 import RGB from "../utils/RGB";
 import ShortestPath, {
@@ -387,6 +388,36 @@ abstract class HexTile extends RegularHexagon {
     p5.image(specialResourceIcon, 0, 0, iconDiameter, iconDiameter);
   }
 
+  protected getHealth(): number | null {
+    return null;
+  }
+
+  private drawHealthBar(p5: p5) {
+    const health = this.getHealth();
+    if (health != null) {
+      const offsetY =
+        this.textHeight / 2 + 5 + MillitaryUnit.HEALTH_BAR_HEIGHT / 2;
+      p5.rectMode(p5.CENTER);
+      p5.noStroke();
+      p5.fill(255, 0, 0);
+      p5.rect(
+        0,
+        offsetY,
+        MillitaryUnit.HEALTH_BAR_WIDTH,
+        MillitaryUnit.HEALTH_BAR_HEIGHT
+      );
+      const healthBarWidth = MillitaryUnit.HEALTH_BAR_WIDTH * (health / 100);
+      p5.fill(0, 255, 0);
+      p5.rectMode(p5.CORNER);
+      p5.rect(
+        -MillitaryUnit.HEALTH_BAR_WIDTH / 2,
+        offsetY - MillitaryUnit.HEALTH_BAR_HEIGHT / 2,
+        healthBarWidth,
+        MillitaryUnit.HEALTH_BAR_HEIGHT
+      );
+    }
+  }
+
   public drawUnitsAndText(p5: p5): void {
     if (this.text) {
       p5.rectMode(p5.CENTER);
@@ -418,6 +449,9 @@ abstract class HexTile extends RegularHexagon {
     if (specialResource != null) {
       this.drawSpecialResource(p5, specialResource);
     }
+    p5.pop();
+    p5.push();
+    this.drawHealthBar(p5);
     p5.pop();
   }
 }

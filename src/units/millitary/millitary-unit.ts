@@ -1,4 +1,5 @@
 import p5 from "p5";
+import City from "../../cities/city";
 import HexTile from "../../grid/hex-tile";
 import CityTile from "../../grid/tiles/city";
 import Player from "../../players/player";
@@ -13,8 +14,8 @@ export type MillitaryUnitActionType =
   | "sleep";
 
 abstract class MillitaryUnit extends Unit {
-  private static readonly HEALTH_BAR_WIDTH = 30;
-  private static readonly HEALTH_BAR_HEIGHT = 5;
+  static readonly HEALTH_BAR_WIDTH = 30;
+  static readonly HEALTH_BAR_HEIGHT = 5;
   private readonly strength: number;
   private health = 100;
   private selectingAttackTarget = false;
@@ -62,10 +63,10 @@ abstract class MillitaryUnit extends Unit {
   }
 
   private static getDamage(
-    attackingUnit: MillitaryUnit,
-    defendingUnit: MillitaryUnit
+    attackingStrength: number,
+    defendingStrength: number
   ): number {
-    const strengthRatio = attackingUnit.strength / defendingUnit.strength;
+    const strengthRatio = attackingStrength / defendingStrength;
     // TODO: add randomness
     // need 3x strength to have guaranteed kill
     const damage = (strengthRatio / 3) * 100;
@@ -84,13 +85,13 @@ abstract class MillitaryUnit extends Unit {
   ): boolean {
     if (defendingUnit instanceof MillitaryUnit) {
       const attackingDamage = MillitaryUnit.getDamage(
-        attackingUnit,
-        defendingUnit
+        attackingUnit.strength,
+        defendingUnit.strength
       );
       let success = false;
       const defendingDamage = MillitaryUnit.getDamage(
-        defendingUnit,
-        attackingUnit
+        defendingUnit.strength,
+        attackingUnit.strength
       );
       defendingUnit.health -= attackingDamage;
       if (defendingUnit.health <= 0) {
@@ -108,6 +109,43 @@ abstract class MillitaryUnit extends Unit {
       // automatically convert undefended civilian units
       return true;
     }
+  }
+
+  private static simulateSiege(
+    attackingUnit: MillitaryUnit,
+    defendingCityTile: CityTile
+  ): boolean {
+    const defendingUnits = defendingCityTile
+      .getUnits()
+      .filter((u) => u instanceof MillitaryUnit) as MillitaryUnit[];
+    const defendingUnitTotalStrength = defendingUnits.reduce(
+      (acc, unit) => acc + unit.strength,
+      0
+    );
+    const defendingCity = defendingCityTile.getCity()!;
+    const totalDefendingStrength =
+      defendingUnitTotalStrength + defendingCity.strength;
+
+    const attackingDamage = MillitaryUnit.getDamage(
+      attackingUnit.strength,
+      totalDefendingStrength
+    );
+    const defendingDamage = MillitaryUnit.getDamage(
+      totalDefendingStrength,
+      attackingUnit.strength
+    );
+    let success = false;
+    defendingCity.health -= attackingDamage;
+    if (defendingCity.health <= 0) {
+      success = true;
+      defendingUnits.forEach((unit) => unit.onKilled());
+    }
+    attackingUnit.health -= defendingDamage;
+    if (attackingUnit.health <= 0) {
+      attackingUnit.onKilled();
+      success = false;
+    }
+    return success;
   }
 
   onUpdateCurrentTile(oldTile: HexTile | null, newTile: HexTile | null): void {
@@ -203,6 +241,50 @@ abstract class MillitaryUnit extends Unit {
     if (MillitaryUnit.simulateMeleeAttack(this, unit)) {
       // battle was a success -- advance to the target tile
       const takenTile = unit.currentTile;
+      this.currentTile = takenTile;
+    }
+  }
+
+  siege(cityTile: CityTile) {
+    const shortesPathToCity = this.hexTileShortestPath.getShortestPath(
+      this.currentTile!.getNode(),
+      cityTile.getNode()
+    );
+    if (shortesPathToCity == null) {
+      console.warn(
+        this,
+        "could not find path to",
+        cityTile,
+        "when trying to siege"
+      );
+      return;
+    }
+    const { minCost, path } = shortesPathToCity;
+    if (minCost > this.remainingMovementPoints) {
+      console.warn(
+        this,
+        "could not find path below",
+        minCost,
+        "to",
+        cityTile,
+        "when trying to siege"
+      );
+      return;
+    }
+    if (path.length < 2) {
+      console.warn(
+        "path appears to show that",
+        this,
+        "is already on",
+        cityTile
+      );
+    }
+    // move to the tile adjacent to the city
+    this.movementTarget = path[path.length - 2];
+    this.moveAlongShortestPath();
+    if (MillitaryUnit.simulateSiege(this, cityTile)) {
+      // battle was a success -- advance to the city tile
+      const takenTile = cityTile;
       this.currentTile = takenTile;
     }
   }

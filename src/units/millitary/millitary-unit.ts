@@ -2,10 +2,15 @@ import p5 from "p5";
 import HexTile from "../../grid/hex-tile";
 import CityTile from "../../grid/tiles/city";
 import Player from "../../players/player";
+import Caravan from "../civil/caravan";
 import Unit from "../unit";
 import { UnitActionType } from "../unit-actions";
 
-export type MillitaryUnitActionType = "move" | "melee-attack" | "sleep";
+export type MillitaryUnitActionType =
+  | "move"
+  | "melee-attack"
+  | "siege"
+  | "sleep";
 
 abstract class MillitaryUnit extends Unit {
   private static readonly HEALTH_BAR_WIDTH = 30;
@@ -13,6 +18,7 @@ abstract class MillitaryUnit extends Unit {
   private readonly strength: number;
   private health = 100;
   private selectingAttackTarget = false;
+  private selectingSiegeTarget = false;
   private readonly icon: p5.Image;
   private unselectedImage: p5.Image;
   private selectedImage: p5.Image;
@@ -41,6 +47,18 @@ abstract class MillitaryUnit extends Unit {
   }
   public stopSelectingAttackTarget() {
     this.selectingAttackTarget = false;
+  }
+
+  public isSelectingSeigeTarget() {
+    return this.selectingSiegeTarget;
+  }
+
+  public toggleSelectingSiegeTarget() {
+    this.selectingSiegeTarget = !this.selectingSiegeTarget;
+  }
+
+  public stopSelectingSiegeTarget() {
+    this.selectingSiegeTarget = false;
   }
 
   private static getDamage(
@@ -98,6 +116,15 @@ abstract class MillitaryUnit extends Unit {
       newTile.getUnits().forEach((unit) => {
         if (!(unit instanceof MillitaryUnit)) {
           unit.owner = this.owner;
+          if (unit instanceof Caravan) {
+            const closestCityTile = newTile.findNearestCityTile();
+            if (closestCityTile != null) {
+              unit.movementTarget = closestCityTile;
+              unit.selectCurrentMovementTarget();
+            } else {
+              unit.onKilled();
+            }
+          }
         }
       });
       if (newTile?.getOwner() !== this.owner) {
@@ -119,10 +146,19 @@ abstract class MillitaryUnit extends Unit {
     }
   }
 
-  getAttackableTargets() {
+  getAttackableUnits() {
     const currentUnitReachableTiles = this.getReachableTiles();
     const attackableTiles = currentUnitReachableTiles.filter(
       (hexTile: HexTile) => hexTile.hasEnemyUnit(this.owner)
+    );
+    return attackableTiles;
+  }
+
+  getPossibleSiegeTiles() {
+    const currentUnitReachableTiles = this.getReachableTiles();
+    const attackableTiles = currentUnitReachableTiles.filter(
+      (hexTile: HexTile) =>
+        hexTile instanceof CityTile && hexTile.getOwner() !== this.owner
     );
     return attackableTiles;
   }
@@ -201,7 +237,15 @@ abstract class MillitaryUnit extends Unit {
   }
 
   getCurrentPossibleUnitActionTypes(): UnitActionType[] {
-    return ["melee-attack", "move", "sleep"];
+    let unitActions: UnitActionType[] = [];
+    if (this.getAttackableUnits().length > 0) {
+      unitActions.push("melee-attack");
+    }
+    unitActions = [...unitActions, "move", "sleep"];
+    if (this.getPossibleSiegeTiles().length > 0) {
+      unitActions.push("siege");
+    }
+    return unitActions;
   }
 }
 

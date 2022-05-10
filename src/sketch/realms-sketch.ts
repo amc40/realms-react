@@ -233,18 +233,30 @@ class RealmsSketch extends p5 {
   }
 
   handleNextTurn() {
-    const unitRequiringOrders = this.currentMap!.getUnitThatRequiresOrders(
-      this.currentPlayer!
-    );
-    if (unitRequiringOrders != null) {
-      this.currentMap!.centreOnAndSelectUnit(this, unitRequiringOrders);
+    const unitsRequiringOrders = this.getUnitsRequiringActions();
+    if (unitsRequiringOrders.length > 0) {
+      const unitRequiringOrders = unitsRequiringOrders[0];
+      const unitMap = unitRequiringOrders.currentTile?.getMap();
+      if (unitMap != null) {
+        if (this.currentMap !== unitMap) {
+          this.currentMap = unitMap;
+        }
+        this.currentMap!.centreOnAndSelectUnit(this, unitRequiringOrders);
+      }
+
       return;
     }
     const cityRequiringProductionChoice =
       this.getCityTileRequiringProductionChoice();
     if (cityRequiringProductionChoice != null) {
-      this.currentMap!.centreOn(this, cityRequiringProductionChoice);
-      this.openCityModal(cityRequiringProductionChoice.getCity()!);
+      const cityMap = cityRequiringProductionChoice.getMap();
+      if (cityMap != null) {
+        if (this.currentMap !== cityMap) {
+          this.currentMap = cityMap;
+        }
+        this.currentMap!.centreOn(this, cityRequiringProductionChoice);
+        this.openCityModal(cityRequiringProductionChoice.getCity()!);
+      }
       return;
     }
 
@@ -320,6 +332,10 @@ class RealmsSketch extends p5 {
     return this.selectedUnit?.isSleeping();
   }
 
+  isSiegeSelected() {
+    return this.getCurrentSelectedMillitaryUnit()?.isSelectingSeigeTarget();
+  }
+
   isUnitActionSelected(unitActionType: UnitActionType) {
     switch (unitActionType) {
       case "move":
@@ -330,6 +346,8 @@ class RealmsSketch extends p5 {
         return this.isTransportSelected();
       case "sleep":
         return this.isSleepSelected();
+      case "siege":
+        return this.isSiegeSelected();
       default:
         return false;
     }
@@ -380,6 +398,8 @@ class RealmsSketch extends p5 {
     }
   }
 
+  handleUnitSeige() {}
+
   onUnitKilled(unit: Unit) {
     unit.currentTile?.removeUnit(unit);
     unit.currentTile = null;
@@ -418,6 +438,9 @@ class RealmsSketch extends p5 {
         break;
       case "settle-city":
         this.handleUnitSettleCity();
+        break;
+      case "siege":
+        this.handleUnitSeige();
         break;
       default:
         throw new Error("Unknown unit action type", unitActionType);

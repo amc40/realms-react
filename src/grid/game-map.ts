@@ -477,7 +477,7 @@ class GameMap {
         currentSelectedUnit != null &&
         currentSelectedUnit instanceof MillitaryUnit &&
         currentSelectedUnit.isSelectingAttackTarget() &&
-        currentSelectedUnit.getAttackableTargets().includes(hexTile)
+        currentSelectedUnit.getAttackableUnits().includes(hexTile)
       ) {
         const enemyUnitsOnTile = hexTile.getUnits();
         const millitaryEnemiesOnTile = enemyUnitsOnTile.filter(
@@ -688,12 +688,16 @@ class GameMap {
   }
 
   getClosestCityTo(hexTile: HexTile, cityOwner: Player): CityTile | null {
-    const cityTilesBelongingToOwner = this.cityTiles.filter(cityTile => cityTile.getOwner() === cityOwner).map(cityTile => ({
-      cityTile,
-      distance: GameMap.distBetweenHexTiles(hexTile, cityTile),
-    }));
+    const cityTilesBelongingToOwner = this.cityTiles
+      .filter((cityTile) => cityTile.getOwner() === cityOwner)
+      .map((cityTile) => ({
+        cityTile,
+        distance: GameMap.distBetweenHexTiles(hexTile, cityTile),
+      }));
     if (cityTilesBelongingToOwner.length > 0) {
-      return cityTilesBelongingToOwner.reduce((a, b) => a.distance < b.distance ? a : b).cityTile;
+      return cityTilesBelongingToOwner.reduce((a, b) =>
+        a.distance < b.distance ? a : b
+      ).cityTile;
     } else {
       return null;
     }
@@ -737,7 +741,7 @@ class GameMap {
       currentSelectedUnit instanceof MillitaryUnit &&
       currentSelectedUnit.isSelectingAttackTarget()
     ) {
-      attackableTiles = currentSelectedUnit.getAttackableTargets();
+      attackableTiles = currentSelectedUnit.getAttackableUnits();
       attackableTiles.forEach((attackableTile) =>
         attackableTile.showAsValidTarget()
       );

@@ -34,6 +34,8 @@ class UnitActions {
         return "/assets/actions/transfer-resources.png";
       case "settle-city":
         return "/assets/actions/settle.png";
+      case "siege":
+        return "/assets/actions/siege.png";
       default:
         throw new Error("Unknown action type", actionType);
     }
@@ -63,6 +65,7 @@ class UnitActions {
     const settleCity = p5.loadImage(
       UnitActions.getUnitActionIconUrl("settle-city")
     );
+    const siege = p5.loadImage(UnitActions.getUnitActionIconUrl("siege"));
     this.unitActionIcons = {
       move,
       sleep,
@@ -73,6 +76,7 @@ class UnitActions {
       "construct-lumber-mill": constructLumberMill,
       "transfer-resources": transferResources,
       "settle-city": settleCity,
+      siege: siege,
     };
   }
 

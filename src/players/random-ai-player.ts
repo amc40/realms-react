@@ -96,7 +96,7 @@ class RandomAIPlayer extends AIPlayer {
   private meleeAttack(gameSketch: RealmsSketch, unit: MillitaryUnit): boolean {
     const currentTile = unit.currentTile;
     if (!currentTile) return false;
-    const possibleTargets = unit.getAttackableTargets();
+    const possibleTargets = unit.getAttackableUnits();
     if (possibleTargets.length === 0) return false;
     const targetTile = randomElement(possibleTargets)!;
     const enemyUnitsOnTile = targetTile

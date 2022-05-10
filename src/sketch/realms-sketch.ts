@@ -248,8 +248,12 @@ class RealmsSketch extends p5 {
       return;
     }
 
-    this.currentMap?.handleNextTurn();
+    this.currentMap?.handleNextTurn(this.currentPlayer!);
     this.currentPlayer = this.getNextPlayer();
+    // end of a round of turns
+    if (this.currentPlayer === this.allPlayers[0]) {
+      this.currentMap?.handleEndRound();
+    }
   }
   getNextPlayer(): Player | null {
     if (this.currentPlayer != null) {

@@ -116,6 +116,8 @@ abstract class Unit {
     return this._movementTarget;
   }
 
+  onUpdateCurrentTile(oldTile: HexTile | null, newTile: HexTile | null) {}
+
   set currentTile(hexTile: HexTile | null) {
     const oldTile = this._currentTile;
     oldTile?.removeUnit(this);
@@ -127,6 +129,7 @@ abstract class Unit {
       oldTileMap?.unregisterUnit(this);
       newTileMap?.registerUnit(this);
     }
+    this.onUpdateCurrentTile(oldTile, hexTile);
   }
 
   get currentTile(): HexTile | null {

@@ -21,7 +21,7 @@ class Settler extends CivilUnit {
 
   static canSettleOn(tile: HexTile): boolean {
     // on other cities within 3 tiles
-    return tile.findDistanceToCityTile(3) == null;
+    return tile.findNearestCityTile(3) == null;
   }
 
   getCurrentPossibleUnitActionTypes(): UnitActionType[] {

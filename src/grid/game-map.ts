@@ -359,12 +359,17 @@ class GameMap {
     );
   }
 
-  handleNextTurn() {
-    this.units.forEach((unit) => unit.handleNextTurn());
+  handleNextTurn(player: Player) {
+    this.units
+      .filter((unit) => unit.owner === player)
+      .forEach((unit) => unit.handleNextTurn());
     this.setCurrentSelectedUnit(null);
+  }
+
+  handleEndRound() {
     this.cityTiles
       .map((cityTile) => cityTile.getCity()!)
-      .forEach((city) => city.handleNextTurn());
+      .forEach((city) => city.handleEndRound());
   }
 
   public handleMouseMove(
@@ -679,6 +684,18 @@ class GameMap {
           );
         }
       }
+    }
+  }
+
+  getClosestCityTo(hexTile: HexTile, cityOwner: Player): CityTile | null {
+    const cityTilesBelongingToOwner = this.cityTiles.filter(cityTile => cityTile.getOwner() === cityOwner).map(cityTile => ({
+      cityTile,
+      distance: GameMap.distBetweenHexTiles(hexTile, cityTile),
+    }));
+    if (cityTilesBelongingToOwner.length > 0) {
+      return cityTilesBelongingToOwner.reduce((a, b) => a.distance < b.distance ? a : b).cityTile;
+    } else {
+      return null;
     }
   }
 

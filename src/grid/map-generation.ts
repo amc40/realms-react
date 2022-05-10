@@ -295,11 +295,11 @@ class MapGenerator {
       const caravan = units.getCaravan(player, onKilled);
       const worker = units.getWorker(player, onKilled);
       const settler = units.getSettler(player, onKilled);
-      // map.addUnit(
-      //   unit,
-      //   MapGenerator.getRandomRow(map),
-      //   MapGenerator.getRandomCol(map)
-      // );
+      map.addUnit(
+        unit,
+        MapGenerator.getRandomRow(map),
+        MapGenerator.getRandomCol(map)
+      );
       // const randomCity = randomElement(cities)!;
       // map.addUnit(caravan, randomCity.getRow(), randomCity.getCol());
       // map.addUnit(

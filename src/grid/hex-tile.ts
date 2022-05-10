@@ -24,6 +24,7 @@ import {
 import TileImprovement from "./tile-improvements/tile-improvement";
 import TileImprovementIcon from "./tile-improvements/tile-improvement-icon";
 import CityTile from "./tiles/city";
+import HillTile from "./tiles/hills";
 
 abstract class HexTile extends RegularHexagon {
   private readonly node = new Node<HexTile>(this);
@@ -37,8 +38,8 @@ abstract class HexTile extends RegularHexagon {
   private currentUnit: Unit | null = null;
   private text: string | null;
   private tileImprovement: TileImprovement | null = null;
-  private readonly baseResources: ResourceQuantity;
-  private readonly specialResources: SpecialResourceQuantity;
+  private readonly _baseResources: ResourceQuantity;
+  private readonly _specialResources: SpecialResourceQuantity;
   private readonly resourceIconRepo: Resources;
   private readonly textWidth = this.radius * 1.4;
   private readonly textHeight = 60;
@@ -74,11 +75,23 @@ abstract class HexTile extends RegularHexagon {
     this.nMovementPoints = nMovementPoints;
     this.city = city ?? null;
     this.text = text ?? null;
-    this.baseResources = baseResources;
+    this._baseResources = baseResources;
     this.city?.addTile(this);
     this.possibleTileImprovements = possibleTileImprovements ?? [];
-    this.specialResources = extraResources ?? {};
+    this._specialResources = extraResources ?? {};
     this.resourceIconRepo = resourceIconRepo;
+  }
+
+  get baseResources() {
+    return {
+      ...this._baseResources,
+    };
+  }
+
+  get specialResources() {
+    return {
+      ...this._specialResources,
+    };
   }
 
   addUnit(unit: Unit) {
@@ -220,7 +233,13 @@ abstract class HexTile extends RegularHexagon {
     this.tileImprovement = getTileImprovementInstance(tileImprovementType, p5);
   }
 
-  getBaseResources() {
+  getBaseResources(): ResourceQuantity {
+    console.log(
+      "tile improvement",
+      this.tileImprovement,
+      "base resources",
+      this.baseResources
+    );
     return this.baseResources;
   }
 
@@ -316,7 +335,8 @@ abstract class HexTile extends RegularHexagon {
    */
   distanceToTileMatchingPredicate(
     predicate: (tile: HexTile) => boolean,
-    maxDistance: number = Infinity
+    maxDistance: number = Infinity,
+    sameRealmOnly: boolean = false
   ): HexTile | null {
     if (maxDistance < 0) return null;
     if (predicate(this)) return this;
@@ -327,14 +347,18 @@ abstract class HexTile extends RegularHexagon {
       tile: HexTile;
       distance: number;
     }[] = neighbours.map((n) => ({ tile: n, distance: 1 }));
+    const thisRealm = this.getMap();
     while (toVisit.length > 0) {
       const { tile, distance } = toVisit.shift()!;
       if (predicate(tile)) return tile;
       visited.add(tile);
       if (distance < maxDistance) {
-        for (let neightbour of tile.getNeighbours()) {
-          if (!visited.has(neightbour)) {
-            toVisit.push({ tile: neightbour, distance: distance + 1 });
+        for (let neighbour of tile.getNeighbours()) {
+          if (
+            !visited.has(neighbour) &&
+            (!sameRealmOnly || neighbour.getMap() === thisRealm)
+          ) {
+            toVisit.push({ tile: neighbour, distance: distance + 1 });
           }
         }
       }
@@ -342,10 +366,14 @@ abstract class HexTile extends RegularHexagon {
     return null;
   }
 
-  findDistanceToCityTile(maxDistance?: number): CityTile | null {
+  findNearestCityTile(
+    maxDistance?: number,
+    sameRealmOnly?: boolean
+  ): CityTile | null {
     return this.distanceToTileMatchingPredicate(
       (tile) => tile instanceof CityTile,
-      maxDistance
+      maxDistance,
+      sameRealmOnly
     ) as CityTile | null;
   }
 

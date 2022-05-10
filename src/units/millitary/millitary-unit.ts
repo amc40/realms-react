@@ -1,5 +1,6 @@
 import p5 from "p5";
 import HexTile from "../../grid/hex-tile";
+import CityTile from "../../grid/tiles/city";
 import Player from "../../players/player";
 import Unit from "../unit";
 import { UnitActionType } from "../unit-actions";
@@ -91,6 +92,33 @@ abstract class MillitaryUnit extends Unit {
     }
   }
 
+  onUpdateCurrentTile(oldTile: HexTile | null, newTile: HexTile | null): void {
+    if (newTile != null) {
+      // capture any civilian units on it
+      newTile.getUnits().forEach((unit) => {
+        if (!(unit instanceof MillitaryUnit)) {
+          unit.owner = this.owner;
+        }
+      });
+      if (newTile?.getOwner() !== this.owner) {
+        if (newTile instanceof CityTile) {
+          // set the owner of the city to the conquering force
+          newTile.getCity()!.owner = this.owner;
+        } else {
+          // set the new owner to the closest city in the realm
+          const newTileRealm = newTile?.getMap();
+          const closestCityTile = newTileRealm?.getClosestCityTo(
+            newTile,
+            this.owner
+          );
+          if (closestCityTile != null) {
+            newTile.setCity(closestCityTile.getCity());
+          }
+        }
+      }
+    }
+  }
+
   getAttackableTargets() {
     const currentUnitReachableTiles = this.getReachableTiles();
     const attackableTiles = currentUnitReachableTiles.filter(
@@ -140,12 +168,6 @@ abstract class MillitaryUnit extends Unit {
       // battle was a success -- advance to the target tile
       const takenTile = unit.currentTile;
       this.currentTile = takenTile;
-      // and capture any civilian units on it
-      takenTile?.getUnits().forEach((unit) => {
-        if (!(unit instanceof MillitaryUnit)) {
-          unit.owner = this.owner;
-        }
-      });
     }
   }
 

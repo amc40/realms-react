@@ -77,7 +77,7 @@ class City {
     this.resources = addResourceQuantities(this.resources, resourceQuantity);
   }
 
-  handleNextTurn() {
+  handleEndRound() {
     this.addResources(this.getCurrentNetResourcesPerTurn());
     if ((this.resources.food ?? 0) >= this.getFoodRequiredForPopIncrease()) {
       this.resources.population = (this.resources.population ?? 0) + 1;

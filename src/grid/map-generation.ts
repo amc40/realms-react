@@ -273,46 +273,105 @@ class MapGenerator {
     return Math.floor(Math.random() * map.nCols);
   }
 
-  private addPlayers(
+  private getMainRealmOwnerIdx(row: number, col: number) {
+    if (row < 7) {
+      if (col < 7) {
+        return 0;
+      } else {
+        return 1;
+      }
+    } else {
+      if (col < 7) {
+        return 2;
+      }
+      return 3;
+    }
+  }
+
+  private addMainRealmPlayers(
     sketch: RealmsSketch,
-    map: GameMap,
+    mainRealmMap: GameMap,
     players: Player[],
     nCities: number,
     units: Units
   ) {
-    for (let player of players) {
-      let cities: CityTile[] = [];
-      for (let cityN = 0; cityN < nCities; cityN++) {
-        const cityRow = MapGenerator.getRandomRow(map);
-        const cityCol = MapGenerator.getRandomCol(map);
-        const cityTile = this.getCityTile(cityRow, cityCol, player, map);
-        map.addCityTile(cityTile);
-        cities.push(cityTile);
-      }
+    if (players.length !== 4)
+      throw new Error(
+        "Main realm map generation currently only supports 4 players"
+      );
+    // add player cities
 
-      const onKilled = (unit: Unit) => sketch.onUnitKilled(unit);
-      const unit = units.getSwordsman(player, onKilled);
-      const caravan = units.getCaravan(player, onKilled);
-      const worker = units.getWorker(player, onKilled);
-      const settler = units.getSettler(player, onKilled);
-      map.addUnit(
-        unit,
-        MapGenerator.getRandomRow(map),
-        MapGenerator.getRandomCol(map)
-      );
-      // const randomCity = randomElement(cities)!;
-      // map.addUnit(caravan, randomCity.getRow(), randomCity.getCol());
-      // map.addUnit(
-      //   worker,
-      //   MapGenerator.getRandomRow(map),
-      //   MapGenerator.getRandomCol(map)
-      // );
-      map.addUnit(
-        settler,
-        MapGenerator.getRandomRow(map),
-        MapGenerator.getRandomCol(map)
-      );
+    const player0CityTile = this.getCityTile(3, 3, players[0], mainRealmMap);
+    mainRealmMap.addCityTile(player0CityTile);
+    const player1CityTile = this.getCityTile(3, 10, players[1], mainRealmMap);
+    mainRealmMap.addCityTile(player1CityTile);
+    const player2CityTile = this.getCityTile(10, 3, players[2], mainRealmMap);
+    mainRealmMap.addCityTile(player2CityTile);
+    const player3CityTile = this.getCityTile(10, 10, players[3], mainRealmMap);
+    mainRealmMap.addCityTile(player3CityTile);
+
+    let playerCityTiles = [
+      player0CityTile,
+      player1CityTile,
+      player2CityTile,
+      player3CityTile,
+    ];
+
+    let playerCities = playerCityTiles.map((cityTile) => cityTile.getCity()!);
+
+    // set owners of the tiles
+    for (let row = 0; row < mainRealmMap.nRows; row++) {
+      for (let col = 0; col < mainRealmMap.nCols; col++) {
+        const tile = mainRealmMap.getTile(row, col);
+        tile?.setCity(playerCities[this.getMainRealmOwnerIdx(row, col)]);
+      }
     }
+    const onKilled = (unit: Unit) => sketch.onUnitKilled(unit);
+    for (let playerCityTile of playerCityTiles) {
+      const row = playerCityTile.getRow();
+      const col = playerCityTile.getCol();
+      const owner = playerCityTile.getCity()!.owner;
+      const worker = units.getWorker(owner, onKilled);
+      const swordsman1 = units.getSwordsman(owner, onKilled);
+      const swordsman2 = units.getSwordsman(owner, onKilled);
+      mainRealmMap.addUnit(worker, row, col);
+      mainRealmMap.addUnit(swordsman1, row, col);
+      mainRealmMap.addUnit(swordsman2, row + 1, col);
+    }
+
+    // for (let player of players) {
+    //   let cities: CityTile[] = [];
+    //   for (let cityN = 0; cityN < nCities; cityN++) {
+    //     const cityRow = MapGenerator.getRandomRow(map);
+    //     const cityCol = MapGenerator.getRandomCol(map);
+    //     const cityTile = this.getCityTile(cityRow, cityCol, player, map);
+    //     map.addCityTile(cityTile);
+    //     cities.push(cityTile);
+    //   }
+
+    //
+    //   const unit = units.getSwordsman(player, onKilled);
+    //   const caravan = units.getCaravan(player, onKilled);
+    //   const worker = units.getWorker(player, onKilled);
+    //   const settler = units.getSettler(player, onKilled);
+    //   map.addUnit(
+    //     unit,
+    //     MapGenerator.getRandomRow(map),
+    //     MapGenerator.getRandomCol(map)
+    //   );
+    //   // const randomCity = randomElement(cities)!;
+    //   // map.addUnit(caravan, randomCity.getRow(), randomCity.getCol());
+    //   // map.addUnit(
+    //   //   worker,
+    //   //   MapGenerator.getRandomRow(map),
+    //   //   MapGenerator.getRandomCol(map)
+    //   // );
+    //   map.addUnit(
+    //     settler,
+    //     MapGenerator.getRandomRow(map),
+    //     MapGenerator.getRandomCol(map)
+    //   );
+    // }
   }
 
   addPortals(mainRealm: GameMap, otherRealm: GameMap, nPortals: number) {
@@ -422,14 +481,14 @@ class MapGenerator {
     height: number,
     x: number,
     y: number,
-    nRows: number,
-    nCols: number,
     players: Player[],
     units: Units,
     sketch: RealmsSketch
   ) {
+    const nRows = 14;
+    const nCols = 14;
     const map = this.generateMap("Terra", width, height, x, y, nRows, nCols);
-    this.addPlayers(sketch, map, players, 3, units);
+    this.addMainRealmPlayers(sketch, map, players, 3, units);
     map.getTile(1, 1)?.addTileImprovement(sketch, "farm");
     return map;
   }
@@ -440,8 +499,6 @@ class MapGenerator {
    * @param height the height of the sketch in pixels
    * @param x the x coordinate of the top left corner of the map
    * @param y the u coordinate of the top left corner of the map
-   * @param mainRealmNRows the number of rows of hexes in the main realm
-   * @param mainRealmNCols the number of columns of hexes in the main realm
    * @param otherRealmsMinRows the minimum number of rows of hexes in other realms
    * @param otherRealmsMaxRows the maximum number of rows of hexes in other realms
    * @param otherRealmsMinCols the minimum number of columns of hexes in other realms
@@ -456,8 +513,6 @@ class MapGenerator {
     height: number,
     x: number,
     y: number,
-    mainRealmNRows: number,
-    mainRealmNCols: number,
     otherRealmsMinRows: number,
     otherRealmsMaxRows: number,
     otherRealmsMinCols: number,
@@ -475,8 +530,6 @@ class MapGenerator {
       height,
       x,
       y,
-      mainRealmNRows,
-      mainRealmNCols,
       players,
       units,
       sketch

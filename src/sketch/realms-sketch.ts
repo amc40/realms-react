@@ -125,8 +125,6 @@ class RealmsSketch extends p5 {
       this.height,
       0,
       0,
-      20,
-      20,
       5,
       20,
       5,

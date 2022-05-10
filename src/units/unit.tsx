@@ -18,6 +18,8 @@ export type AugmentedTile = {
   nMoves?: number;
 };
 
+const minUnitMovementPoints = 1;
+
 abstract class Unit {
   public static WIDTH = 35;
   public static HEIGHT = Unit.WIDTH;
@@ -34,23 +36,27 @@ abstract class Unit {
       const nodeBMap = hexB.getMap()!;
       // if in the same map apply simple distance heuristic within the same map
       if (nodeAMap === nodeBMap) {
-        return GameMap.distBetweenHexTiles(hexA, hexB);
+        return GameMap.distBetweenHexTiles(hexA, hexB) * minUnitMovementPoints;
       }
-      // if in a different map we find the distance to the closest portal to the other realm and then
-      // sum the straight line distance with the distance of the portal to the tile in the other realm
-      const portalDistanceA = nodeAMap.getClosestPortalTo(hexA, nodeBMap);
+
+      const portalDistancesA = nodeAMap.getPortalsTo(hexA, nodeBMap);
+      let minTotalDistance = Infinity;
       // if not reachable then set as infinite distance so will be checked last
-      if (portalDistanceA == null) {
-        return Infinity;
+      for (let portalDistanceA of portalDistancesA) {
+        if (portalDistanceA != null) {
+          const portalTileA = portalDistanceA.portalTile;
+          const portal = portalTileA.portal;
+          const { tile: portalTileB } =
+            portal.getOtherEndMapAndTile(portalTileA);
+          const distanceFromPortalB = GameMap.distBetweenHexTiles(
+            portalTileB,
+            hexB
+          );
+          const totalDistance = portalDistanceA.distance + distanceFromPortalB;
+          minTotalDistance = Math.min(minTotalDistance, totalDistance);
+        }
       }
-      const portalTileA = portalDistanceA.portalTile;
-      const portal = portalTileA.portal;
-      const { tile: portalTileB } = portal.getOtherEndMapAndTile(portalTileA);
-      const distanceFromPortalB = GameMap.distBetweenHexTiles(
-        portalTileB,
-        hexB
-      );
-      return distanceFromPortalB + portalDistanceA.distance;
+      return minTotalDistance * minUnitMovementPoints;
     }
   );
   private _shortestPathToTarget: HexTile[] | null = null;
@@ -286,7 +292,7 @@ abstract class Unit {
     }
   }
 
-  abstract getUnitActionTypes(): UnitActionType[];
+  abstract getCurrentPossibleUnitActionTypes(): UnitActionType[];
 
   protected static drawAdditionalUnitsIcon(p5: p5) {}
 

@@ -139,6 +139,10 @@ abstract class HexTile extends RegularHexagon {
     }
   }
 
+  hasEnemyUnit(player: Player): boolean {
+    return this.units.some((unit) => unit.owner !== player);
+  }
+
   addNeighbour(neighbourHexTile: HexTile) {
     this.node.addEdge(
       new WeightedDirectedEdge<HexTile>(

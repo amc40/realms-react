@@ -34,7 +34,12 @@ class Caravan extends CivilUnit {
     this.selectingTransportTarget = false;
   }
 
-  getUnitActionTypes(): UnitActionType[] {
+  startTransportingTo(tile: CityTile) {
+    this.movementTarget = tile;
+    this.selectCurrentMovementTarget();
+  }
+
+  getCurrentPossibleUnitActionTypes(): UnitActionType[] {
     let unitActions: UnitActionType[] = ["transport", "sleep"];
     if (this.currentTile instanceof CityTile) {
       unitActions.push("transfer-resources");

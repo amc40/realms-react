@@ -19,6 +19,9 @@ import { MouseButton } from "../utils/mouse-events";
 import { getSpacing } from "../utils/spacing";
 import { ResourceTransferSrc } from "../resources/resource-transfer";
 import CityTile from "../grid/tiles/city";
+import { randomElement, randomInt } from "../utils/random";
+import AIPlayer from "../players/ai-player";
+import RandomAIPlayer from "../players/random-ai-player";
 
 type TransferResources = (
   resourceSrc1: ResourceTransferSrc,
@@ -99,9 +102,10 @@ class RealmsSketch extends p5 {
   setup(): void {
     this.createCanvas(this.windowWidth, this.windowHeight);
     // add players
-    this.allPlayers = this.empires!.empires.slice(0, this.nPlayers).map(
-      (empire) => new Player(empire)
-    );
+    this.allPlayers = [new Player(this.empires!.empires[0])];
+    for (let i = 1; i < this.nPlayers; i++) {
+      this.allPlayers.push(new RandomAIPlayer(this.empires!.empires[i]));
+    }
     this.humanPlayer = this.allPlayers[0];
     this.currentPlayer = this.humanPlayer;
     const mapGenerator = new MapGenerator(
@@ -195,6 +199,12 @@ class RealmsSketch extends p5 {
     return null;
   }
 
+  getCitiesBelongingToPlayer(player: Player) {
+    return this.maps!.flatMap((map) =>
+      map.getCityTilesBelongingToPlayer(player)
+    );
+  }
+
   handleUnitAttack() {
     if (this.isAttackSelected()) {
       this.getCurrentSelectedMillitaryUnit()?.toggleSelectingAttackTarget();
@@ -202,6 +212,21 @@ class RealmsSketch extends p5 {
       this.clearAllUnitActionSelections();
       this.getCurrentSelectedMillitaryUnit()?.toggleSelectingAttackTarget();
     }
+  }
+
+  getCityTilesRequiringProductionChoice(): CityTile[] {
+    return this.maps.flatMap((map) =>
+      map.getCityTilesRequiringProductionChoice(this.currentPlayer!)
+    );
+  }
+
+  getCityTileRequiringProductionChoice(): CityTile | null {
+    const cityTilesRequiringProductionChoice =
+      this.getCityTilesRequiringProductionChoice();
+    if (cityTilesRequiringProductionChoice.length > 0) {
+      return cityTilesRequiringProductionChoice[0];
+    }
+    return null;
   }
 
   handleNextTurn() {
@@ -213,9 +238,7 @@ class RealmsSketch extends p5 {
       return;
     }
     const cityRequiringProductionChoice =
-      this.currentMap!.getCityTileRequiringProductionChoice(
-        this.currentPlayer!
-      );
+      this.getCityTileRequiringProductionChoice();
     if (cityRequiringProductionChoice != null) {
       this.currentMap!.centreOn(this, cityRequiringProductionChoice);
       this.openCityModal(cityRequiringProductionChoice.getCity()!);
@@ -373,10 +396,67 @@ class RealmsSketch extends p5 {
     }
   }
 
+  getRandomMap() {
+    return randomElement(this.maps);
+  }
+
+  getRandomTile() {
+    const randomMap = this.getRandomMap();
+    if (!randomMap) return null;
+    const row = randomInt(0, randomMap.nRows);
+    const col = randomInt(0, randomMap.nCols);
+    return randomMap.getTile(row, col);
+  }
+
   selectMapAndCentreOn(mapToSelect: GameMap, centreOn: HexTile): void {
     this.currentMap = mapToSelect;
     this.currentMap!.centreOn(this, centreOn);
     this.rerender();
+  }
+
+  allUnitActionsExhausted() {
+    if (this.currentPlayer == null) return true;
+    return this.maps.every((m) =>
+      m.allUnitActionsExhausted(this.currentPlayer!)
+    );
+  }
+
+  citiesAllHaveProduction() {
+    if (this.currentPlayer == null) return true;
+    return this.maps.every((m) =>
+      m.citiesAllHaveProduction(this.currentPlayer!)
+    );
+  }
+
+  getUnitsRequiringActions() {
+    return this.maps.flatMap((m) =>
+      m.getUnitsThatRequireOrders(this.currentPlayer!)
+    );
+  }
+
+  handleAI() {
+    if (this.currentPlayer instanceof AIPlayer) {
+      let unitsRequiringActions = this.getUnitsRequiringActions();
+      while (unitsRequiringActions.length > 0) {
+        for (let unitRequiringOrders of unitsRequiringActions) {
+          this.currentPlayer.chooseUnitAction(this, unitRequiringOrders);
+        }
+        unitsRequiringActions = this.getUnitsRequiringActions();
+      }
+
+      const citesRequiringProductionChoice =
+        this.getCityTilesRequiringProductionChoice();
+      for (let cityTile of citesRequiringProductionChoice) {
+        const city = cityTile.getCity()!;
+        const production = this.currentPlayer.chooseCityProduction(
+          this,
+          this.productionItems!.getItems(),
+          city
+        );
+        city.setCurrentProduction(production);
+      }
+      this.handleNextTurn();
+    }
   }
 
   draw(): void {
@@ -390,7 +470,8 @@ class RealmsSketch extends p5 {
         this.selectedUnit.owner === this.humanPlayer &&
         this.isHumanPlayersTurn()
       ) {
-        const unitActionTypes = this.selectedUnit.getUnitActionTypes();
+        const unitActionTypes =
+          this.selectedUnit.getCurrentPossibleUnitActionTypes();
         this.unitActionButtons = this.unitActions!.getUnitActionButtons(
           unitActionTypes,
           this
@@ -418,13 +499,14 @@ class RealmsSketch extends p5 {
     if (this.currentPlayer != null) {
       this.nextTurnIndicator.draw(
         this,
-        this.currentMap!.allUnitActionsExhausted(this.currentPlayer)
-          ? this.currentMap!.citiesAllHaveProduction(this.currentPlayer)
+        this.allUnitActionsExhausted()
+          ? this.citiesAllHaveProduction()
             ? "Next Turn"
             : "Choose\nProduction"
           : "Needs\nOrders"
       );
     }
+    this.handleAI();
   }
 }
 

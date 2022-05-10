@@ -29,6 +29,9 @@ class RegularHexagon {
   }
 
   private static drawHexagon(p5: p5, radius: number) {
+    // Start adapted code from
+    // Patel, A. (2022, April 19). Hexagonal grids. Red Blob Games. Retrieved May 8, 2022,
+    // from https://www.redblobgames.com/grids/hexagons/#conversions
     p5.beginShape();
     for (
       let angle = RegularHexagon.INIT_ANGLE;
@@ -37,6 +40,7 @@ class RegularHexagon {
     ) {
       p5.vertex(radius * Math.cos(angle), radius * Math.sin(angle));
     }
+    // end adapted code
     p5.endShape(p5.CLOSE);
   }
 

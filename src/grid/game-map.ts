@@ -10,6 +10,10 @@ import City from "../cities/city";
 import Caravan from "../units/civil/caravan";
 import PortalTile from "./tiles/portal";
 
+// Start adapted code from
+// Patel, A. (2022, April 19). Hexagonal grids. Red Blob Games. Retrieved May 8, 2022,
+// from https://www.redblobgames.com/grids/hexagons/#conversions
+
 export class AxialCoordinate {
   public readonly q: number;
   public readonly r: number;
@@ -87,10 +91,10 @@ export class CubeCoordinate {
   }
 
   /**
-   * @return the total of the absolute value of the coordinates.
+   * @return the minimum number of hex tiles which must be traversed to travel between the two coordinates
    */
   public totalCoordMag() {
-    return Math.abs(this.q) + Math.abs(this.r) + Math.abs(this.s);
+    return (Math.abs(this.q) + Math.abs(this.r) + Math.abs(this.s)) / 2;
   }
 }
 
@@ -119,6 +123,8 @@ export class OffsetCoordinate {
     );
   }
 }
+
+// End adapted code
 
 class GameMap {
   readonly realmName: string;
@@ -237,7 +243,9 @@ class GameMap {
       mouseY < this.y + this.height
     );
   }
-
+  // Start adapted code from
+  // Patel, A. (2022, April 19). Hexagonal grids. Red Blob Games. Retrieved May 8, 2022,
+  // from https://www.redblobgames.com/grids/hexagons/#conversions
   public mouseXYToOffset(mouseX: number, mouseY: number) {
     const topLeftRelativeX = mouseX - this.horizontalDist / 2;
     const topLeftRelativeY = mouseY - this.radius;
@@ -266,6 +274,8 @@ class GameMap {
     const hexTile2 = node2.gamePoint;
     return GameMap.distBetweenHexTiles(hexTile1, hexTile2);
   }
+
+  // End adapted code
 
   inBounds(row: number, col: number) {
     return row >= 0 && row < this.nRows && col >= 0 && col < this.nCols;
@@ -300,6 +310,12 @@ class GameMap {
     );
   }
 
+  getUnitsThatRequireOrders(player: Player): Unit[] {
+    return this.getUnitsBelongingToPlayer(player).filter((unit) =>
+      unit.requiresOrders()
+    );
+  }
+
   centreOnAndSelectUnit(p5: p5, unit: Unit) {
     this.centreOnUnit(p5, unit);
     this.setCurrentSelectedUnit(unit);
@@ -322,10 +338,19 @@ class GameMap {
     return this.cityTiles.filter((cityTile) => cityTile.getOwner() === player);
   }
 
-  getCityTileRequiringProductionChoice(player: Player) {
-    return this.getCityTilesBelongingToPlayer(player).find(
+  getCityTilesRequiringProductionChoice(player: Player): CityTile[] {
+    return this.getCityTilesBelongingToPlayer(player).filter(
       (cityTile) => cityTile.getCity()!.getCurrentProduction() == null
     );
+  }
+
+  getCityTileRequiringProductionChoice(player: Player): CityTile | null {
+    const cityTilesRequiringProductionChoice =
+      this.getCityTilesRequiringProductionChoice(player);
+    if (cityTilesRequiringProductionChoice.length === 0) {
+      return null;
+    }
+    return cityTilesRequiringProductionChoice[0];
   }
 
   citiesAllHaveProduction(player: Player) {
@@ -382,6 +407,23 @@ class GameMap {
     );
   }
 
+  getPortalsTo(
+    startTile: HexTile,
+    mapDest: GameMap
+  ): {
+    portalTile: PortalTile;
+    distance: number;
+  }[] {
+    const portalsToDest = this.portalTiles.filter((portalTile) =>
+      portalTile.portal.isPortalBetween(this, mapDest)
+    );
+    const portalTileDistances = portalsToDest.map((portalTile) => ({
+      portalTile,
+      distance: GameMap.distBetweenHexTiles(startTile, portalTile),
+    }));
+    return portalTileDistances;
+  }
+
   getClosestPortalTo(
     startTile: HexTile,
     mapDest: GameMap
@@ -389,16 +431,11 @@ class GameMap {
     portalTile: PortalTile;
     distance: number;
   } | null {
-    const portalsToDest = this.portalTiles.filter((portalTile) =>
-      portalTile.portal.isPortalBetween(this, mapDest)
-    );
-    if (portalsToDest.length === 0) {
+    const portalTileDistances = this.getPortalsTo(startTile, mapDest);
+    if (portalTileDistances.length === 0) {
       return null;
     }
-    const portalTileDistances = portalsToDest.map((portalTile) => ({
-      portalTile,
-      distance: GameMap.distBetweenHexTiles(startTile, portalTile),
-    }));
+
     const portalTileDistance = portalTileDistances.reduce(
       (closest, { portalTile, distance }) => {
         if (distance < closest.distance) {
@@ -435,7 +472,7 @@ class GameMap {
         currentSelectedUnit != null &&
         currentSelectedUnit instanceof MillitaryUnit &&
         currentSelectedUnit.isSelectingAttackTarget() &&
-        this.getAttackableTargets(currentSelectedUnit).includes(hexTile)
+        currentSelectedUnit.getAttackableTargets().includes(hexTile)
       ) {
         const enemyUnitsOnTile = hexTile.getUnits();
         const millitaryEnemiesOnTile = enemyUnitsOnTile.filter(
@@ -455,8 +492,7 @@ class GameMap {
           hexTile
         )
       ) {
-        currentSelectedUnit.movementTarget = hexTile;
-        currentSelectedUnit.selectCurrentMovementTarget();
+        currentSelectedUnit.startTransportingTo(hexTile);
         currentSelectedUnit.stopSelectingTransportTarget();
       } else {
         const hexCentreX = this.getHexCentreX(hexTile);
@@ -639,19 +675,6 @@ class GameMap {
     }
   }
 
-  hasEnemyUnit(player: Player, hexTile: HexTile): boolean {
-    const selectedUnit = hexTile.getCurrentSelectedUnit();
-    return selectedUnit != null && selectedUnit.owner !== player;
-  }
-
-  getAttackableTargets(millaryUnit: MillitaryUnit) {
-    const currentUnitReachableTiles = millaryUnit.getReachableTiles();
-    const attackableTiles = currentUnitReachableTiles.filter(
-      (hexTile: HexTile) => this.hasEnemyUnit(millaryUnit.owner, hexTile)
-    );
-    return attackableTiles;
-  }
-
   onUnitKilled(unit: Unit) {
     unit.currentTile?.removeUnit(unit);
     if (this.getCurrentSelectedUnit() === unit) {
@@ -666,7 +689,10 @@ class GameMap {
     return this.hexagonGrid[row][col];
   }
 
-  drawHex(p5: p5, drawFunc: (p5: p5, hexTile: HexTile) => void) {
+  drawHexes(p5: p5, drawFunc: (p5: p5, hexTile: HexTile) => void) {
+    // Start adapted code from
+    // Patel, A. (2022, April 19). Hexagonal grids. Red Blob Games. Retrieved May 8, 2022,
+    // from https://www.redblobgames.com/grids/hexagons/#conversions
     p5.push();
     p5.translate(this.horizontalDist / 2, this.radius);
     for (let row = 0; row < this.nRows; row++) {
@@ -680,6 +706,7 @@ class GameMap {
       p5.translate(0, this.radius * 1.5);
     }
     p5.pop();
+    // end adapted code
   }
 
   draw(p5: p5) {
@@ -693,7 +720,7 @@ class GameMap {
       currentSelectedUnit instanceof MillitaryUnit &&
       currentSelectedUnit.isSelectingAttackTarget()
     ) {
-      attackableTiles = this.getAttackableTargets(currentSelectedUnit);
+      attackableTiles = currentSelectedUnit.getAttackableTargets();
       attackableTiles.forEach((attackableTile) =>
         attackableTile.showAsValidTarget()
       );
@@ -711,7 +738,7 @@ class GameMap {
       );
     }
 
-    this.drawHex(p5, (p5, hexTile) => hexTile.drawBackground(p5));
+    this.drawHexes(p5, (p5, hexTile) => hexTile.drawBackground(p5));
 
     const augmentedPath =
       currentSelectedUnit?.getMoveAugmentedShortestPathToTarget();
@@ -728,7 +755,7 @@ class GameMap {
         transportTile.stopShowAsValidTarget()
       );
     }
-    this.drawHex(p5, (p5, hexTile) => hexTile.drawUnitsAndText(p5));
+    this.drawHexes(p5, (p5, hexTile) => hexTile.drawUnitsAndText(p5));
     p5.pop();
   }
 }

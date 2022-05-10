@@ -44,6 +44,10 @@ abstract class CivilUnit extends Unit {
 
   abstract getName(): string;
 
+  getResouces() {
+    return this.resources;
+  }
+
   getTransferResourceSrc(): ResourceTransferSrc {
     return {
       resourceSrcName: this.getName(),
@@ -67,8 +71,6 @@ abstract class CivilUnit extends Unit {
       Unit.HEIGHT * this.iconRatio
     );
   }
-
-
 }
 
 export default CivilUnit;

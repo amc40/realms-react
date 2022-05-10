@@ -1,4 +1,5 @@
 import p5 from "p5";
+import HexTile from "../../grid/hex-tile";
 import Player from "../../players/player";
 import Unit from "../unit";
 import { UnitActionType } from "../unit-actions";
@@ -90,6 +91,14 @@ abstract class MillitaryUnit extends Unit {
     }
   }
 
+  getAttackableTargets() {
+    const currentUnitReachableTiles = this.getReachableTiles();
+    const attackableTiles = currentUnitReachableTiles.filter(
+      (hexTile: HexTile) => hexTile.hasEnemyUnit(this.owner)
+    );
+    return attackableTiles;
+  }
+
   /**
    * Melee attack a given target unit.
    * Note: the target unit should be within range with the current move's remaining movement points.
@@ -169,7 +178,7 @@ abstract class MillitaryUnit extends Unit {
     );
   }
 
-  getUnitActionTypes(): UnitActionType[] {
+  getCurrentPossibleUnitActionTypes(): UnitActionType[] {
     return ["melee-attack", "move", "sleep"];
   }
 }

@@ -23,7 +23,7 @@ class WorkerUnit extends CivilUnit {
     super(p5, WorkerUnit.nMovementPoints, owner, onKilled, icon, 0.8);
   }
 
-  getUnitActionTypes(): UnitActionType[] {
+  getCurrentPossibleUnitActionTypes(): UnitActionType[] {
     let possibleActionTypes: UnitActionType[] = [];
     if (this.currentTile?.possibleTileImprovements.includes("farm")) {
       possibleActionTypes.push("construct-farm");

@@ -194,15 +194,19 @@ class MapGenerator {
   private getTileOfType(
     tileType: NaturalTileType,
     row: number,
-    col: number
+    col: number,
+    generateSpecialResources: boolean
   ): HexTile {
     switch (tileType) {
       case "grassland":
-        const proportionWood = 0.3;
-        const minWood = 3;
-        const maxWood = 30;
-        const wood =
-          Math.random() < proportionWood ? randomInt(minWood, maxWood) : 0;
+        let wood = 0;
+        if (generateSpecialResources) {
+          const proportionWood = 0.3;
+          const minWood = 3;
+          const maxWood = 30;
+          wood =
+            Math.random() < proportionWood ? randomInt(minWood, maxWood) : 0;
+        }
 
         return new GrasslandTile(
           this.radius,
@@ -216,11 +220,15 @@ class MapGenerator {
       case "marsh":
         return new MarshTile(this.radius, row, col, this.resourceIcons);
       case "hills":
-        const proportionIron = 0.2;
-        const minIron = 5;
-        const maxIron = 30;
-        const iron =
-          Math.random() < proportionIron ? randomInt(minIron, maxIron) : 0;
+        let iron = 0;
+        if (generateSpecialResources) {
+          const proportionIron = 0.2;
+          const minIron = 5;
+          const maxIron = 30;
+          iron =
+            Math.random() < proportionIron ? randomInt(minIron, maxIron) : 0;
+        }
+
         return new HillTile(this.radius, row, col, this.resourceIcons, iron);
       case "plains":
         return new PlainsTile(this.radius, row, col, this.resourceIcons);
@@ -326,6 +334,9 @@ class MapGenerator {
         tile?.setCity(playerCities[this.getMainRealmOwnerIdx(row, col)]);
       }
     }
+    playerCities.forEach((city) => {
+      city.setPopulation(city.getStablePopulation());
+    });
     const onKilled = (unit: Unit) => sketch.onUnitKilled(unit);
     for (let playerCityTile of playerCityTiles) {
       const row = playerCityTile.getRow();
@@ -419,12 +430,18 @@ class MapGenerator {
     x: number,
     y: number,
     nRows: number,
-    nCols: number
+    nCols: number,
+    generateSpecialResources: boolean = true
   ) {
     // random initial tile type
     const initialTileType =
       tileTypes[Math.floor(Math.random() * tileTypes.length)];
-    const initialTile = this.getTileOfType(initialTileType, 0, 0);
+    const initialTile = this.getTileOfType(
+      initialTileType,
+      0,
+      0,
+      generateSpecialResources
+    );
     const hexagonGrid = new Array<Array<HexTile>>(nRows);
     for (let row = 0; row < nRows; row++) {
       hexagonGrid[row] = new Array<HexTile>(nCols);
@@ -449,7 +466,12 @@ class MapGenerator {
           const tileType = MapGenerator.sampleProbabilities(
             tileTypeProbabilities
           );
-          const tile = this.getTileOfType(tileType, row, col);
+          const tile = this.getTileOfType(
+            tileType,
+            row,
+            col,
+            generateSpecialResources
+          );
           hexagonGrid[row][col] = tile;
         }
       }
@@ -487,9 +509,28 @@ class MapGenerator {
   ) {
     const nRows = 14;
     const nCols = 14;
-    const map = this.generateMap("Terra", width, height, x, y, nRows, nCols);
+    const map = this.generateMap(
+      "Terra",
+      width,
+      height,
+      x,
+      y,
+      nRows,
+      nCols,
+      false
+    );
+    for (let row = 0; row < nRows; row++) {
+      for (let col = 0; col < nCols; col++) {
+        const tile = map.getTile(row, col);
+        if (tile instanceof GrasslandTile) {
+          tile.addTileImprovement(sketch, "farm");
+        } else if (tile instanceof HillTile) {
+          tile.addTileImprovement(sketch, "mine");
+        }
+      }
+    }
     this.addMainRealmPlayers(sketch, map, players, 3, units);
-    map.getTile(1, 1)?.addTileImprovement(sketch, "farm");
+
     return map;
   }
 

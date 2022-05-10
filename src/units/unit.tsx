@@ -59,6 +59,8 @@ abstract class Unit {
       return minTotalDistance * minUnitMovementPoints;
     }
   );
+  protected readonly doesNotContainEnemyUnitPredicate = (tile: HexTile) =>
+    tile.getUnits().some((unit) => unit.owner !== this.owner);
   private _shortestPathToTarget: HexTile[] | null = null;
   private state: State = State.WAITING_FOR_ORDERS;
   readonly movementPoints;
@@ -102,7 +104,8 @@ abstract class Unit {
       if (this.currentTile != null && this._movementTarget != null) {
         const shortestPathResult = this.hexTileShortestPath.getShortestPath(
           this.currentTile.getNode(),
-          this._movementTarget.getNode()
+          this._movementTarget.getNode(),
+          this.doesNotContainEnemyUnitPredicate
         );
         this._shortestPathToTarget =
           shortestPathResult != null ? shortestPathResult.path : null;

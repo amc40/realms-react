@@ -101,7 +101,6 @@ function App() {
   const cityModalCurrentResourcesPerTurn =
     cityModalCity?.getCurrentResourcesPerTurn();
 
-
   return (
     <div className="App">
       <div
@@ -260,9 +259,11 @@ function App() {
           </Button>
         </Modal.Footer>
       </Modal> */}
-      <BottomLeftDisplay>
-        {hoverHexTile != null ? <TileDisplay hexTile={hoverHexTile} /> : null}
-      </BottomLeftDisplay>
+      {hoverHexTile != null ? (
+        <BottomLeftDisplay>
+          <TileDisplay hexTile={hoverHexTile} />
+        </BottomLeftDisplay>
+      ) : null}
     </div>
   );
 }

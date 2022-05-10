@@ -38,7 +38,14 @@ export class ShortestPath<T> {
     closedSet.forEach((node) => node.clearInterimResult());
   }
 
-  public getShortestPath(startNode: Node<T>, goalNode: Node<T>) {
+  public getShortestPath(
+    startNode: Node<T>,
+    goalNode: Node<T>,
+    tempUnreachablePredicate?: (gameElement: T) => boolean
+  ) {
+    if (tempUnreachablePredicate?.(goalNode.gamePoint)) {
+      return null;
+    }
     const openQueue = new PriorityQueue<AStarInterimResult<T>>(
       (interimResult) => interimResult.estimatedTotalCost
     );
@@ -64,7 +71,10 @@ export class ShortestPath<T> {
       currentNode.outEdges.forEach((outEdge) => {
         const outEdgeDest = outEdge.to;
         // ignore if closed
-        if (!closedSet.has(outEdgeDest)) {
+        if (
+          !closedSet.has(outEdgeDest) &&
+          !tempUnreachablePredicate?.(outEdgeDest.gamePoint)
+        ) {
           const cost = currentResult.costSoFar + outEdge.weight;
           if (outEdgeDest.bestResultSoFar != null) {
             // already present in open list

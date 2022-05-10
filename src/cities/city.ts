@@ -18,9 +18,7 @@ class City {
   owner: Player;
   cityTile: CityTile | null = null;
   private resources: ResourceQuantity = {
-    population: 10,
-    food: 10,
-    production: 10,
+    population: 1,
   };
   private baseResourcesPerTurn: ResourceQuantity = {
     food: 1,
@@ -120,7 +118,16 @@ class City {
   }
 
   getConsumedFoodPerTurn() {
-    return this.getResources().population ?? 0;
+    return (this.getResources().population ?? 0) * 3;
+  }
+
+  getStablePopulation() {
+    const { food } = this.getCurrentResourcesPerTurn();
+    return Math.floor((food ?? 0) / 3);
+  }
+
+  setPopulation(newPopulation: number) {
+    this.resources.population = newPopulation;
   }
 
   getSurplusFood() {

@@ -13,11 +13,15 @@ class FarmTileImprovementIcon extends TileImprovementIcon {
 
 class FarmTileImprovement extends TileImprovement {
   static readonly resourceYield: ResourceQuantity = {
-    food: 2,
+    food: 1,
   };
 
   constructor(p5: p5) {
-    super("Farm", () => FarmTileImprovement.resourceYield, new FarmTileImprovementIcon(p5));
+    super(
+      "Farm",
+      () => FarmTileImprovement.resourceYield,
+      new FarmTileImprovementIcon(p5)
+    );
   }
 }
 

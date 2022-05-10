@@ -14,7 +14,7 @@ class MineTileImprovementIcon extends TileImprovementIcon {
 
 class MineTileImprovement extends TileImprovement {
   static readonly baseResourceYield: ResourceQuantity = {
-    production: 2,
+    production: 1,
   };
 
   constructor(p5: p5) {

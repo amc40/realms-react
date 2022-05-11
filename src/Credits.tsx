@@ -77,6 +77,15 @@ const Credits: React.FC<Props> = ({ onBack }) => {
         <a href="https://www.flaticon.com/free-icons/siege" title="siege icons">
           Siege icons created by smashingstocks - Flaticon
         </a>
+        <a href="https://www.flaticon.com/free-icons/spear" title="spear icons">
+          Spear icons created by PIXARTIST - Flaticon
+        </a>
+        <a
+          href="https://www.flaticon.com/free-icons/pitchfork"
+          title="pitchfork icons"
+        >
+          Pitchfork icons created by Freepik - Flaticon
+        </a>
       </div>
       <Button
         style={{ marginTop: 50, fontFamily: '"Enchanted Land", serif' }}

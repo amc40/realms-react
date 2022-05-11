@@ -159,6 +159,12 @@ class City {
 
   setCurrentProduction(production: ProductionItem) {
     this.currentProduction = production;
+    for (const _resource of Object.keys(production.otherResourceCost)) {
+      const resource = _resource as AllResourceTypes;
+      this.resources[resource] =
+        (this.resources[resource] ?? 0) -
+        (production.otherResourceCost[resource] ?? 0);
+    }
   }
 }
 

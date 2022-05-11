@@ -15,6 +15,7 @@ import { ResourceTransferSrc } from "./resources/resource-transfer";
 import RealmScroller from "./assets/RealmScroller/RealmScroller";
 import TileDisplay from "./assets/TileDisplay/TileDisplay";
 import HexTile from "./grid/hex-tile";
+import styles from "./RealmsGame.module.css";
 
 type Props = {
   aiOnlyProp: boolean;
@@ -129,6 +130,7 @@ const RealmsGame: React.FC<Props> = ({ aiOnlyProp }) => {
         centered
         show={showCityModal && cityModalCity != null}
         onHide={() => setShowCityModal(false)}
+        dialogClassName={styles["city-modal-dialog"]}
       >
         {cityModalCity != null ? (
           <>
@@ -166,6 +168,7 @@ const RealmsGame: React.FC<Props> = ({ aiOnlyProp }) => {
                 <>
                   <div style={{ marginBottom: 5 }}>
                     <ProductionItemDisplay
+                      disabled={false}
                       productionItem={cityModalCurrentProduction}
                       productionPerTurn={
                         cityModalCurrentResourcesPerTurn?.production ?? 0
@@ -189,6 +192,7 @@ const RealmsGame: React.FC<Props> = ({ aiOnlyProp }) => {
               )}
 
               <ProductionItemsDisplay
+                cityResources={cityModalCity.getResources()}
                 onSelect={(productionItem) => {
                   cityModalCity.setCurrentProduction(productionItem);
                   console.log(

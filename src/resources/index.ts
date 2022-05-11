@@ -36,6 +36,22 @@ export function addResourceQuantities(
   return currentQuantity;
 }
 
+export function resourceQuantityLessThanOrEqualTo(
+  resourceQuantity1: ResourceQuantity,
+  resourceQuantity2: ResourceQuantity
+) {
+  for (let resourceStr of Object.keys(resourceQuantity1)) {
+    const resource = resourceStr as AllResourceTypes;
+    if (
+      resourceQuantity2[resource] == null ||
+      (resourceQuantity1[resource] ?? 0) > (resourceQuantity2[resource] ?? 0)
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function addAllResourceQuantities(
   resourceQuantities: ResourceQuantity[]
 ) {

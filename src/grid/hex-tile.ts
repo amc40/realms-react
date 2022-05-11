@@ -368,7 +368,9 @@ abstract class HexTile extends RegularHexagon {
   }
 
   containsMillitaryUnit() {
-    return this.getUnits().filter((unit) => unit instanceof MillitaryUnit);
+    return (
+      this.getUnits().filter((unit) => unit instanceof MillitaryUnit).length > 0
+    );
   }
 
   findNearestCityTile(

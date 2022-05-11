@@ -23,6 +23,7 @@ import { randomElement, randomInt } from "../utils/random";
 import AIPlayer from "../players/ai-player";
 import RandomAIPlayer from "../players/random-ai-player";
 import Settler from "../units/civil/settler";
+import FSMAIPlayer from "../players/fsm-ai-player";
 
 type TransferResources = (
   resourceSrc1: ResourceTransferSrc,
@@ -97,10 +98,10 @@ class RealmsSketch extends p5 {
     if (!aiOnly) {
       this.allPlayers.push(new Player(this.empires!.empires[0]));
     } else {
-      this.allPlayers.push(new RandomAIPlayer(this.empires!.empires[0]));
+      this.allPlayers.push(new FSMAIPlayer(this.empires!.empires[0]));
     }
     for (let i = 1; i < this.nPlayers; i++) {
-      this.allPlayers.push(new RandomAIPlayer(this.empires!.empires[i]));
+      this.allPlayers.push(new FSMAIPlayer(this.empires!.empires[i]));
     }
     this.humanPlayer = !aiOnly ? this.allPlayers[0] : null;
     this.currentPlayer = this.allPlayers[0];
@@ -546,6 +547,8 @@ class RealmsSketch extends p5 {
     return this.mainRealmMap.getPortalTilesBelongingToPlayer(player);
   }
 
+  lastAIMs = Date.now();
+
   draw(): void {
     if (
       this.selectedUnit !== this.prevSelectedUnit ||
@@ -595,7 +598,11 @@ class RealmsSketch extends p5 {
           : "Needs\nOrders"
       );
     }
-    this.handleAI();
+
+    if (this.humanPlayer != null || Date.now() - this.lastAIMs > 1000) {
+      this.handleAI();
+      this.lastAIMs = Date.now();
+    }
   }
 }
 

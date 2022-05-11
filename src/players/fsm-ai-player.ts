@@ -1,5 +1,6 @@
 import City from "../cities/city";
 import { ProductionItem, ProductionItemName } from "../cities/production";
+import CityTile from "../grid/tiles/city";
 import PortalTile from "../grid/tiles/portal";
 import RealmsSketch from "../sketch/realms-sketch";
 import MillitaryUnit from "../units/millitary/millitary-unit";
@@ -23,7 +24,7 @@ type State =
 type ProductionPreference = ProductionItemName[];
 
 class FSMAIPlayer extends AIPlayer {
-  state = "control-realms";
+  state: State = "control-portals";
 
   productionPreferenceControlPortals(): ProductionPreference {
     let productionPreference: ProductionPreference = [];
@@ -117,6 +118,27 @@ class FSMAIPlayer extends AIPlayer {
           return;
         }
         // TODO: potentially move to colonise state
+        unit.setSleeping();
+        return;
+      }
+    } else {
+      // if not already in a city then head to one
+      if (unitCurrentTile instanceof CityTile || unitCurrentTile == null) {
+        unit.setSleeping();
+        return;
+      }
+      // find the closest city tile
+      const closestCityTile = unitCurrentMap?.getClosestCityTo(
+        unitCurrentTile,
+        unit.owner
+      );
+      if (closestCityTile != null) {
+        unit.movementTarget = closestCityTile;
+        unit.selectCurrentMovementTarget();
+        return;
+      } else {
+        // just hunked down and hope
+        // TODO: maybe seek out closest millitary unit
         unit.setSleeping();
         return;
       }

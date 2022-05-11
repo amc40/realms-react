@@ -49,44 +49,47 @@ const UnitIcon: React.FC<{ unit: Unit }> = ({ unit }) => {
 };
 
 class ProductionItems {
-  readonly millitaryUnits: ProductionItem[] = [];
-  readonly civilUnits: ProductionItem[] = [];
-
   private static getMillitaryIcon() {}
+  private readonly units: Units;
+  private readonly sketch: RealmsSketch;
 
-  constructor(units: Units, player: Player, sketch: RealmsSketch) {
+  constructor(units: Units, sketch: RealmsSketch) {
+    this.units = units;
+    this.sketch = sketch;
+  }
+
+  public getItems(player: Player) {
     const produceUnit = (city: City, unitType: UnitType) =>
       city.cityTile!.produceUnit(
-        units.getUnit(unitType, city.owner, sketch.onUnitKilled)
+        this.units.getUnit(unitType, city.owner, this.sketch.onUnitKilled)
       );
-    this.millitaryUnits.push({
+    const millitaryUnits = [];
+    millitaryUnits.push({
       name: "Swordsman",
       onProduced: (city: City) => produceUnit(city, "swordsman"),
       productionCost: 30,
-      icon: <UnitIcon unit={units.getSwordsman(player, () => {})} />,
+      icon: <UnitIcon unit={this.units.getSwordsman(player, () => {})} />,
     });
-    this.civilUnits.push({
+    const civilUnits = [];
+    civilUnits.push({
       name: "Worker",
       onProduced: (city: City) => produceUnit(city, "worker"),
       productionCost: 30,
-      icon: <UnitIcon unit={units.getWorker(player, () => {})} />,
+      icon: <UnitIcon unit={this.units.getWorker(player, () => {})} />,
     });
-    this.civilUnits.push({
+    civilUnits.push({
       name: "Settler",
       onProduced: (city: City) => produceUnit(city, "settler"),
       productionCost: 60,
-      icon: <UnitIcon unit={units.getSettler(player, () => {})} />,
+      icon: <UnitIcon unit={this.units.getSettler(player, () => {})} />,
     });
-    this.civilUnits.push({
+    civilUnits.push({
       name: "Caravan",
       onProduced: (city: City) => produceUnit(city, "caravan"),
       productionCost: 30,
-      icon: <UnitIcon unit={units.getCaravan(player, () => {})} />,
+      icon: <UnitIcon unit={this.units.getCaravan(player, () => {})} />,
     });
-  }
-
-  public getItems() {
-    return [...this.millitaryUnits, ...this.civilUnits];
+    return [...millitaryUnits, ...civilUnits];
   }
 }
 

@@ -72,6 +72,7 @@ class RealmsSketch extends p5 {
 
   constructor(
     canvasElement: HTMLElement,
+    aiOnly: boolean,
     nPlayers = 4,
     openCityModal: (city: City) => void,
     rerender: () => void,
@@ -84,33 +85,24 @@ class RealmsSketch extends p5 {
     this.openCityModal = openCityModal;
     this.transferResources = transferResources;
     this.setHoverHexTile = setHoverHexTile;
-  }
-
-  preload(): void {
+    if (this.instanceN > 1) {
+      throw new Error("Only one instance of realms sketch is allowed");
+    }
     this.empires = new Empires(this);
     this.resources = new Resources(this);
     this.units = new Units(this);
-  }
-
-  get currentPlayer() {
-    return this._currentPlayer;
-  }
-
-  set currentPlayer(player: Player | null) {
-    this._currentPlayer = player;
-    // rerender to show the updated player indicator
-    this.rerender();
-  }
-
-  setup(): void {
-    this.createCanvas(this.windowWidth, this.windowHeight);
     // add players
-    this.allPlayers = [new Player(this.empires!.empires[0])];
+    this.allPlayers = [];
+    if (!aiOnly) {
+      this.allPlayers.push(new Player(this.empires!.empires[0]));
+    } else {
+      this.allPlayers.push(new RandomAIPlayer(this.empires!.empires[0]));
+    }
     for (let i = 1; i < this.nPlayers; i++) {
       this.allPlayers.push(new RandomAIPlayer(this.empires!.empires[i]));
     }
-    this.humanPlayer = this.allPlayers[0];
-    this.currentPlayer = this.humanPlayer;
+    this.humanPlayer = !aiOnly ? this.allPlayers[0] : null;
+    this.currentPlayer = this.allPlayers[0];
     this.mapGenerator = new MapGenerator(
       this.openCityModal,
       this.selectMapAndCentreOn.bind(this),
@@ -140,12 +132,22 @@ class RealmsSketch extends p5 {
     Object.values(this.unitActionButtons!).forEach(({ button }) =>
       button.setVisible()
     );
-    this.productionItems = new ProductionItems(
-      this.units!,
-      this.humanPlayer,
-      this
-    );
+    this.productionItems = new ProductionItems(this.units!, this);
     this.unitActions = new UnitActions(this);
+  }
+
+  get currentPlayer() {
+    return this._currentPlayer;
+  }
+
+  set currentPlayer(player: Player | null) {
+    this._currentPlayer = player;
+    // rerender to show the updated player indicator
+    this.rerender();
+  }
+
+  setup(): void {
+    this.createCanvas(this.windowWidth, this.windowHeight);
   }
 
   handleUnitMove() {
@@ -523,7 +525,7 @@ class RealmsSketch extends p5 {
         const city = cityTile.getCity()!;
         const production = this.currentPlayer.chooseCityProduction(
           this,
-          this.productionItems!.getItems(),
+          this.productionItems!.getItems(this.currentPlayer),
           city
         );
         city.setCurrentProduction(production);

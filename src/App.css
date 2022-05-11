@@ -36,3 +36,8 @@
     transform: rotate(360deg);
   }
 }
+
+@font-face {
+  font-family: "Enchanted Land";
+  src: local("Enchanted Land") url(./fonts/EnchantedLand.ttf) format("truetype");
+}

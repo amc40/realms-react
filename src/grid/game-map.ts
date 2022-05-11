@@ -420,6 +420,10 @@ class GameMap {
     );
   }
 
+  getCityTiles(): HexTile[] {
+    return [...this.cityTiles];
+  }
+
   getPortalsTo(
     startTile: HexTile,
     mapDest: GameMap
@@ -465,9 +469,10 @@ class GameMap {
     mouseScreenX: number,
     mouseScreenY: number,
     currentPlayer: Player,
-    humanPlayersTurn: boolean
+    humanPlayersTurn: boolean,
+    aiOnly: boolean
   ): boolean {
-    if (!humanPlayersTurn) return false;
+    if (!humanPlayersTurn && !aiOnly) return false;
     const mouseX = (mouseScreenX - this.xPan) / this.scale;
     const mouseY = (mouseScreenY - this.yPan) / this.scale;
     const offsetCoordinate = this.mouseXYToOffset(mouseX, mouseY);
@@ -525,7 +530,8 @@ class GameMap {
         hexTile.onClick(
           mouseRelativeToCentre.x,
           mouseRelativeToCentre.y,
-          currentPlayer
+          currentPlayer,
+          aiOnly
         );
         const prevSelectedUnit = this.getCurrentSelectedUnit();
         if (prevSelectedUnit != null) {

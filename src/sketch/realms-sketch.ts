@@ -149,6 +149,10 @@ class RealmsSketch extends p5 {
     this.rerender();
   }
 
+  getMaps() {
+    return [...this.maps];
+  }
+
   setup(): void {
     this.createCanvas(this.windowWidth, this.windowHeight);
   }
@@ -279,7 +283,9 @@ class RealmsSketch extends p5 {
       this.currentPlayer = this.getNextPlayer();
       // end of a round of turns
       if (this.currentPlayer === this.allPlayers[0]) {
-        this.currentMap?.handleEndRound();
+        const startTime = Date.now();
+        this.maps.forEach((map) => map.handleEndRound());
+        console.log("elapsed time", Date.now() - startTime);
       }
     }
   }
@@ -322,7 +328,8 @@ class RealmsSketch extends p5 {
             this.mouseX,
             this.mouseY,
             this.currentPlayer,
-            this.isHumanPlayersTurn()
+            this.isHumanPlayersTurn(),
+            this.humanPlayer == null
           ));
     }
   }
@@ -396,8 +403,8 @@ class RealmsSketch extends p5 {
     return null;
   }
 
-  handleUnitSettleCity() {
-    const currentSelectedSettler = this.getCurrentSelectedSettler();
+  handleUnitSettleCity(unit: Settler | null) {
+    const currentSelectedSettler = unit;
     if (currentSelectedSettler != null) {
       const unitTile = currentSelectedSettler.currentTile;
       const map = unitTile?.getMap();
@@ -449,7 +456,7 @@ class RealmsSketch extends p5 {
         this.handleUnitTransferResources();
         break;
       case "settle-city":
-        this.handleUnitSettleCity();
+        this.handleUnitSettleCity(this.getCurrentSelectedSettler());
         break;
       case "siege":
         this.handleUnitSiege();
@@ -603,7 +610,7 @@ class RealmsSketch extends p5 {
       );
     }
 
-    if (this.humanPlayer != null || Date.now() - this.lastAIMs > 1000) {
+    if (this.humanPlayer != null || Date.now() - this.lastAIMs > 300) {
       this.handleAI();
       this.lastAIMs = Date.now();
     }

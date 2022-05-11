@@ -72,7 +72,9 @@ class ProductionItems {
   public getItems(player: Player) {
     const produceUnit = (city: City, unitType: UnitType) =>
       city.cityTile!.produceUnit(
-        this.units.getUnit(unitType, city.owner, this.sketch.onUnitKilled)
+        this.units.getUnit(unitType, city.owner, (unit: Unit) =>
+          this.sketch.onUnitKilled(unit)
+        )
       );
     const millitaryUnits: ProductionItem[] = [];
     millitaryUnits.push(

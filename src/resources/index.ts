@@ -55,10 +55,14 @@ export function resourceQuantityLessThanOrEqualTo(
 export function addAllResourceQuantities(
   resourceQuantities: ResourceQuantity[]
 ) {
+  const startTime = Date.now();
+
   let currentQuantity = getNoResources();
   for (let resourceQuantity of resourceQuantities) {
     currentQuantity = addResourceQuantities(currentQuantity, resourceQuantity);
   }
+  console.log("time taken to add");
+  console.log(Date.now() - startTime);
   return currentQuantity;
 }
 

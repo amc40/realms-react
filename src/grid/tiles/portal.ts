@@ -48,14 +48,15 @@ class PortalTile extends HexTile {
   public onClick(
     mouseRelativeX: number,
     mouseRelativeY: number,
-    player: Player
+    player: Player,
+    aiOnly: boolean
   ): void {
     if (this.intersectsWithText(mouseRelativeX, mouseRelativeY)) {
       const { map: otherMap, tile: otherTile } =
         this.portal.getOtherEndMapAndTile(this);
       this.selectMapAndCentreOn(otherMap, otherTile);
     } else {
-      super.onClick(mouseRelativeX, mouseRelativeY, player);
+      super.onClick(mouseRelativeX, mouseRelativeY, player, aiOnly);
     }
   }
 }

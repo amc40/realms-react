@@ -269,6 +269,7 @@ abstract class Unit {
       if (this.currentTile !== this.movementTarget) {
         this.recalculatePath();
         if (this.movementTarget == null) {
+          this.state = State.WAITING_FOR_ORDERS;
           // no path to target
           return false;
         }

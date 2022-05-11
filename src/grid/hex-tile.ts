@@ -206,7 +206,8 @@ abstract class HexTile extends RegularHexagon {
   public onClick(
     relativeMouseX: number,
     relativeMouseY: number,
-    player: Player
+    player: Player,
+    aiOnly: boolean
   ): void {
     // cycle through units by default
     if (this.currentUnit === null) {
@@ -234,6 +235,10 @@ abstract class HexTile extends RegularHexagon {
     this.tileImprovement = getTileImprovementInstance(tileImprovementType, p5);
   }
 
+  hasTileImprovement() {
+    return this.tileImprovement != null;
+  }
+
   getBaseResources(): ResourceQuantity {
     console.log(
       "tile improvement",
@@ -257,10 +262,17 @@ abstract class HexTile extends RegularHexagon {
    * @returns {number} the number of resource per turn including the tile improvement
    */
   getAllResources(): ResourceQuantity {
-    return addResourceQuantities(
+    const getAllResourcesStart = Date.now();
+
+    const tileImprovementYield =
+      this.tileImprovement?.getResourceYield(this) ?? {};
+    console.log("tile improvement yield", Date.now() - getAllResourcesStart);
+    const result = addResourceQuantities(
       this.baseResources,
-      this.tileImprovement?.getResourceYield(this) ?? {}
+      tileImprovementYield
     );
+    console.log("getAllResources took", Date.now() - getAllResourcesStart);
+    return result;
   }
 
   minTextX() {
@@ -365,6 +377,44 @@ abstract class HexTile extends RegularHexagon {
       }
     }
     return null;
+  }
+
+  /**
+   *
+   * @param distance inclusive
+   * @param sameRealm
+   * @returns
+   */
+  getAllTilesWithinDistance(
+    maxDistance: number,
+    sameRealmOnly: boolean = false
+  ) {
+    let tiles: HexTile[] = [];
+    if (maxDistance < 0) return [];
+    const neighbours = this.getNeighbours();
+    const visited = new Set<HexTile>();
+    visited.add(this);
+    let toVisit: {
+      tile: HexTile;
+      distance: number;
+    }[] = neighbours.map((n) => ({ tile: n, distance: 1 }));
+    const thisRealm = this.getMap();
+    while (toVisit.length > 0) {
+      const { tile, distance } = toVisit.shift()!;
+      visited.add(tile);
+      tiles.push(tile);
+      if (distance < maxDistance) {
+        for (let neighbour of tile.getNeighbours()) {
+          if (
+            !visited.has(neighbour) &&
+            (!sameRealmOnly || neighbour.getMap() === thisRealm)
+          ) {
+            toVisit.push({ tile: neighbour, distance: distance + 1 });
+          }
+        }
+      }
+    }
+    return tiles;
   }
 
   containsMillitaryUnit() {

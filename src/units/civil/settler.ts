@@ -1,4 +1,5 @@
 import p5 from "p5";
+import GameMap from "../../grid/game-map";
 import HexTile from "../../grid/hex-tile";
 import Player from "../../players/player";
 import Unit from "../unit";
@@ -22,6 +23,23 @@ class Settler extends CivilUnit {
   static canSettleOn(tile: HexTile): boolean {
     // on other cities within 3 tiles
     return tile.findNearestCityTile(3) == null;
+  }
+
+  static getSettelableTiles(map: GameMap): HexTile[] {
+    const possibleIndices = new Set<[number, number]>();
+    for (let row = 0; row < map.nRows; row++) {
+      for (let col = 0; col < map.nCols; col++) {
+        possibleIndices.add([row, col]);
+      }
+    }
+    for (let cityTile of map.getCityTiles()) {
+      cityTile.getAllTilesWithinDistance(3).forEach((tile) => {
+        possibleIndices.delete([tile.getRow(), tile.getCol()]);
+      });
+    }
+    return Array.from(possibleIndices).map(
+      ([row, col]) => map.getTile(row, col)!
+    );
   }
 
   getCurrentPossibleUnitActionTypes(): UnitActionType[] {

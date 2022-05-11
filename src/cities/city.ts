@@ -55,7 +55,7 @@ class City {
   getCurrentResourcesPerTurn() {
     const tileResources = this.tiles.map((tile) => tile.getAllResources());
     return addAllResourceQuantities([
-      this.baseResourcesPerTurn,
+      { ...this.baseResourcesPerTurn },
       ...tileResources,
     ]);
   }

@@ -1,7 +1,9 @@
 import p5 from "p5";
+import { ThemeProvider } from "react-bootstrap";
 import { ProductionItem } from "../cities/production";
 import GameMap from "../grid/game-map";
 import HexTile from "../grid/hex-tile";
+import CityTile from "../grid/tiles/city";
 import Player from "../players/player";
 import ShortestPath, { Node } from "../utils/shortest-path";
 import { CivilUnitActionType } from "./civil/civil-unit";
@@ -59,8 +61,10 @@ abstract class Unit {
       return minTotalDistance * minUnitMovementPoints;
     }
   );
-  protected readonly doesNotContainEnemyUnitPredicate = (tile: HexTile) =>
+  protected readonly containsEnemyUnitPredicate = (tile: HexTile) =>
     tile.getUnits().some((unit) => unit.owner !== this.owner);
+  protected readonly isEnemyCityPredicate = (tile: HexTile) =>
+    tile instanceof CityTile && tile.getOwner() !== this.owner;
   private _shortestPathToTarget: HexTile[] | null = null;
   private state: State = State.WAITING_FOR_ORDERS;
   readonly movementPoints;
@@ -105,7 +109,9 @@ abstract class Unit {
         const shortestPathResult = this.hexTileShortestPath.getShortestPath(
           this.currentTile.getNode(),
           this._movementTarget.getNode(),
-          this.doesNotContainEnemyUnitPredicate
+          (hexTile: HexTile) =>
+            this.containsEnemyUnitPredicate(hexTile) ||
+            this.isEnemyCityPredicate(hexTile)
         );
         this._shortestPathToTarget =
           shortestPathResult != null ? shortestPathResult.path : null;
@@ -117,6 +123,25 @@ abstract class Unit {
 
   get movementTarget() {
     return this._movementTarget;
+  }
+
+  recalculatePath() {
+    if (this.currentTile != null && this._movementTarget != null) {
+      const shortestPathResult = this.hexTileShortestPath.getShortestPath(
+        this.currentTile.getNode(),
+        this._movementTarget.getNode(),
+        (hexTile: HexTile) =>
+          this.containsEnemyUnitPredicate(hexTile) ||
+          this.isEnemyCityPredicate(hexTile)
+      );
+      this._shortestPathToTarget =
+        shortestPathResult != null ? shortestPathResult.path : null;
+    } else if (this._movementTarget == null) {
+      this._shortestPathToTarget = null;
+    }
+    if (this._shortestPathToTarget == null) {
+      this.movementTarget = null;
+    }
   }
 
   onUpdateCurrentTile(oldTile: HexTile | null, newTile: HexTile | null) {}
@@ -239,8 +264,14 @@ abstract class Unit {
   }
 
   handleNextTurn() {
+    // return true unless a unit needs to redo its orders (because a path is blocked)
     if (this.state === State.FOLLOWING_ORDERS) {
       if (this.currentTile !== this.movementTarget) {
+        this.recalculatePath();
+        if (this.movementTarget == null) {
+          // no path to target
+          return false;
+        }
         this.moveAlongShortestPath();
       }
     }
@@ -249,6 +280,7 @@ abstract class Unit {
     } else {
       this.remainingMovementPoints = this.movementPoints;
     }
+    return true;
   }
 
   selectCurrentMovementTarget() {

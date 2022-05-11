@@ -325,7 +325,7 @@ abstract class HexTile extends RegularHexagon {
   }
 
   hasSpecialResource(specialResource: SpecialResourceTypes) {
-    return this.specialResources[specialResource] != null;
+    return (this.specialResources[specialResource] ?? 0) !== 0;
   }
 
   /**

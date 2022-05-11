@@ -366,10 +366,12 @@ class GameMap {
   }
 
   handleNextTurn(player: Player) {
-    this.units
+    const success = this.units
       .filter((unit) => unit.owner === player)
-      .forEach((unit) => unit.handleNextTurn());
+      .every((unit) => unit.handleNextTurn());
+    if (!success) return false;
     this.setCurrentSelectedUnit(null);
+    return true;
   }
 
   handleEndRound() {

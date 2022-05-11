@@ -43,12 +43,12 @@ export class ShortestPath<T> {
     goalNode: Node<T>,
     tempUnreachablePredicate?: (gameElement: T) => boolean
   ) {
-    // if (
-    //   tempUnreachablePredicate?.(goalNode.gamePoint) ||
-    //   tempUnreachablePredicate?.(startNode.gamePoint)
-    // ) {
-    //   return null;
-    // }
+    if (
+      tempUnreachablePredicate?.(goalNode.gamePoint) ||
+      tempUnreachablePredicate?.(startNode.gamePoint)
+    ) {
+      return null;
+    }
     const openQueue = new PriorityQueue<AStarInterimResult<T>>(
       (interimResult) => interimResult.estimatedTotalCost
     );
@@ -75,8 +75,8 @@ export class ShortestPath<T> {
         const outEdgeDest = outEdge.to;
         // ignore if closed
         if (
-          !closedSet.has(outEdgeDest)
-          // !tempUnreachablePredicate?.(outEdgeDest.gamePoint)
+          !closedSet.has(outEdgeDest) &&
+          !tempUnreachablePredicate?.(outEdgeDest.gamePoint)
         ) {
           const cost = currentResult.costSoFar + outEdge.weight;
           if (outEdgeDest.bestResultSoFar != null) {

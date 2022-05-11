@@ -7,6 +7,7 @@ import {
   addResourceQuantities,
   AllResourceTypes,
   ResourceQuantity,
+  resourceQuantityLessThanOrEqualTo,
 } from "../resources";
 import { ResourceTransferSrc } from "../resources/resource-transfer";
 import Unit from "../units/unit";
@@ -155,6 +156,16 @@ class City {
       production: this.resources.production,
       ...transferableResourceQuantity,
     };
+  }
+
+  getValidProductionSelections(productionItems: ProductionItem[]) {
+    return productionItems.filter((productionItem) => {
+      const resourceRequirements = productionItem.otherResourceCost;
+      return resourceQuantityLessThanOrEqualTo(
+        resourceRequirements,
+        this.resources
+      );
+    });
   }
 
   setCurrentProduction(production: ProductionItem) {

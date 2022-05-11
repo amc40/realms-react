@@ -36,6 +36,7 @@ type TransferResources = (
 class RealmsSketch extends p5 {
   private static instanceCount = 0;
   private maps: GameMap[] = [];
+  private mainRealmMap: GameMap | null = null;
   currentMap: GameMap | null = null;
   private nextTurnIndicator = new NextTurn(() => this.handleNextTurn());
 
@@ -126,6 +127,7 @@ class RealmsSketch extends p5 {
       this
     );
     this.currentMap = mainRealm;
+    this.mainRealmMap = mainRealm;
     this.maps = [mainRealm, ...otherRealms];
     this.rerender();
 
@@ -523,15 +525,25 @@ class RealmsSketch extends p5 {
         this.getCityTilesRequiringProductionChoice();
       for (let cityTile of citesRequiringProductionChoice) {
         const city = cityTile.getCity()!;
+        const validProductionSelections = city.getValidProductionSelections(
+          this.productionItems!.getItems(this.currentPlayer)
+        );
         const production = this.currentPlayer.chooseCityProduction(
           this,
-          this.productionItems!.getItems(this.currentPlayer),
+          validProductionSelections,
           city
         );
         city.setCurrentProduction(production);
       }
       this.handleNextTurn();
     }
+  }
+
+  getMainRealmPortalTilesBelongingToPlayer(player: Player) {
+    if (!this.mainRealmMap) {
+      return [];
+    }
+    return this.mainRealmMap.getPortalTilesBelongingToPlayer(player);
   }
 
   draw(): void {

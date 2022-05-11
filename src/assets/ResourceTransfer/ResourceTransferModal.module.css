@@ -1,6 +1,6 @@
 .resource-transfer-modal-dialog {
-  width: 80vw;
-  max-width: 80vw;
+  width: 80vw !important;
+  max-width: 80vw !important;
 }
 
 .resource-transfer-container {

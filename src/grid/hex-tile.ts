@@ -329,12 +329,12 @@ abstract class HexTile extends RegularHexagon {
   }
 
   /**
-   * Finds the distance to the nearest hex matching a given predicate.
+   * Finds a tile satisfying the predicate.
    * @param predicate the predicate to match against.
    * @param tile the start point of the search (distance 0)
    * @param maxDistance the maximum depth (inclusive) of the search. Highly advisable to use otherwise search will be extremely expensive.
    */
-  distanceToTileMatchingPredicate(
+  findTileMatchingPredicate(
     predicate: (tile: HexTile) => boolean,
     maxDistance: number = Infinity,
     sameRealmOnly: boolean = false
@@ -367,11 +367,15 @@ abstract class HexTile extends RegularHexagon {
     return null;
   }
 
+  containsMillitaryUnit() {
+    return this.getUnits().filter((unit) => unit instanceof MillitaryUnit);
+  }
+
   findNearestCityTile(
     maxDistance?: number,
     sameRealmOnly?: boolean
   ): CityTile | null {
-    return this.distanceToTileMatchingPredicate(
+    return this.findTileMatchingPredicate(
       (tile) => tile instanceof CityTile,
       maxDistance,
       sameRealmOnly

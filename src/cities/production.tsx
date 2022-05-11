@@ -9,8 +9,16 @@ import Units, { UnitType } from "../units";
 import Unit from "../units/unit";
 import City from "./city";
 
+export type ProductionItemName =
+  | "Swordsman"
+  | "Spearman"
+  | "Millitia"
+  | "Worker"
+  | "Settler"
+  | "Caravan";
+
 export interface ProductionItem {
-  name: string;
+  name: ProductionItemName;
   onProduced: (city: City) => void;
   productionCost: number;
   otherResourceCost: ResourceQuantity;

@@ -316,6 +316,12 @@ class GameMap {
     );
   }
 
+  getPortalTilesBelongingToPlayer(player: Player): PortalTile[] {
+    return this.portalTiles.filter(
+      (portalTile) => portalTile.getOwner() === player
+    );
+  }
+
   centreOnAndSelectUnit(p5: p5, unit: Unit) {
     this.centreOnUnit(p5, unit);
     this.setCurrentSelectedUnit(unit);

@@ -16,7 +16,7 @@ import { ProductionItem } from "./production";
 class City {
   private static popIncreaseFoodSurplus = 30;
   readonly name: string;
-  owner: Player;
+  _owner: Player;
   cityTile: CityTile | null = null;
   private resources: ResourceQuantity = {
     population: 1,
@@ -31,9 +31,26 @@ class City {
   health = 100;
   strength = 20;
 
-  constructor(name: string = "City", owner: Player) {
+  onCaptured: () => void;
+
+  constructor(
+    name: string = "City",
+    owner: Player,
+    onCaptured: (city: City) => void
+  ) {
     this.name = name;
-    this.owner = owner;
+    this._owner = owner;
+    this.onCaptured = () => onCaptured(this);
+  }
+
+  get owner() {
+    return this._owner;
+  }
+
+  set owner(player: Player) {
+    this._owner = player;
+    this.cityTile?.setColor(player.empire.color);
+    this.onCaptured();
   }
 
   setCityTile(cityTile: CityTile) {

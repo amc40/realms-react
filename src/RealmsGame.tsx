@@ -16,14 +16,24 @@ import RealmScroller from "./assets/RealmScroller/RealmScroller";
 import TileDisplay from "./assets/TileDisplay/TileDisplay";
 import HexTile from "./grid/hex-tile";
 import styles from "./RealmsGame.module.css";
+import EndOfGameModal, {
+  EndGameStatus,
+} from "./assets/EndOfGame/EndOfGameModal";
 
 type Props = {
+  humansOnlyProp: boolean;
   aiOnlyProp: boolean;
+  onBack: () => void;
 };
 
-const RealmsGame: React.FC<Props> = ({ aiOnlyProp }) => {
+const RealmsGame: React.FC<Props> = ({
+  aiOnlyProp,
+  humansOnlyProp,
+  onBack,
+}) => {
   const aiOnlyRef = useRef(aiOnlyProp);
   const aiOnly = aiOnlyRef.current;
+  const humansOnly = humansOnlyProp;
   const canvasRef = useRef<HTMLDivElement>(null);
   const [realmsSketch, setRealmsSketch] = useState<RealmsSketch | null>(null);
 
@@ -48,6 +58,10 @@ const RealmsGame: React.FC<Props> = ({ aiOnlyProp }) => {
     >(null);
   const [showResourceTransferModal, setShowResourceTransferModal] =
     useState(false);
+
+  const [endGameStatus, setEndGameStatus] = useState<
+    EndGameStatus | undefined
+  >();
 
   const transferResources = useCallback(
     (
@@ -91,11 +105,13 @@ const RealmsGame: React.FC<Props> = ({ aiOnlyProp }) => {
         new RealmsSketch(
           canvas,
           aiOnly,
+          humansOnly,
           4,
           openShowCityModal,
           rerender,
           transferResources,
-          setHoverHexTile
+          setHoverHexTile,
+          (endGameStatus: EndGameStatus) => setEndGameStatus(endGameStatus)
         )
       );
     }
@@ -123,9 +139,14 @@ const RealmsGame: React.FC<Props> = ({ aiOnlyProp }) => {
       {realmsSketch?.currentPlayer != null ? (
         <CurrentPlayerIndicator
           currentPlayer={realmsSketch?.currentPlayer}
-          humanPlayer={realmsSketch?.humanPlayer}
+          humanPlayer={
+            realmsSketch?.humanPlayers.length === 1
+              ? realmsSketch?.humanPlayers[0]
+              : null
+          }
         />
       ) : null}
+      <EndOfGameModal status={endGameStatus} onHide={() => onBack()} />
       <Modal
         centered
         show={showCityModal && cityModalCity != null}

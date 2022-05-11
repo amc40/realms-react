@@ -148,6 +148,7 @@ class GameMap {
 
   private portalTiles: PortalTile[] = [];
   private cityTiles: CityTile[] = [];
+  tilesWithSpecialResources: HexTile[] = [];
 
   private static getNeighbourOffsetCoords(
     row: number,
@@ -225,6 +226,9 @@ class GameMap {
       row.forEach((hex) => {
         if (hex instanceof CityTile) {
           this.cityTiles.push(hex);
+        }
+        if (hex.getFirstSpecialResource() !== null) {
+          this.tilesWithSpecialResources.push(hex);
         }
       })
     );
@@ -378,6 +382,9 @@ class GameMap {
     this.cityTiles
       .map((cityTile) => cityTile.getCity()!)
       .forEach((city) => city.handleEndRound());
+    this.tilesWithSpecialResources = this.tilesWithSpecialResources.filter(
+      (tile) => tile.getFirstSpecialResource() != null
+    );
   }
 
   public handleMouseMove(

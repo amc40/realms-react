@@ -78,19 +78,22 @@ class MapGenerator {
   private readonly resourceIcons: Resources;
   private readonly getCurrentSelectedUnit: () => Unit | null;
   private readonly setCurrentSelectedUnit: (unit: Unit | null) => void;
+  private readonly onCityCaptured: (city: City) => void;
 
   constructor(
     openCityModal: (city: City) => void,
     selectMapAndCentreOn: SelectMapAndCentreOn,
     resourceIcons: Resources,
     getCurrentSelectedUnit: () => Unit | null,
-    setCurrentSelectedUnit: (unit: Unit | null) => void
+    setCurrentSelectedUnit: (unit: Unit | null) => void,
+    onCityCaptured: (city: City) => void
   ) {
     this.openCityModal = openCityModal;
     this.selectMapAndCentreOn = selectMapAndCentreOn;
     this.resourceIcons = resourceIcons;
     this.getCurrentSelectedUnit = getCurrentSelectedUnit;
     this.setCurrentSelectedUnit = setCurrentSelectedUnit;
+    this.onCityCaptured = onCityCaptured;
   }
 
   private static getPreviousGeneratedNeighbourOffsetCoords(
@@ -242,7 +245,11 @@ class MapGenerator {
       this.radius,
       row,
       col,
-      new City("City " + owner.incrementThenGetNCities(), owner),
+      new City(
+        "City " + owner.incrementThenGetNCities(),
+        owner,
+        this.onCityCaptured
+      ),
       this.resourceIcons,
       this.openCityModal,
       (unit: Unit) => map.addUnit(unit, row, col)

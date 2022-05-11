@@ -7,7 +7,7 @@ import "./App.css";
 
 type Props = {};
 
-type Mode = "menu" | "human-game" | "ai-game" | "credits";
+type Mode = "menu" | "human-vs-ai-game" | "hotseat" | "ai-game" | "credits";
 
 const App: React.FC<Props> = ({}) => {
   const [mode, setMode] = React.useState<Mode>("menu");
@@ -17,14 +17,34 @@ const App: React.FC<Props> = ({}) => {
       {/* <RealmsGame /> */}
       {mode === "menu" && (
         <Menu
-          onNewGame={() => setMode("human-game")}
+          onNewVsAiGame={() => setMode("human-vs-ai-game")}
           onAIOnlyGame={() => setMode("ai-game")}
           onCredits={() => setMode("credits")}
+          onNewHotseatGame={() => setMode("hotseat")}
         />
       )}
       {mode === "credits" && <Credits onBack={() => setMode("menu")} />}
-      {mode === "human-game" && <RealmsGame aiOnlyProp={false} />}
-      {mode === "ai-game" && <RealmsGame aiOnlyProp={true} />}
+      {mode === "human-vs-ai-game" && (
+        <RealmsGame
+          aiOnlyProp={false}
+          humansOnlyProp={false}
+          onBack={() => setMode("menu")}
+        />
+      )}
+      {mode === "ai-game" && (
+        <RealmsGame
+          aiOnlyProp={true}
+          humansOnlyProp={false}
+          onBack={() => setMode("menu")}
+        />
+      )}
+      {mode === "hotseat" && (
+        <RealmsGame
+          aiOnlyProp={false}
+          humansOnlyProp={true}
+          onBack={() => setMode("menu")}
+        />
+      )}
     </div>
   );
 };

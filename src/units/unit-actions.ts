@@ -91,7 +91,11 @@ class UnitActions {
     type: UnitActionType;
     button: CircularButton;
   }[] {
-    const unitActionButtonX = getSpacing(sketch.width / 2, 100, 3);
+    const unitActionButtonX = getSpacing(
+      sketch.width / 2,
+      100,
+      unitActionsAndOnClick.length
+    );
     const unitActionButtonRadius = 30;
     const unitActionButtonY = sketch.height - unitActionButtonRadius - 50;
     return unitActionsAndOnClick.map((unitActionType, index) => ({

@@ -187,7 +187,8 @@ abstract class MillitaryUnit extends Unit {
   getAttackableUnits() {
     const currentUnitReachableTiles = this.getReachableTiles();
     const attackableTiles = currentUnitReachableTiles.filter(
-      (hexTile: HexTile) => hexTile.hasEnemyUnit(this.owner)
+      (hexTile: HexTile) =>
+        !(hexTile instanceof CityTile) && hexTile.hasEnemyUnit(this.owner)
     );
     return attackableTiles;
   }

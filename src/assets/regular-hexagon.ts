@@ -6,7 +6,7 @@ class RegularHexagon {
   private static readonly INIT_ANGLE = Math.PI / 6;
   private static readonly ROT_INCREMENT_ANGLE = Math.PI / 3;
   protected readonly radius: number;
-  private readonly color: RGB;
+  private color: RGB;
   private borderWidth: number;
 
   constructor(radius: number, color: RGB, borderWidth: number = 1) {
@@ -26,6 +26,10 @@ class RegularHexagon {
   getMinWidthHeight() {
     // 2 * height of sides (2 * 1/2 sqrt(2/3))
     return this.radius * Math.sqrt(2 / 3);
+  }
+
+  setColor(rgb: RGB) {
+    this.color = rgb;
   }
 
   private static drawHexagon(p5: p5, radius: number) {

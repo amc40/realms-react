@@ -24,6 +24,7 @@ import AIPlayer from "../players/ai-player";
 import RandomAIPlayer from "../players/random-ai-player";
 import Settler from "../units/civil/settler";
 import FSMAIPlayer from "../players/fsm-ai-player";
+import { EndGameStatus } from "../assets/EndOfGame/EndOfGameModal";
 
 type TransferResources = (
   resourceSrc1: ResourceTransferSrc,
@@ -44,6 +45,7 @@ class RealmsSketch extends p5 {
   private openCityModal: (city: City) => void;
   private transferResources: TransferResources;
   private setHoverHexTile: (hoverHexTile: HexTile | null) => void;
+  private onGameEnd: (endGameStatus: EndGameStatus) => void;
 
   private mapGenerator: MapGenerator | null = null;
 
@@ -58,7 +60,7 @@ class RealmsSketch extends p5 {
   private rerender: () => void;
 
   allPlayers: Player[] = [];
-  humanPlayer: Player | null = null;
+  humanPlayers: Player[] = [];
   _currentPlayer: Player | null = null;
   resources: Resources | null = null;
   productionItems: ProductionItems | null = null;
@@ -75,11 +77,13 @@ class RealmsSketch extends p5 {
   constructor(
     canvasElement: HTMLElement,
     aiOnly: boolean,
+    humansOnly: boolean,
     nPlayers = 4,
     openCityModal: (city: City) => void,
     rerender: () => void,
     transferResources: TransferResources,
-    setHoverHexTile: (hoverHexTile: HexTile | null) => void
+    setHoverHexTile: (hoverHexTile: HexTile | null) => void,
+    onGameEnd: (endGameStatus: EndGameStatus) => void
   ) {
     super(() => {}, canvasElement);
     this.rerender = rerender;
@@ -95,15 +99,28 @@ class RealmsSketch extends p5 {
     this.units = new Units(this);
     // add players
     this.allPlayers = [];
-    if (!aiOnly) {
-      this.allPlayers.push(new Player(this.empires!.empires[0]));
+
+    this.onGameEnd = onGameEnd;
+
+    if (humansOnly) {
+      for (let i = 0; i < this.nPlayers; i++) {
+        this.allPlayers.push(new Player(this.empires!.empires[i]));
+      }
+    } else if (aiOnly) {
+      for (let i = 0; i < this.nPlayers; i++) {
+        this.allPlayers.push(new FSMAIPlayer(this.empires!.empires[i]));
+      }
     } else {
-      this.allPlayers.push(new FSMAIPlayer(this.empires!.empires[0]));
+      this.allPlayers.push(new Player(this.empires!.empires[0]));
+      for (let i = 1; i < this.nPlayers; i++) {
+        this.allPlayers.push(new FSMAIPlayer(this.empires!.empires[i]));
+      }
     }
-    for (let i = 1; i < this.nPlayers; i++) {
-      this.allPlayers.push(new FSMAIPlayer(this.empires!.empires[i]));
-    }
-    this.humanPlayer = !aiOnly ? this.allPlayers[0] : null;
+    this.humanPlayers = !aiOnly
+      ? humansOnly
+        ? [...this.allPlayers]
+        : [this.allPlayers[0]]
+      : [];
     this.currentPlayer = this.allPlayers[0];
     this.mapGenerator = new MapGenerator(
       this.openCityModal,
@@ -112,7 +129,8 @@ class RealmsSketch extends p5 {
       () => this.selectedUnit,
       (newSelectedUnit: Unit | null) => {
         this.selectedUnit = newSelectedUnit;
-      }
+      },
+      () => this.checkForPlayerEliminated()
     );
     const { mainRealm, otherRealms } = this.mapGenerator.generateMaps(
       this.width,
@@ -177,6 +195,7 @@ class RealmsSketch extends p5 {
     this.selectedUnit?.stopSelectingMovement();
     this.getCurrentSelectedMillitaryUnit()?.stopSelectingAttackTarget();
     this.getCurrentSelectedTransportUnit()?.stopSelectingTransportTarget();
+    this.getCurrentSelectedMillitaryUnit()?.stopSelectingSiegeTarget();
   }
 
   handleUnitSleep() {
@@ -280,15 +299,44 @@ class RealmsSketch extends p5 {
       map.handleNextTurn(this.currentPlayer!)
     );
     if (mapNextTurnSuccess) {
+      this.checkForPlayerEliminated();
       this.currentPlayer = this.getNextPlayer();
       // end of a round of turns
       if (this.currentPlayer === this.allPlayers[0]) {
-        const startTime = Date.now();
         this.maps.forEach((map) => map.handleEndRound());
-        console.log("elapsed time", Date.now() - startTime);
       }
     }
   }
+
+  checkForPlayerEliminated() {
+    for (let player of this.allPlayers) {
+      const citiesBeloningToPlayer = this.maps.flatMap((map) =>
+        map.getCityTilesBelongingToPlayer(player)
+      );
+      if (citiesBeloningToPlayer.length === 0) {
+        this.allPlayers = this.allPlayers.filter((p) => p !== player);
+        this.humanPlayers = this.humanPlayers.filter((p) => p !== player);
+        this.checkForGameComplete();
+      }
+    }
+  }
+
+  checkForGameComplete() {
+    if (this.allPlayers.length === 1) {
+      // only one remaining player
+      this.onGameEnd(this.humanPlayers.length > 0 ? "won" : "lost");
+    } else if (this.humanPlayers.length === 0) {
+      this.onGameEnd("lost");
+    } else {
+      const someTileContainsSpecialResources = this.maps.some(
+        (map) => map.tilesWithSpecialResources.length > 0
+      );
+      if (!someTileContainsSpecialResources) {
+        this.onGameEnd("stalemate");
+      }
+    }
+  }
+
   getNextPlayer(): Player | null {
     if (this.currentPlayer != null) {
       const nextPlayerIdx =
@@ -304,7 +352,9 @@ class RealmsSketch extends p5 {
   }
 
   isHumanPlayersTurn() {
-    return this.currentPlayer === this.humanPlayer;
+    return this.humanPlayers.some(
+      (humanPlayer) => humanPlayer === this.currentPlayer
+    );
   }
 
   mouseMoved(event?: MouseEvent): void {
@@ -329,7 +379,7 @@ class RealmsSketch extends p5 {
             this.mouseY,
             this.currentPlayer,
             this.isHumanPlayersTurn(),
-            this.humanPlayer == null
+            this.humanPlayers.length === 0
           ));
     }
   }
@@ -568,7 +618,7 @@ class RealmsSketch extends p5 {
     ) {
       if (
         this.selectedUnit != null &&
-        this.selectedUnit.owner === this.humanPlayer &&
+        this.currentPlayer === this.selectedUnit?.owner &&
         this.isHumanPlayersTurn()
       ) {
         const unitActionTypes =
@@ -610,7 +660,7 @@ class RealmsSketch extends p5 {
       );
     }
 
-    if (this.humanPlayer != null || Date.now() - this.lastAIMs > 300) {
+    if (this.humanPlayers.length > 0 || Date.now() - this.lastAIMs > 1000) {
       this.handleAI();
       this.lastAIMs = Date.now();
     }
